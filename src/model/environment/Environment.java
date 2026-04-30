@@ -1,5 +1,5 @@
 package model.environment;
 
-public class Environment {
+public abstract class Environment {
 
 }

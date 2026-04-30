@@ -1,5 +1,5 @@
 package model.herbivore;
 
-public class Rabit {
+public class Rabbit {
 
 }
