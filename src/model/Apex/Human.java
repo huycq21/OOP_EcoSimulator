@@ -1,4 +1,4 @@
-package model;
+package model.apex;
 
 public class Human {
 

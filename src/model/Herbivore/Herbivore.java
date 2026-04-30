@@ -1,4 +1,4 @@
-package model.Herbivore;
+package model.herbivore;
 
 import model.Animal;
 

@@ -1,4 +1,4 @@
-package model;
+package model.spawner;
 
 public class Spawner {
 

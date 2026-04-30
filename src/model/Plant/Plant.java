@@ -1,4 +1,4 @@
-package model.Plant;
+package model.plant;
 
 public class Plant {
 

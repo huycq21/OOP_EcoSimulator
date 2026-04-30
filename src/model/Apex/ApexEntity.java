@@ -1,4 +1,4 @@
-package model.Apex;
+package model.apex;
 
 public class ApexEntity {
 

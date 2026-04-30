@@ -1,4 +1,4 @@
-package model;
+package model.environment;
 
 public class Environment {
 

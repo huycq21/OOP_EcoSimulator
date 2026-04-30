@@ -1,4 +1,4 @@
-package model.Carnivore;
+package model.carnivore;
 
 import model.Animal;
 import model.Hunter;
