@@ -1,4 +1,6 @@
-package model;
+package model.Herbivore;
+
+import model.Animal;
 
 public abstract class Herbivore extends Animal {
     public Herbivore(double x, double y, int size, double speed) {
