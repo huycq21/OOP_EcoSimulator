@@ -1,47 +1,115 @@
 package model;
 
+import java.util.Random;
+
 public abstract class Animal extends Entity {
-    protected int hp = 100;
+    // Các chỉ số sinh tồn cơ bản
+    protected double hp;
+    protected double maxHp;
+    protected double energy;
+    protected double maxEnergy;
     protected double speed;
-    protected double vX, vY; // Vận tốc di chuyển theo trục X và Y
-
-    public Animal(double x, double y, int size, double speed) {
-        super(x, y, size);
-        this.speed = speed;
-        
-        // Khởi tạo hướng đi ngẫu nhiên ban đầu cho con vật
-        this.vX = (Math.random() - 0.5) * speed;
-        this.vY = (Math.random() - 0.5) * speed;
-    }
-    public void takeDamage(int damage) {
-        this.hp -= damage;
-        System.out.println("Một con vật vừa bị cắn! Máu còn: " + this.hp);
-        
-        if (this.hp <= 0) {
-            die(); // Nếu máu <= 0 thì gọi hàm chết
-        }
-    }
-
-    // Hàm xử lý cái chết (Sau này View sẽ dựa vào đây để xóa hình ảnh)
-    protected void die() {
-        System.out.println("Một con vật đã gục ngã...");
-        // Logic xóa con vật khỏi danh sách sẽ được xử lý ở Controller
-    }
+    protected double visionRadius;
     
-    // Thuật toán dùng chung cho mọi động vật: Di chuyển và dội tường
-    protected void move() {
-        x += vX;
-        y += vY;
+    // Quản lý di chuyển và trạng thái
+    protected Vector2D velocity; // Vận tốc hiện tại (hướng + tốc độ)
+    protected AnimalState currentState;
+    
+    // Công cụ random dùng chung cho các lớp con
+    protected Random random;
 
-        // Giả sử khung hình của bạn là 800x600. Trừ hao kích thước con vật để không lẹm ra ngoài.
-        if (x <= 0 || x >= 780) {
-            vX = -vX; // Đụng tường dọc (trái/phải) -> Đổi chiều trục X
+    public Animal(Vector2D position, double size, double maxHp, double maxEnergy, double speed, double visionRadius) {
+        super(position, size); // Gọi constructor của Entity để set tọa độ và kích thước
+        
+        this.maxHp = maxHp;
+        this.hp = maxHp;             // Mới sinh ra mặc định đầy máu
+        
+        this.maxEnergy = maxEnergy;
+        this.energy = maxEnergy;     // Mới sinh ra mặc định đầy năng lượng
+        
+        this.speed = speed;
+        this.visionRadius = visionRadius;
+        
+        this.velocity = new Vector2D(0, 0); // Đứng yên lúc mới sinh
+        this.currentState = AnimalState.WANDERING; // Mặc định là đi dạo
+        this.random = new Random();
+    }
+
+    // Override phương thức trừu tượng từ Entity
+    @Override
+    public void update() {
+        if (!isAlive) return; // Nếu đã chết thì ngắt luôn, không làm gì cả
+
+        // 1. Tiêu hao thể lực theo thời gian
+        decreaseEnergy();
+        
+        // 2. Kiểm tra sinh tồn
+        if (hp <= 0 || energy <= 0) {
+            this.currentState = AnimalState.DEAD;
+            this.destroy(); // Đánh dấu isAlive = false (kế thừa từ Entity)
+            return; // Chết rồi thì không di chuyển nữa
         }
-        if (y <= 0 || y >= 560) {
-            vY = -vY; // Đụng tường ngang (trên/dưới) -> Đổi chiều trục Y
+
+        // 3. Xử lý hành vi dựa trên Trạng thái hiện tại
+        switch (currentState) {
+            case WANDERING:
+                wander();
+                break;
+            case CHASING:
+                // Kẻ thù sẽ ghi đè (override) logic này ở lớp Carnivore
+                break;
+            case FLEEING:
+                // Con mồi sẽ ghi đè (override) logic này ở lớp Herbivore
+                break;
+            case EATING:
+                // Dừng lại để hồi năng lượng (vận tốc = 0)
+                velocity.setX(0);
+                velocity.setY(0);
+                break;
+            case HIDING:
+                // Trốn trong bụi rậm, không di chuyển
+                velocity.setX(0);
+                velocity.setY(0);
+                break;
+            default:
+                break;
+        }
+        
+        // 4. Cộng vận tốc vào tọa độ để tạo ra sự di chuyển trên màn hình
+        position.add(velocity);
+    }
+
+    // --- CÁC HÀM LOGIC CƠ BẢN ---
+
+    // Thuật toán đi dạo ngẫu nhiên
+    protected void wander() {
+        // Chỉ có 5% cơ hội đổi hướng mỗi Tick để đường đi mượt mà, không bị giật cục
+        if (random.nextDouble() < 0.05) { 
+            // Tạo một góc ngẫu nhiên từ 0 đến 360 độ (2 PI rad)
+            double angle = random.nextDouble() * 2 * Math.PI; 
+            
+            // Tính toán vector vận tốc (Đi dạo thì chỉ đi với 50% tốc độ tối đa)
+            velocity.setX(Math.cos(angle) * speed * 0.5); 
+            velocity.setY(Math.sin(angle) * speed * 0.5);
         }
     }
 
-    // Hàm trừu tượng: Ép các loài cụ thể phải tự định nghĩa tiếng kêu
-    public abstract void makeSound();
+    private void decreaseEnergy() {
+        // Giảm một lượng nhỏ năng lượng qua mỗi vòng lặp
+        this.energy -= 0.02; 
+    }
+
+    // --- GETTERS & SETTERS (Tính đóng gói - Encapsulation) ---
+    
+    public AnimalState getCurrentState() {
+        return currentState;
+    }
+
+    public void setCurrentState(AnimalState currentState) {
+        this.currentState = currentState;
+    }
+
+    public double getVisionRadius() {
+        return visionRadius;
+    }
 }
