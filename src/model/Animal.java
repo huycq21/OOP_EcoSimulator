@@ -1,9 +1,9 @@
 package model;
 
-import java.util.Random;
+import model.strategy.SurvivalStrategy;
 
 public abstract class Animal extends Entity {
-    // Các chỉ số sinh tồn cơ bản
+    // 1. Các chỉ số sinh tồn cơ bản
     protected double hp;
     protected double maxHp;
     protected double energy;
@@ -11,96 +11,72 @@ public abstract class Animal extends Entity {
     protected double speed;
     protected double visionRadius;
     
-    // Quản lý di chuyển và trạng thái
-    protected Vector2D velocity; // Vận tốc hiện tại (hướng + tốc độ)
+    // 2. Trạng thái và Vật lý (Di chuyển)
+    protected Vector2D velocity; 
     protected AnimalState currentState;
     
-    // Công cụ random dùng chung cho các lớp con
-    protected Random random;
+    // 3. ĐÂY CHÍNH LÀ BỘ NÃO (Strategy Pattern)
+    protected SurvivalStrategy brain; 
 
+    // Constructor
     public Animal(Vector2D position, double size, double maxHp, double maxEnergy, double speed, double visionRadius) {
-        super(position, size); // Gọi constructor của Entity để set tọa độ và kích thước
+        super(position, size); 
         
         this.maxHp = maxHp;
-        this.hp = maxHp;             // Mới sinh ra mặc định đầy máu
+        this.hp = maxHp;             
         
         this.maxEnergy = maxEnergy;
-        this.energy = maxEnergy;     // Mới sinh ra mặc định đầy năng lượng
+        this.energy = maxEnergy;     
         
         this.speed = speed;
         this.visionRadius = visionRadius;
         
-        this.velocity = new Vector2D(0, 0); // Đứng yên lúc mới sinh
-        this.currentState = AnimalState.WANDERING; // Mặc định là đi dạo
-        this.random = new Random();
+        this.velocity = new Vector2D(0, 0); 
+        this.currentState = AnimalState.WANDERING; 
     }
 
-    // Override phương thức trừu tượng từ Entity
     @Override
     public void update() {
-        if (!isAlive) return; // Nếu đã chết thì ngắt luôn, không làm gì cả
+        if (!isAlive) return; 
 
-        // 1. Tiêu hao thể lực theo thời gian
+        // 1. Giảm thể lực theo thời gian
         decreaseEnergy();
         
-        // 2. Kiểm tra sinh tồn
+        // 2. Kiểm tra sinh tử
         if (hp <= 0 || energy <= 0) {
             this.currentState = AnimalState.DEAD;
-            this.destroy(); // Đánh dấu isAlive = false (kế thừa từ Entity)
-            return; // Chết rồi thì không di chuyển nữa
+            this.destroy(); 
+            return; 
         }
 
-        // 3. Xử lý hành vi dựa trên Trạng thái hiện tại
-        switch (currentState) {
-            case WANDERING:
-                wander();
-                break;
-            case CHASING:
-                // Kẻ thù sẽ ghi đè (override) logic này ở lớp Carnivore
-                break;
-            case FLEEING:
-                // Con mồi sẽ ghi đè (override) logic này ở lớp Herbivore
-                break;
-            case EATING:
-                // Dừng lại để hồi năng lượng (vận tốc = 0)
-                velocity.setX(0);
-                velocity.setY(0);
-                break;
-            case HIDING:
-                // Trốn trong bụi rậm, không di chuyển
-                velocity.setX(0);
-                velocity.setY(0);
-                break;
-            default:
-                break;
+        // 3. UỶ QUYỀN SUY NGHĨ CHO BỘ NÃO
+        // Thú vị ở đây: Class Animal không cần biết nó đang chạy trốn hay đi dạo.
+        // Nó chỉ gọi cái "não" ra và bảo: "Mày tính toán hướng đi cho tao đi!"
+        if (this.brain != null) {
+            this.brain.execute(this); 
         }
         
-        // 4. Cộng vận tốc vào tọa độ để tạo ra sự di chuyển trên màn hình
+        // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
+        // Vận tốc này vừa được cái "não" ở bước 3 tính toán xong
         position.add(velocity);
     }
 
-    // --- CÁC HÀM LOGIC CƠ BẢN ---
-
-    // Thuật toán đi dạo ngẫu nhiên
-    protected void wander() {
-        // Chỉ có 5% cơ hội đổi hướng mỗi Tick để đường đi mượt mà, không bị giật cục
-        if (random.nextDouble() < 0.05) { 
-            // Tạo một góc ngẫu nhiên từ 0 đến 360 độ (2 PI rad)
-            double angle = random.nextDouble() * 2 * Math.PI; 
-            
-            // Tính toán vector vận tốc (Đi dạo thì chỉ đi với 50% tốc độ tối đa)
-            velocity.setX(Math.cos(angle) * speed * 0.5); 
-            velocity.setY(Math.sin(angle) * speed * 0.5);
-        }
-    }
-
+    // Hàm giảm năng lượng cơ bản
     private void decreaseEnergy() {
-        // Giảm một lượng nhỏ năng lượng qua mỗi vòng lặp
-        this.energy -= 0.02; 
+        this.energy -= 0.02; // Có thể đưa hệ số này ra SimulationConstant cho dễ chỉnh
     }
 
-    // --- GETTERS & SETTERS (Tính đóng gói - Encapsulation) ---
+    // --- CÁC HÀM GETTER / SETTER QUAN TRỌNG ---
     
+    // ĐÂY LÀ HÀM QUAN TRỌNG NHẤT ĐỂ "THAY NÃO"
+    public void setBrain(SurvivalStrategy newBrain) {
+        this.brain = newBrain;
+    }
+    
+    public SurvivalStrategy getBrain() {
+        return brain;
+    }
+
     public AnimalState getCurrentState() {
         return currentState;
     }
@@ -109,7 +85,25 @@ public abstract class Animal extends Entity {
         this.currentState = currentState;
     }
 
+    public Vector2D getVelocity() {
+        return velocity;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
     public double getVisionRadius() {
         return visionRadius;
     }
+
+    public double getEnergy() {
+        return energy;
+    }
+
+    public double getMaxEnergy() {
+        return maxEnergy;
+    }
+    
+    // (Bạn có thể thêm các getter/setter khác cho hp, maxHp... nếu cần)
 }
