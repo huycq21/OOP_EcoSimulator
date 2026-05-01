@@ -55,7 +55,6 @@ public abstract class Animal extends Entity {
         if (this.brain != null) {
             this.brain.execute(this); 
         }
-        
         // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
         // Vận tốc này vừa được cái "não" ở bước 3 tính toán xong
         position.add(velocity);
