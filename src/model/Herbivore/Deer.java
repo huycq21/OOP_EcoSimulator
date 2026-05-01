@@ -15,3 +15,4 @@ public class Deer extends Herbivore {
         this.setBrain(new PassiveStrategy());
     }
 }
+ 
