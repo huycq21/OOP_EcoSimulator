@@ -1,11 +1,13 @@
 package model;
 
 import model.strategy.SurvivalStrategy;
+import model.*;
 
-public abstract class Animal extends Entity {
+public abstract class Animal extends Entity implements Ageable {
     // 1. Các chỉ số sinh tồn cơ bản
     protected double hp;
-
+    protected int age;
+    protected int maxAge;
     protected double maxHp;
     protected double energy;
     protected double maxEnergy;
@@ -42,9 +44,11 @@ public abstract class Animal extends Entity {
 
         // 1. Giảm thể lực theo thời gian
         decreaseEnergy();
-        
+        // Mỗi khung hình, tăng tuổi
+        growOlder();
+
         // 2. Kiểm tra sinh tử
-        if (hp <= 0 || energy <= 0) {
+        if (hp <= 0 || energy <= 0 || isTooOld()) {
             this.currentState = AnimalState.DEAD;
             this.destroy(); 
             return; 
@@ -83,6 +87,16 @@ public abstract class Animal extends Entity {
 
     public void setCurrentState(AnimalState currentState) {
         this.currentState = currentState;
+    }
+
+    @Override
+    public void growOlder() {
+        age++;
+    }
+
+    @Override
+    public boolean isTooOld() {
+        return age > maxAge;
     }
 
     public Vector2D getVelocity() {

@@ -6,6 +6,9 @@ import model.carnivore.*;
 import model.herbivore.*;
 import model.plant.*;
 import java.util.List;
+
+import apple.laf.JRSUIUtils.Tree;
+
 import java.util.ArrayList;
 
 public class CollisionHandler {
@@ -57,10 +60,10 @@ public class CollisionHandler {
         }
 
         // 2. TRƯỜNG HỢP: Động vật ăn cỏ đụng Thực vật (Ăn uống)
-        else if (e1 instanceof Herbivore && e2 instanceof Plant) {
-            handleEatingPlant((Herbivore) e1, (Plant) e2);
-        } else if (e2 instanceof Herbivore && e1 instanceof Plant) {
-            handleEatingPlant((Herbivore) e2, (Plant) e1);
+        else if (e1 instanceof Herbivore && e2 instanceof Eatable && !(e2 instanceof Carcass)) {
+            handleEating((Herbivore) e1, (Eatable) e2);
+        } else if (e2 instanceof Herbivore && e1 instanceof Eatable && !(e1 instanceof Carcass)) {
+            handleEating((Herbivore) e2, (Eatable) e1);
         }
 
         // 3. TRƯỜNG HỢP: Động vật đụng Bụi rậm / Chướng ngại vật
@@ -102,8 +105,16 @@ public class CollisionHandler {
     }
 
     // Xử lý ăn cỏ / nấm độc
-    private static void handleEatingPlant(Herbivore herbivore, Plant plant) {
-        double energyGot = plant.getEnergyValue();
+    private static void handleEatingPlant(Herbivore herbivore, Eatable food) {
+
+        if (food instanceof OldTree) {
+            // Giả sử các loài có size >= 5.0 (như Voi, Hươu cao cổ) mới với tới lá cây
+            if (herbivore.getSize() < 5.0) {
+                return; // Lùn quá với không tới, từ chối cho ăn, ép con vật đi tìm cỏ!
+            }
+        }
+
+        double energyGot = food.getEnergyValue();
 
         // Nếu năng lượng bằng 0 (ví dụ bụi Berry vừa bị vặt hết quả), thì không làm gì cả
         if (energyGot == 0) return;
@@ -113,13 +124,13 @@ public class CollisionHandler {
         herbivore.setEnergy(herbivore.getEnergy() + energyGot);
 
         // Nấm độc (Mushroom) có energyValue bị âm. Vừa bị trừ năng lượng, vừa trừ máu luôn cho chân thực!
-        if (plant instanceof Mushroom) {
+        if (food instanceof Mushroom) {
             herbivore.setHp(herbivore.getHp() - 20); // Trừ thẳng 20 máu
             System.out.println(herbivore.getClass().getSimpleName() + " ăn trúng nấm độc! Bị trừ máu.");
         }
 
         // Gọi hàm để cây biết nó vừa bị cắn (Cỏ thì chết, Berry thì mất trạng thái có quả)
-        plant.getEaten();
+        food.getEaten();
     }
 
     // Xử lý ăn Xác chết (Dành cho Sói hoặc Linh cẩu)

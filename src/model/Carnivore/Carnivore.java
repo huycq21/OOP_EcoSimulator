@@ -3,11 +3,14 @@ package model.carnivore;
 import model.Animal;
 import model.Vector2D;
 
+
 public abstract class Carnivore extends Animal {
     protected double strengthWeight;
     protected double attackDamage;      // Lực sát thương mỗi lần cắn
     protected int attackCooldown;       // Thời gian chờ giữa các lần tấn công (số tick)
     protected int currentCooldownTimer; // Bộ đếm thời gian chờ
+    protected int age;
+    protected int maxAge; 
 
     public Carnivore(Vector2D position, double size, double maxHp, double maxEnergy, 
                      double speed, double visionRadius, double strengthWeight, 
@@ -20,7 +23,8 @@ public abstract class Carnivore extends Animal {
         this.attackCooldown = attackCooldown;
         this.currentCooldownTimer = 0; // Sẵn sàng cắn ngay lần đầu chạm mặt
     }
-
+    
+    
     @Override
     public void update() {
         super.update(); // Gọi Animal update để di chuyển và giảm thể lực

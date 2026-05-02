@@ -4,7 +4,7 @@ import model.Eatable;
 import model.Ageable;
 import model.Vector2D;
 
-public class Berry extends Plant{
+public class Berry extends Plant implements Eatable, Ageable {
     private boolean hasFruits;  //Đang có quả hay không
     private int regrowthTime;   //Thời gian mọc lại quả
     private int currentRegrowthTimer;  // Bộ đếm thời gian mọc lại
@@ -47,7 +47,19 @@ public class Berry extends Plant{
         }
     }
 
+    @Override
+    public void growOlder() {
+        age++;
+    }
+    @Override
+    public boolean isTooOld() {
+        return age > maxAge;
+    }
+
     public boolean hasFruits() {
         return hasFruits;
+    }
+    public boolean isAlive() {
+        return isAlive;
     }
 }
