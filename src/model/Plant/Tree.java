@@ -1,10 +1,25 @@
 package model.plant;
 
 import model.Vector2D;
+import model.*;
 
-public class Tree {
+public class Tree extends Plant implements Eatable {
+    private double energyValue;
+
     public Tree(Vector2D position) {
-        // Kích thước: 5.0 (to lớn), Dinh dưỡng: 100, Tuổi thọ: 5000 (tick)
-        super(position, 8.0, 100.0, 10000);
+        super(position, 8.0, 150, 20000); // Kích thước khổng lồ
+        this.energyValue = 100.0; // Chứa rất nhiều lá cây
+    }
+
+    // --- Triển khai 2 hàm bắt buộc của interface Eatable ---
+    
+    @Override
+    public double getEnergyValue() {
+        return this.energyValue;
+    }
+
+    @Override
+    public void getEaten() {
+        this.destroy();
     }
 }

@@ -3,12 +3,13 @@ package model.environment;
 import model.Entity;
 import java.util.ArrayList;
 import java.util.List;
+import model.Vector2D;
 
 public class Bush extends Obstacle implements Hideable {
     private List<Entity> hiddenEntities;
 
-    public Bush(Vector2D position) {
-        super(position); // Gọi constructor của Obstacle/Entity
+    public Bush(Vector2D position, double size) {
+        super(position, size); // Gọi constructor của Obstacle/Entity
         this.hiddenEntities = new ArrayList<>();
     }
 

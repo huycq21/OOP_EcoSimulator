@@ -5,6 +5,7 @@ import model.strategy.SurvivalStrategy;
 public abstract class Animal extends Entity {
     // 1. Các chỉ số sinh tồn cơ bản
     protected double hp;
+
     protected double maxHp;
     protected double energy;
     protected double maxEnergy;
@@ -103,6 +104,14 @@ public abstract class Animal extends Entity {
     public double getMaxEnergy() {
         return maxEnergy;
     }
-    
+    public double getHp() {
+        return hp;
+    }
+    public void setHp(double x) {
+        this.hp = x;
+    }
+    public void setEnergy(double energy) {
+        this.energy = energy;
+    }
     // (Bạn có thể thêm các getter/setter khác cho hp, maxHp... nếu cần)
 }
