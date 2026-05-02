@@ -8,7 +8,6 @@ public class Tree extends Plant implements Eatable {
 
     public Tree(Vector2D position) {
         super(position, 8.0, 150, 20000); // Kích thước khổng lồ
-        this.energyValue = 100.0; // Chứa rất nhiều lá cây
     }
 
     // --- Triển khai 2 hàm bắt buộc của interface Eatable ---
