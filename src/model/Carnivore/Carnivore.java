@@ -2,6 +2,7 @@ package model.carnivore;
 
 import model.Animal;
 import model.Vector2D;
+import model.*;
 
 
 public abstract class Carnivore extends Animal {
@@ -23,7 +24,6 @@ public abstract class Carnivore extends Animal {
         this.attackCooldown = attackCooldown;
         this.currentCooldownTimer = 0; // Sẵn sàng cắn ngay lần đầu chạm mặt
     }
-    
     
     @Override
     public void update() {

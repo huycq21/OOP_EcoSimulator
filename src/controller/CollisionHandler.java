@@ -7,8 +7,6 @@ import model.herbivore.*;
 import model.plant.*;
 import java.util.List;
 
-import apple.laf.JRSUIUtils.Tree;
-
 import java.util.ArrayList;
 
 public class CollisionHandler {
@@ -59,7 +57,7 @@ public class CollisionHandler {
             handleCombat((Carnivore) e2, (Herbivore) e1, newEntities);
         }
 
-        // 2. TRƯỜNG HỢP: Động vật ăn cỏ đụng Thực vật (Ăn uống)
+        // 2. TRƯỜNG HỢP: Động vật ăn cỏ đụng Eatable (có thể là cây cỏ để ăn hoặc bụi rậm để trốn)
         else if (e1 instanceof Herbivore && e2 instanceof Eatable && !(e2 instanceof Carcass)) {
             handleEating((Herbivore) e1, (Eatable) e2);
         } else if (e2 instanceof Herbivore && e1 instanceof Eatable && !(e1 instanceof Carcass)) {
@@ -105,13 +103,30 @@ public class CollisionHandler {
     }
 
     // Xử lý ăn cỏ / nấm độc
-    private static void handleEatingPlant(Herbivore herbivore, Eatable food) {
+    private static void handleEating(Herbivore herbivore, Eatable food) {
 
         if (food instanceof OldTree) {
             // Giả sử các loài có size >= 5.0 (như Voi, Hươu cao cổ) mới với tới lá cây
             if (herbivore.getSize() < 5.0) {
-                return; // Lùn quá với không tới, từ chối cho ăn, ép con vật đi tìm cỏ!
+                return; 
+                // Lùn quá với không tới, từ chối cho ăn, ép con vật đi tìm cỏ!
             }
+            //Voi có thể ăn được lá cây lớn
+            double leafGot = food.getEnergyValue();
+            herbivore.setHp(herbivore.getHp() + leafGot * 0.5);
+            herbivore.setEnergy(herbivore.getEnergy() + leafGot);
+            food.getEaten();
+            return;
+
+        } else if (food instanceof SmallTree) { //Nếu là cây non thì ăn luôn
+            if (herbivore instanceof Elephant) {
+                // Voi có thể ăn được cây nhỏ
+                double energyGot = food.getEnergyValue();
+                herbivore.setHp(herbivore.getHp() + energyGot * 0.5); // Cỏ có thể hồi máu, nấm độc thì trừ máu (x0.5 để cân bằng)
+                herbivore.setEnergy(herbivore.getEnergy() + energyGot);
+                food.getEaten();
+            }
+            return;
         }
 
         double energyGot = food.getEnergyValue();
@@ -144,6 +159,7 @@ public class CollisionHandler {
     // Xử lý đụng tường / chui bụi rậm
     private static void handleObstacleCollision(Animal animal, Obstacle obstacle) {
         // Nếu chướng ngại vật là một chỗ trốn (Hideable) như Bush
+        if (animal instanceof Elephant) return; // Voi thì không bị chướng ngại vật nào cản được, bỏ qua hết
         if (obstacle instanceof Hideable) {
             Hideable hideable = (Hideable) obstacle;
             
