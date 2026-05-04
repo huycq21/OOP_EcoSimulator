@@ -4,7 +4,7 @@ import model.Vector2D;
 import model.strategy.HunterStrategy;
 import model.*;
 
-public class Fox extends Carnivore implements Ageable {
+public class Fox extends Carnivore {
     public Fox(Vector2D position) {
         // ... các thông số cũ ...
         // Bổ sung: 

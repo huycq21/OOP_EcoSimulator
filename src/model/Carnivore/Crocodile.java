@@ -4,7 +4,7 @@ import model.Vector2D;
 import model.*;
 import model.strategy.HunterStrategy;
 
-public class Crocodile extends Carnivore implements Ageable {
+public class Crocodile extends Carnivore {
 
     public Crocodile(Vector2D position) {
         // Tốc độ 1.5 cực chậm, nhưng damage 150.0 cực khủng

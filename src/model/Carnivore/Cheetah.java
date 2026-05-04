@@ -4,7 +4,7 @@ import model.Vector2D;
 import model.strategy.HunterStrategy;
 import model.*;
 
-public class Cheetah extends Carnivore implements Ageable {
+public class Cheetah extends Carnivore {
 
     public Cheetah(Vector2D position) {
         // Thứ tự super: position, size, maxHp, maxEnergy, speed, visionRadius, strengthWeight, attackDamage, attackCooldown
