@@ -6,42 +6,41 @@ import model.carnivore.*;
 import model.herbivore.*;
 import model.plant.*;
 import java.util.List;
-
 import java.util.ArrayList;
 
 public class CollisionHandler {
 
-    // Hàm chính được gọi mỗi khung hình để kiểm tra toàn bộ thực thể
     public static void processCollisions(Environment env) {
         List<Entity> entities = env.getEntities();
-        
-        // Danh sách lưu trữ các thực thể mới sinh ra (ví dụ: Xác chết)
-        // Phải dùng danh sách tạm để tránh lỗi khi đang lặp qua mảng chính
         List<Entity> newEntities = new ArrayList<>();
 
-        // Thuật toán quét va chạm (O(N^2)) - So sánh từng cặp với nhau
-        for (int i = 0; i < entities.size(); i++) {
-            Entity e1 = entities.get(i);
+        QuadTree qTree = env.getQuadTree();
+
+        for (Entity e1 : entities) {
             if (!e1.isAlive()) continue;
 
-            for (int j = i + 1; j < entities.size(); j++) {
-                Entity e2 = entities.get(j);
-                if (!e2.isAlive()) continue;
+            double searchRadius = e1.getSize() * 2; 
+            
+            Rectangle searchRange = new Rectangle(
+                    e1.getPosition().getX(), 
+                    e1.getPosition().getY(), 
+                    searchRadius, searchRadius
+            );
 
-                // Tính khoảng cách giữa 2 tâm của vật thể
-                double distance = e1.getPosition().distanceTo(e2.getPosition());
-                
-                // Khoảng cách va chạm = Tổng 2 bán kính (size / 2)
-                double collisionRadius = (e1.getSize() + e2.getSize()) / 2.0;
 
-                // NẾU CHẠM NHAU!
-                if (distance < collisionRadius) {
-                    resolveCollision(e1, e2, newEntities);
+            List<Entity> nearbyEntities = qTree.query(searchRange, null);
+
+            for (Entity e2 : nearbyEntities) {
+                if (e1 != e2 && e2.isAlive()) {
+                    double distance = e1.getPosition().distanceTo(e2.getPosition());
+                    double collisionRadius = (e1.getSize() + e2.getSize()) / 2.0;
+
+                    if (distance < collisionRadius) {
+                        resolveCollision(e1, e2, newEntities);
+                    }
                 }
             }
         }
-
-        // Thêm các thực thể mới (như Carcass) vào bản đồ
         for (Entity newEntity : newEntities) {
             env.addEntity(newEntity);
         }

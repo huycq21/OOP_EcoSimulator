@@ -6,12 +6,10 @@ import model.*;
 
 
 public abstract class Carnivore extends Animal {
-    protected double strengthWeight;
+    protected double strengthWeight;    // Mức độ đe dọa
     protected double attackDamage;      // Lực sát thương mỗi lần cắn
     protected int attackCooldown;       // Thời gian chờ giữa các lần tấn công (số tick)
     protected int currentCooldownTimer; // Bộ đếm thời gian chờ
-    protected int age;
-    protected int maxAge; 
 
     public Carnivore(Vector2D position, double size, double maxHp, double maxEnergy, 
                      double speed, double visionRadius, double strengthWeight, 
