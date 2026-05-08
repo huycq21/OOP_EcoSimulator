@@ -6,6 +6,7 @@ import model.Entity;
 import model.Vector2D;
 import model.carnivore.Carnivore;
 import model.environment.Environment;
+import model.environment.Rectangle; // Chú ý import thêm Rectangle
 import java.util.List;
 
 public class ScaredStrategy implements SurvivalStrategy {
@@ -50,22 +51,36 @@ public class ScaredStrategy implements SurvivalStrategy {
             prey.getVelocity().setY(fleeVector.getY());
 
         } else {
-            // 4. Nếu không có sói, quay lại đi dạo ăn cỏ bình thường
+            // 4. Nếu không có thú săn mồi, quay lại đi dạo ăn cỏ bình thường
             wanderLogic.execute(prey);
         }
     }
 
+    // --- ĐÃ ĐƯỢC NÂNG CẤP BẰNG QUADTREE ---
     private Entity findNearestPredator(Animal prey) {
         Entity nearest = null;
-        double minDistance = prey.getVisionRadius(); 
+        double vision = prey.getVisionRadius(); 
+        double minDistance = vision;
 
-        List<Entity> allEntities = Environment.getInstance().getEntities();
+        // 1. Tạo vùng radar (hình chữ nhật) bao quanh tầm nhìn
+        Rectangle searchRange = new Rectangle(
+            prey.getPosition().getX(),
+            prey.getPosition().getY(),
+            vision * 2, 
+            vision * 2
+        );
 
-        for (Entity e : allEntities) {
-            if (e instanceof Carnivore && e.isAlive()) {
+        // 2. Lấy danh sách từ QuadTree siêu nhanh
+        List<Entity> nearbyEntities = Environment.getInstance().getQuadTree().query(searchRange, null);
+
+        for (Entity e : nearbyEntities) {
+            // Chỉ sợ những kẻ là thú ăn thịt (Carnivore) và đang còn sống
+            if (e instanceof Carnivore && e.isAlive()&& prey.getSize() < e.getSize() * 1.5) {
                 double dist = prey.getPosition().distanceTo(e.getPosition());
                 
-                if (dist < minDistance) {
+                // QuadTree trả về hình chữ nhật, nên ta phải check lại xem 
+                // con sói có thực sự nằm trong "vòng tròn" tầm nhìn hay không (dist <= vision)
+                if (dist <= vision && dist < minDistance) {
                     minDistance = dist;
                     nearest = e;
                 }

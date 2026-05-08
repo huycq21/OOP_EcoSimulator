@@ -5,12 +5,19 @@ public class Carcass extends Entity implements Eatable, Ageable {
     private double meatLeft; // Lượng thịt (năng lượng) còn lại
     private int age;         // Thời gian đã phân hủy
     private int maxAge;      // Thời gian tối đa trước khi thối rữa hoàn toàn (biến mất)
+    // THÊM BIẾN NÀY ĐỂ NHỚ KIẾP TRƯỚC
+    private Class<?> originalSpecies;
 
-    public Carcass(Vector2D position, double size, double totalMeat) {
+    public Carcass(Vector2D position, double size, double totalMeat, Class<?> originalSpecies) {
         super(position, size);
         this.meatLeft = totalMeat;
         this.age = 0;
         this.maxAge = 3000; // Tương đương khoảng 48 giây (nếu 1 tick = 16ms), sau đó xác tự biến mất
+        this.originalSpecies = originalSpecies;
+    }
+
+    public Class<?> getOriginalSpecies() {
+        return originalSpecies;
     }
 
     @Override

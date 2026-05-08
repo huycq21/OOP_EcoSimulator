@@ -12,6 +12,7 @@ public abstract class Animal extends Entity implements Ageable {
     protected double energy;
     protected double maxEnergy;
     protected double speed;
+
     protected double visionRadius;
     
     // 2. Trạng thái và Vật lý (Di chuyển)
@@ -125,7 +126,14 @@ public abstract class Animal extends Entity implements Ageable {
         this.hp = x;
     }
     public void setEnergy(double energy) {
-        this.energy = energy;
+        if(energy > maxEnergy) {
+            this.energy = maxEnergy;
+        } else {
+            this.energy = energy;
+        }
+    }
+    public void setSpeed(double speed) {
+        this.speed = speed;
     }
     // (Bạn có thể thêm các getter/setter khác cho hp, maxHp... nếu cần)
 }

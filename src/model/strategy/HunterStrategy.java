@@ -1,83 +1,144 @@
 package model.strategy;
 
-import model.Animal;
-import model.AnimalState;
-import model.Entity;
-import model.Vector2D;
+import model.*;
 import model.herbivore.Herbivore;
-import model.environment.Environment; // Cần import cái này để lấy danh sách sinh vật
+import model.carnivore.Carnivore;
+import model.apex.Eagle;
+import model.environment.Environment;
+import model.environment.Rectangle; // Import thêm Rectangle để dùng QuadTree
 import java.util.List;
 
 public class HunterStrategy implements SurvivalStrategy {
-    // Tái sử dụng lại logic đi dạo nếu không có con mồi nào ở gần
-    private PassiveStrategy wanderLogic;
+    // Đổi PassiveStrategy cứng nhắc thành một SurvivalStrategy linh hoạt
+    private SurvivalStrategy idleLogic; 
 
+    // Constructor 1: Mặc định (như cũ) - Đi dạo khi rảnh
     public HunterStrategy() {
-        this.wanderLogic = new PassiveStrategy();
+        this.idleLogic = new PassiveStrategy();
+    }
+
+    // Constructor 2: MỚI - Cho phép nạp tập tính bầy đàn (hoặc bất cứ gì) khi rảnh
+    public HunterStrategy(SurvivalStrategy customIdleLogic) {
+        this.idleLogic = customIdleLogic;
     }
 
     @Override
     public void execute(Animal hunter) {
-        // 1. Quét tìm con mồi gần nhất
-        Entity target = findNearestPrey(hunter);
+        Entity target = findNearestCorpse(hunter);
+        boolean isScavenging = true;
+
+        if (target == null) {
+            target = findNearestPrey(hunter);
+            isScavenging = false;
+        }
 
         if (target != null) {
-            // Đã thấy mồi! Đổi nhãn trạng thái thành ĐANG SĂN MỒI
-            hunter.setCurrentState(AnimalState.CHASING);
-
-            // 2. Toán học Vector: Tính toán hướng lao tới con mồi
+            hunter.setCurrentState(isScavenging ? AnimalState.EATING : AnimalState.CHASING);
             Vector2D hunterPos = hunter.getPosition();
             Vector2D targetPos = target.getPosition();
-
-            // Lấy tọa độ Đích trừ tọa độ Nguồn sẽ ra Vector hướng
             double dx = targetPos.getX() - hunterPos.getX();
             double dy = targetPos.getY() - hunterPos.getY();
-
-            Vector2D chaseVector = new Vector2D(dx, dy);
-
-            // Chuẩn hóa vector (rút ngắn độ dài vector về 1) 
-            // để đảm bảo con vật không dịch chuyển tức thời đến chỗ con mồi
-            chaseVector.normalize();
-
-            // Nhân vector hướng (độ dài 1) với tốc độ của kẻ đi săn
-            // Đi săn thì chạy bằng 100% tốc độ tối đa (speed)
-            chaseVector.setX(chaseVector.getX() * hunter.getSpeed());
-            chaseVector.setY(chaseVector.getY() * hunter.getSpeed());
-
-            // 3. Cập nhật vận tốc mới để lớp Animal mang đi di chuyển
-            hunter.getVelocity().setX(chaseVector.getX());
-            hunter.getVelocity().setY(chaseVector.getY());
-
+            
+            Vector2D moveVector = new Vector2D(dx, dy);
+            moveVector.normalize();
+            moveVector.setX(moveVector.getX() * hunter.getSpeed());
+            moveVector.setY(moveVector.getY() * hunter.getSpeed());
+            
+            hunter.getVelocity().setX(moveVector.getX());
+            hunter.getVelocity().setY(moveVector.getY());
         } else {
-            // 4. Nếu không thấy ai, gọi bộ não đi dạo ra chạy hộ!
-            wanderLogic.execute(hunter);
+            // BÍ QUYẾT LÀ Ở ĐÂY: Khi không đi săn, gọi não bộ dự phòng!
+            idleLogic.execute(hunter); 
         }
     }
 
-    // --- HÀM HỖ TRỢ: DÒ RADAR TÌM CON MỒI ---
-    private Entity findNearestPrey(Animal hunter) {
-        Entity nearest = null;
-        double minDistance = hunter.getVisionRadius(); // Chỉ quét trong bán kính tầm nhìn
+    // --- HÀM TÌM XÁC CHẾT (ĐÃ DÙNG QUADTREE & CẤM ĂN ĐỒNG LOẠI) ---
+    public Entity findNearestCorpse(Animal hunter) {
+        Entity nearestCorpse = null;
+        double vision = hunter.getVisionRadius();
+        double minDistance = vision;
 
-        // Lấy danh sách tất cả sinh vật trên bản đồ. 
-        // LƯU Ý: Chỗ này yêu cầu class Environment của bạn phải có pattern Singleton (getInstance())
-        // Hoặc sau này bạn sẽ thay bằng cấu trúc QuadTree mà ta đã bàn!
-        List<Entity> allEntities = Environment.getInstance().getEntities();
+        // 1. Tạo vùng quét bằng tầm nhìn của con vật
+        Rectangle searchRange = new Rectangle(
+            hunter.getPosition().getX(), 
+            hunter.getPosition().getY(), 
+            vision * 2, vision * 2
+        );
 
-        for (Entity e : allEntities) {
-            // Nếu thực thể đó là Thú ăn cỏ VÀ đang sống VÀ không phải đang trốn
-            if (e instanceof Herbivore && e.isAlive() && ((Herbivore) e).getCurrentState() != AnimalState.HIDING) {
-                
-                // Tính khoảng cách
+        // 2. Lấy danh sách thực thể xung quanh từ QuadTree (Siêu nhanh)
+        List<Entity> nearbyEntities = Environment.getInstance().getQuadTree().query(searchRange, null);
+
+        for (Entity e : nearbyEntities) {
+            // Xác chết = Động vật VÀ Đã chết VÀ KHÔNG CÙNG LOÀI
+            if (e instanceof Carcass && e.getClass() != hunter.getClass()) {
                 double dist = hunter.getPosition().distanceTo(e.getPosition());
                 
-                // Nếu nằm trong tầm nhìn và gần hơn mục tiêu trước đó
-                if (dist < minDistance) {
+                // Vẫn phải check khoảng cách vì QuadTree trả về hình chữ nhật, tầm nhìn là hình tròn
+                if (dist <= vision && dist < minDistance) {
                     minDistance = dist;
-                    nearest = e;
+                    nearestCorpse = e;
                 }
             }
         }
-        return nearest;
+        return nearestCorpse;
+    }
+
+    // --- HÀM TÌM MỒI SỐNG (ĐÃ DÙNG QUADTREE & CẤM SĂN ĐỒNG LOẠI) ---
+    public Entity findNearestPrey(Animal hunter) {
+        Entity nearestPrey = null;
+        double vision = hunter.getVisionRadius();
+        double minDistance = vision;
+
+        // 1. Tạo vùng quét bằng QuadTree
+        Rectangle searchRange = new Rectangle(
+            hunter.getPosition().getX(), 
+            hunter.getPosition().getY(), 
+            vision * 2, vision * 2
+        );
+
+        List<Entity> nearbyEntities = Environment.getInstance().getQuadTree().query(searchRange, null);
+
+        for (Entity e : nearbyEntities) {
+            // Đang sống VÀ không nấp VÀ KHÔNG CÙNG LOÀI
+            if (e instanceof Animal && e.isAlive() && 
+                ((Animal) e).getCurrentState() != AnimalState.HIDING && 
+                e.getClass() != hunter.getClass()) { 
+                
+                Animal preyCandidate = (Animal) e;
+                boolean isValidPrey = false;
+
+                // 1. NẾU LÀ THÚ ĂN CỎ
+                if (preyCandidate instanceof Herbivore) {
+                    if (hunter instanceof Eagle) {
+                        if (preyCandidate.getSize() <= 5.0) isValidPrey = true;
+                    } else {
+                        isValidPrey = true; 
+                    }
+                } 
+                // 2. NẾU LÀ THÚ ĂN THỊT KHÁC LOÀI -> Cá lớn nuốt cá bé
+                else if (preyCandidate instanceof Carnivore && hunter instanceof Carnivore) {
+                    Carnivore predator = (Carnivore) hunter;
+                    Carnivore prey = (Carnivore) preyCandidate;
+
+                    // Chỉ săn nếu áp đảo hoàn toàn (> 1.3 lần đe dọa)
+                    if (predator.getStrengthWeight() > prey.getStrengthWeight() * 1.3) {
+                        if (hunter instanceof Eagle) {
+                            if (prey.getSize() <= 5.0) isValidPrey = true;
+                        } else {
+                            isValidPrey = true;
+                        }
+                    }
+                }
+
+                if (isValidPrey) {
+                    double dist = hunter.getPosition().distanceTo(preyCandidate.getPosition());
+                    if (dist <= vision && dist < minDistance) {
+                        minDistance = dist;
+                        nearestPrey = preyCandidate;
+                    }
+                }
+            }
+        }
+        return nearestPrey;
     }
 }

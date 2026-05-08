@@ -2,6 +2,7 @@ package controller;
 
 import model.environment.*;
 import model.*;
+import model.apex.ApexEntity;
 import model.carnivore.*;
 import model.herbivore.*;
 import model.plant.*;
@@ -27,7 +28,6 @@ public class CollisionHandler {
                     searchRadius, searchRadius
             );
 
-
             List<Entity> nearbyEntities = qTree.query(searchRange, null);
 
             for (Entity e2 : nearbyEntities) {
@@ -36,7 +36,8 @@ public class CollisionHandler {
                     double collisionRadius = (e1.getSize() + e2.getSize()) / 2.0;
 
                     if (distance < collisionRadius) {
-                        resolveCollision(e1, e2, newEntities);
+                        // CHÚ Ý 1: Truyền thêm 'env' vào đây
+                        resolveCollision(e1, e2, newEntities, env);
                     }
                 }
             }
@@ -47,57 +48,88 @@ public class CollisionHandler {
     }
 
     // --- PHÂN LOẠI VÀ XỬ LÝ TỪNG TRƯỜNG HỢP ---
-    private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntities) {
+    // CHÚ Ý 2: Thêm tham số Environment env
+    private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntities, Environment env) {
         
-        // 1. TRƯỜNG HỢP: Động vật ăn thịt đụng Động vật ăn cỏ
-        if (e1 instanceof Carnivore && e2 instanceof Herbivore) {
-            handleCombat((Carnivore) e1, (Herbivore) e2, newEntities);
-        } else if (e2 instanceof Carnivore && e1 instanceof Herbivore) {
-            handleCombat((Carnivore) e2, (Herbivore) e1, newEntities);
+        // 1. TRƯỜNG HỢP: ApexEntity đụng độ Thú ăn thịt thường (Ví dụ: Hổ vs Sói/Cáo)
+        if (e1 instanceof ApexEntity && e2 instanceof Carnivore && !(e2 instanceof ApexEntity)) {
+            handleCombat((Carnivore) e1, (Animal) e2, newEntities, env);
+        } else if (e2 instanceof ApexEntity && e1 instanceof Carnivore && !(e1 instanceof ApexEntity)) {
+            handleCombat((Carnivore) e2, (Animal) e1, newEntities, env);
         }
 
-        // 2. TRƯỜNG HỢP: Động vật ăn cỏ đụng Eatable (có thể là cây cỏ để ăn hoặc bụi rậm để trốn)
+        // 2. TRƯỜNG HỢP: Động vật ăn thịt (bao gồm cả Apex) đụng Động vật ăn cỏ
+        else if (e1 instanceof Carnivore && e2 instanceof Herbivore) {
+            handleCombat((Carnivore) e1, (Animal) e2, newEntities, env);
+        } else if (e2 instanceof Carnivore && e1 instanceof Herbivore) {
+            handleCombat((Carnivore) e2, (Animal) e1, newEntities, env);
+        }
+
+        // 3. TRƯỜNG HỢP: Động vật ăn cỏ đụng Eatable
         else if (e1 instanceof Herbivore && e2 instanceof Eatable && !(e2 instanceof Carcass)) {
             handleEating((Herbivore) e1, (Eatable) e2);
         } else if (e2 instanceof Herbivore && e1 instanceof Eatable && !(e1 instanceof Carcass)) {
             handleEating((Herbivore) e2, (Eatable) e1);
         }
 
-        // 3. TRƯỜNG HỢP: Động vật đụng Bụi rậm / Chướng ngại vật
+        // 4. TRƯỜNG HỢP: Động vật đụng Bụi rậm / Chướng ngại vật
         else if (e1 instanceof Animal && e2 instanceof Obstacle) {
             handleObstacleCollision((Animal) e1, (Obstacle) e2);
         } else if (e2 instanceof Animal && e1 instanceof Obstacle) {
             handleObstacleCollision((Animal) e2, (Obstacle) e1);
         }
 
-        // 4. TRƯỜNG HỢP: Thú ăn thịt đụng Xác chết (Ăn xác)
+        // 5. TRƯỜNG HỢP: Thú ăn thịt đụng Xác chết (Ăn xác)
         else if (e1 instanceof Carnivore && e2 instanceof Carcass) {
             handleEatingCarcass((Carnivore) e1, (Carcass) e2);
         } else if (e2 instanceof Carnivore && e1 instanceof Carcass) {
             handleEatingCarcass((Carnivore) e2, (Carcass) e1);
         }
+        // --- LUẬT MỚI: 2 THÚ ĂN THỊT ĐỤNG NHAU (TRANH GIÀNH) ---
+        if (e1 instanceof Carnivore && e2 instanceof Carnivore) {
+            handleTurfWar((Carnivore) e1, (Carnivore) e2, newEntities, env);
+        }
     }
 
     // --- CÁC HÀM XỬ LÝ CHI TIẾT ---
 
-    // Xử lý săn bắt và rơi ra Xác chết
-    private static void handleCombat(Carnivore predator, Herbivore prey, List<Entity> newEntities) {
-        // Nếu thỏ đang nấp trong bụi rậm thì Sói không cắn được
-        if (prey.getCurrentState() == AnimalState.HIDING) return;
+    // Đã đổi Herbivore thành Animal để Predator có thể thịt cả Carnivore nhỏ hơn
+    private static void handleCombat(Carnivore predator, Animal prey, List<Entity> newEntities, Environment env) {
+        // Xử lý cơ chế nấp lùm
+        if (prey.getCurrentState() == AnimalState.HIDING) {
+            if (predator instanceof Fox) {
+                // Cáo vẫn tấn công chay bình thường
+                predator.attack(prey);
+            } else {
+                return; // Kẻ khác (kể cả Hổ/Gấu) không thấy mồi trong lùm
+            }
+        } else {
+            // NẾU KHÔNG NẤP TRONG LÙM: Phân biệt Apex và Thường
+            if (predator instanceof ApexEntity) {
+                ApexEntity apex = (ApexEntity) predator;
+                
+                // Nếu chiêu đặc biệt đã hồi xong
+                if (apex.getCurrentCooldownTimer() <= 0) {
+                    apex.performSpecialAbility(env);
+                } else {
+                    // Đang hồi chiêu thì phải cắn chay
+                    apex.attack(prey);
+                }
+            } else {
+                // Thú ăn thịt thông thường cắn chay
+                predator.attack(prey);
+            }
+        }
 
-        // Thú ăn thịt gọi hàm cắn (có tính toán Cooldown ở bên trong class Carnivore)
-        predator.attack(prey);
-
-        // Nếu con mồi cạn máu
-        if (prey.getHp() <= 0) {
-            prey.destroy(); // Chết!
+        // KIỂM TRA MÁU VÀ RỚT XÁC (Áp dụng chung)
+        if (prey.getHp() <= 0 && prey.isAlive()) { // Thêm check isAlive để tránh rơi xác 2 lần
+            prey.destroy(); // Chuyển cờ isAlive = false
             
-            // TẠO RA XÁC CHẾT (CARCASS) TẠI ĐÚNG VỊ TRÍ ĐÓ
-            // Lượng thịt bằng chính năng lượng tối đa của con mồi
-            Carcass meat = new Carcass(prey.getPosition(), prey.getSize(), prey.getMaxEnergy());
+            Carcass meat = new Carcass(prey.getPosition(), prey.getSize(), prey.getMaxEnergy(), prey.getClass());
             newEntities.add(meat);
             
-            System.out.println("Một con " + prey.getClass().getSimpleName() + " đã bị hạ gục! Rơi ra cục thịt.");
+            System.out.println("CẢNH BÁO TỬ VONG: " + prey.getClass().getSimpleName() 
+                               + " đã bị hạ gục bởi " + predator.getClass().getSimpleName() + "! Rơi ra lượng thịt: " + meat.getEnergyValue());
         }
     }
 
@@ -147,10 +179,10 @@ public class CollisionHandler {
         food.getEaten();
     }
 
-    // Xử lý ăn Xác chết (Dành cho Sói hoặc Linh cẩu)
+    // Xử lý ăn Xác chết (Áp dụng cho cả Carnivore thường và Apex)
     private static void handleEatingCarcass(Carnivore carnivore, Carcass carcass) {
-        // Mỗi lần chạm, cắn một miếng 15.0 năng lượng
-        double bite = carcass.takeBite(15.0);
+        // Mỗi lần chạm, cắn một miếng năng lượng bằng sát thương của Carnivore
+        double bite = carcass.takeBite(carnivore.getAttackDamage());
         carnivore.setEnergy(carnivore.getEnergy() + bite);
         carnivore.setCurrentState(AnimalState.EATING);
     }
@@ -179,5 +211,76 @@ public class CollisionHandler {
         // Hiệu ứng dội ngược: Đảo ngược vận tốc để nảy ra
         animal.getVelocity().setX(animal.getVelocity().getX() * -1);
         animal.getVelocity().setY(animal.getVelocity().getY() * -1);
+    }
+
+    // --- HÀM MỚI: XỬ LÝ TRANH GIÀNH GIỮA CÁC LOÀI ĂN THỊT ---
+    private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEntities, Environment env) {
+        // Lấy sức mạnh thực tế (đã bao gồm bầy đàn)
+        double str1 = c1.getEffectiveStrength(env);
+        double str2 = c2.getEffectiveStrength(env);
+
+        // Phân loại Kẻ mạnh (Dominant) và Kẻ yếu (Submissive)
+        Carnivore dominant = str1 >= str2 ? c1 : c2;
+        Carnivore submissive = str1 >= str2 ? c2 : c1;
+
+        // Nếu kẻ mạnh áp đảo hoàn toàn kẻ yếu (ví dụ: Sức mạnh chênh lệch hơn 1.3 lần)
+        if (dominant.getEffectiveStrength(env) > submissive.getEffectiveStrength(env) * 1.3) {
+            
+            // KẺ YẾU KIỂM TRA ĐỘ ĐÓI
+            if (submissive.isStarving()) {
+                // Chó cùng dứt giậu! Đói quá rồi, liều mạng cắn trả!
+                System.out.println(submissive.getClass().getSimpleName() + " đang đói khát! Nó liều mạng tấn công " + dominant.getClass().getSimpleName() + "!");
+                
+                // Cả 2 cùng tấn công nhau (Dùng lại logic đánh nhau của bạn)
+                executeAttack(submissive, dominant, env);
+                executeAttack(dominant, submissive, env);
+                
+            } else {
+                // Chưa đến mức chết đói -> Sợ hãi, nhường đồ ăn và BỎ CHẠY
+                submissive.setCurrentState(AnimalState.FLEEING); // Chuyển state để né
+                
+                // Toán học Vector: Kẻ yếu nảy ngược/chạy trốn ra xa khỏi kẻ mạnh
+                double dx = submissive.getPosition().getX() - dominant.getPosition().getX();
+                double dy = submissive.getPosition().getY() - dominant.getPosition().getY();
+                Vector2D fleeVector = new Vector2D(dx, dy);
+                fleeVector.normalize();
+                
+                submissive.getVelocity().setX(fleeVector.getX() * submissive.getSpeed());
+                submissive.getVelocity().setY(fleeVector.getY() * submissive.getSpeed());
+                
+                // Kẻ mạnh có thể cắn với 1 cái làm cảnh cáo (tùy bạn)
+                executeAttack(dominant, submissive, env); 
+            }
+        } 
+        else {
+            // Sức mạnh ngang ngửa nhau (ví dụ: Bầy Linh cẩu đụng độ Hổ đơn độc) -> TỬ CHIẾN!
+            executeAttack(c1, c2, env);
+            executeAttack(c2, c1, env);
+        }
+
+        // Kiểm tra xem có đứa nào chết sau pha va chạm không để rơi thịt
+        checkDeathAndDropCarcass(c1, c2, newEntities);
+        checkDeathAndDropCarcass(c2, c1, newEntities);
+    }
+    // --- HÀM HỖ TRỢ ĐỂ TÁI SỬ DỤNG CODE TẤN CÔNG (DÙNG CHO CẢ APEX VÀ THƯỜNG) ---
+    private static void executeAttack(Carnivore attacker, Animal victim, Environment env) {
+        if (attacker instanceof ApexEntity) {
+            // ApexEntity giờ đã tự biết khi nào quăng chiêu, khi nào cắn chay!
+            ((ApexEntity) attacker).attack(victim, env);
+        } else {
+            // Carnivore thường cắn chay
+            attacker.attack(victim);
+        }
+    }
+
+    // --- HÀM HỖ TRỢ KIỂM TRA CHẾT VÀ RỚT XÁC ---
+    private static void checkDeathAndDropCarcass(Carnivore killer, Animal victim, List<Entity> newEntities) {
+        if (victim.getHp() <= 0 && victim.isAlive()) {
+            victim.destroy();
+            Carcass meat = new Carcass(victim.getPosition(), victim.getSize(), victim.getMaxEnergy(), victim.getClass());
+            newEntities.add(meat);
+            System.out.println("TỬ CHIẾN THÚ ĂN THỊT: " + victim.getClass().getSimpleName() 
+                               + " đã bị xé xác bởi " + killer.getClass().getSimpleName() + "!");
+        }
     }
 }

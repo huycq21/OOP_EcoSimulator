@@ -1,8 +1,10 @@
 package model.carnivore;
 
-import model.Animal;
-import model.Vector2D;
+import java.util.List;
+
 import model.*;
+import model.environment.Environment;
+import model.environment.Rectangle;
 
 
 public abstract class Carnivore extends Animal {
@@ -21,6 +23,38 @@ public abstract class Carnivore extends Animal {
         this.attackDamage = attackDamage;
         this.attackCooldown = attackCooldown;
         this.currentCooldownTimer = 0; // Sẵn sàng cắn ngay lần đầu chạm mặt
+    }
+    public boolean isStarving() {
+        return this.getEnergy() < (this.getMaxEnergy() * 0.25);
+    }
+
+    // --- TÍNH NĂNG MỚI: TÍNH SỨC MẠNH ÁP ĐẢO (CỘNG DỒN BẦY ĐÀN) ---
+    public double getEffectiveStrength(Environment env) {
+        double totalStrength = this.strengthWeight;
+
+        // Chỉ những loài săn mồi bầy đàn mới được cộng dồn đe dọa (ví dụ Sói, Linh Cẩu)
+        // Lưu ý: Hổ hay Gấu là động vật độc lập, không cộng dồn dù có đứng cạnh nhau
+        if (this instanceof Wolf || this instanceof Hyena) {
+            
+            // Quét các đồng loại xung quanh trong bán kính tầm nhìn
+            Rectangle searchRange = new Rectangle(
+                this.getPosition().getX(), 
+                this.getPosition().getY(), 
+                this.getVisionRadius(), 
+                this.getVisionRadius()
+            );
+
+            List<Entity> nearby = env.getQuadTree().query(searchRange, null);
+
+            for (Entity e : nearby) {
+                // Nếu là đồng loại (cùng Class), đang sống, và không phải chính mình
+                if (e != this && e.getClass() == this.getClass() && e.isAlive()) {
+                    // Cộng hưởng sức mạnh! (Giả sử mỗi đồng minh đóng góp 80% sức mạnh đe dọa)
+                    totalStrength += ((Carnivore) e).getStrengthWeight() * 0.8;
+                }
+            }
+        }
+        return totalStrength;
     }
     
     @Override
@@ -49,6 +83,22 @@ public abstract class Carnivore extends Animal {
         }
     }
 
-    public double getStrengthWeight() { return strengthWeight; }
-    public double getAttackDamage() { return attackDamage; }
+    public double getStrengthWeight() {
+        return strengthWeight;
+    }
+    public double getAttackDamage() {
+        return attackDamage;
+    }
+    public int getAttackCooldown() {
+        return attackCooldown;
+    }
+    public void setAttackCooldown(int attackCooldown) {
+        this.attackCooldown = attackCooldown;
+    }
+        public int getCurrentCooldownTimer() {
+        return currentCooldownTimer;
+    }
+    public void setCurrentCooldownTimer(int currentCooldownTimer) {
+        this.currentCooldownTimer = currentCooldownTimer;
+    }
 }

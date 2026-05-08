@@ -7,5 +7,6 @@ public enum AnimalState {
     EATING,     // Đang ăn
     SLEEPING,   // Đang ngủ (hồi năng lượng)
     HIDING,     // Đang trốn trong bụi rậm
-    DEAD        // Đã chết (chờ thành Carcass hoặc bị xóa)
+    DEAD,        // Đã chết (chờ thành Carcass hoặc bị xóa)
+    IDLE         // Đang đứng yên
 }

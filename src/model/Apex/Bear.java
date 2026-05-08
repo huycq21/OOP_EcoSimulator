@@ -3,6 +3,7 @@ package model.apex;
 import model.Vector2D;
 import model.environment.Environment;
 import model.environment.Rectangle;
+import model.strategy.HunterStrategy;
 import model.Entity;
 
 import java.util.List;
@@ -24,13 +25,14 @@ public class Bear extends ApexEntity {
             80.0,        // visionRadius: Tầm nhìn rộng
             150.0,       // strengthWeight: Mức độ đe dọa áp đảo hoàn toàn Sói
             100.0,       // attackDamage: Vả đúng 1 phát là Sói (100 HP) "đăng xuất"!
-            90            // attackCooldown: Đánh chậm hơn Sói (90 tick vs 60 tick)
+            90,          // attackCooldown: Đánh chậm hơn Sói (90 tick vs 60 tick)
+            300          // spAttackCooldown: THÊM VÀO ĐÂY! (Hồi chiêu AOE mất 300 tick)
         );
         
         // Tầm vả AOE vươn ra gấp 1.5 lần cơ thể
         this.aoeRadius = this.getSize() * 1.5; 
-        
-        // Bạn có thể setBrain(new ApexStrategy()) ở đây nếu muốn!
+        // Hổ / Gấu constructor:
+        this.setBrain(new HunterStrategy()); // Dùng constructor mặc định
     }
 
     @Override
@@ -56,7 +58,7 @@ public class Bear extends ApexEntity {
         // 3. XÉT VA CHẠM TRONG SỐ NHỮNG KẺ ĐEN ĐỦI ĐỨNG GẦN GẤU
         for (Entity entity : nearbyEntities) {
             // Không tự vả mặt mình, và chỉ vả động vật
-            if (entity != this && entity.isAlive() && entity instanceof Animal) {
+            if (entity != this && entity.isAlive() && entity instanceof Animal && entity.getClass() != this.getClass()) {
                 
                 Animal prey = (Animal) entity;
                 double distance = this.getPosition().distanceTo(prey.getPosition());

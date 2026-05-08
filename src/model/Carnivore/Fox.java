@@ -13,14 +13,4 @@ public class Fox extends Carnivore {
         super(position, 3.5, 60, 120, 6.0, 70.0, 40.0, 30.0, 40);
         this.setBrain(new HunterStrategy());
     }
-
-    @Override
-    public void growOlder() {
-        age++;
-    }
-
-    @Override
-    public boolean isTooOld() {
-        return age > maxAge;
-    }
 }
