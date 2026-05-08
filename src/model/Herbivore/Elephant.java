@@ -1,7 +1,7 @@
 package model.herbivore;
 
 import model.Vector2D;
-import model.strategy.PassiveStrategy;
+import model.strategy.ForagingStrategy;
 
 public class Elephant extends Herbivore {
 
@@ -11,6 +11,6 @@ public class Elephant extends Herbivore {
         super(position, 12.0, 500, 400, 2.0, 50.0);
         
         // Voi thì cứ đi dạongẫu nhiên thôi, thú nhỏ tự phải né nó
-        this.setBrain(new PassiveStrategy());
+        this.setBrain(new ForagingStrategy());
     }
 }

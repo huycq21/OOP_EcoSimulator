@@ -2,8 +2,10 @@ package model.strategy;
 
 import model.Animal;
 import model.AnimalState;
+import model.Carcass;
 import model.Entity;
 import model.Vector2D;
+import model.carnivore.Carnivore;
 import model.herbivore.Herbivore;
 import model.environment.Environment; // Cần import cái này để lấy danh sách sinh vật
 import java.util.List;
@@ -18,8 +20,11 @@ public class HunterStrategy implements SurvivalStrategy {
 
     @Override
     public void execute(Animal hunter) {
-        // 1. Quét tìm con mồi gần nhất
-        Entity target = findNearestPrey(hunter);
+        boolean hungry = hunter.getEnergy() < hunter.getMaxEnergy() * 0.65;
+        Entity target = hungry ? findNearestPrey(hunter) : findVeryClosePrey(hunter);
+        if (target == null && hungry) {
+            target = findNearestCarcass(hunter);
+        }
 
         if (target != null) {
             // Đã thấy mồi! Đổi nhãn trạng thái thành ĐANG SĂN MỒI
@@ -57,7 +62,7 @@ public class HunterStrategy implements SurvivalStrategy {
     // --- HÀM HỖ TRỢ: DÒ RADAR TÌM CON MỒI ---
     private Entity findNearestPrey(Animal hunter) {
         Entity nearest = null;
-        double minDistance = hunter.getVisionRadius(); // Chỉ quét trong bán kính tầm nhìn
+        double minDistance = getPreyDetectionRadius(hunter);
 
         // Lấy danh sách tất cả sinh vật trên bản đồ. 
         // LƯU Ý: Chỗ này yêu cầu class Environment của bạn phải có pattern Singleton (getInstance())
@@ -66,7 +71,7 @@ public class HunterStrategy implements SurvivalStrategy {
 
         for (Entity e : allEntities) {
             // Nếu thực thể đó là Thú ăn cỏ VÀ đang sống VÀ không phải đang trốn
-            if (e instanceof Herbivore && e.isAlive() && ((Herbivore) e).getCurrentState() != AnimalState.HIDING) {
+            if (isValidPrey(hunter, e)) {
                 
                 // Tính khoảng cách
                 double dist = hunter.getPosition().distanceTo(e.getPosition());
@@ -79,5 +84,59 @@ public class HunterStrategy implements SurvivalStrategy {
             }
         }
         return nearest;
+    }
+
+    private Entity findVeryClosePrey(Animal hunter) {
+        Entity nearest = null;
+        double minDistance = getPreyDetectionRadius(hunter) * 0.35;
+        List<Entity> allEntities = Environment.getInstance().getEntities();
+
+        for (Entity e : allEntities) {
+            if (isValidPrey(hunter, e)) {
+                double dist = hunter.getPosition().distanceTo(e.getPosition());
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
+    }
+
+    private boolean isValidPrey(Animal hunter, Entity entity) {
+        if (!(entity instanceof Herbivore) || !entity.isAlive()) return false;
+
+        Herbivore prey = (Herbivore) entity;
+        if (prey.getCurrentState() == AnimalState.HIDING) return false;
+
+        if (hunter instanceof Carnivore) {
+            return ((Carnivore) hunter).canAttack(prey);
+        }
+
+        return true;
+    }
+
+    private Entity findNearestCarcass(Animal hunter) {
+        Entity nearest = null;
+        double minDistance = getPreyDetectionRadius(hunter) * 1.5;
+        List<Entity> allEntities = Environment.getInstance().getEntities();
+
+        for (Entity e : allEntities) {
+            if (e instanceof Carcass && e.isAlive()) {
+                double dist = hunter.getPosition().distanceTo(e.getPosition());
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
+    }
+
+    private double getPreyDetectionRadius(Animal hunter) {
+        if (hunter instanceof Carnivore) {
+            return ((Carnivore) hunter).getPreyDetectionRadius();
+        }
+        return hunter.getVisionRadius();
     }
 }

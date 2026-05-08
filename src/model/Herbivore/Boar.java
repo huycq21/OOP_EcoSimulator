@@ -1,7 +1,7 @@
 package model.herbivore;
 
 import model.Vector2D;
-import model.strategy.PassiveStrategy;
+import model.strategy.ForagingStrategy;
 
 public class Boar extends Herbivore {
 
@@ -12,6 +12,6 @@ public class Boar extends Herbivore {
         
         // Lắp não mặc định.
         // TODO: Sau này thay bằng DefensiveStrategy (Bị dồn vào chân tường sẽ quay lại húc)
-        this.setBrain(new PassiveStrategy());
+        this.setBrain(new ForagingStrategy());
     }
 }

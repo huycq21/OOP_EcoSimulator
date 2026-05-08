@@ -45,6 +45,7 @@ public abstract class Environment {
         
         // 5. Dọn dẹp xác chết
         entities.removeAll(entitiesToRemove);
+        entities.removeIf(entity -> !entity.isAlive());
     }
 
     // --- HÀM HỖ TRỢ VẬT LÝ ---

@@ -1,7 +1,7 @@
 package model.herbivore;
 
 import model.Vector2D;
-import model.strategy.PassiveStrategy;
+import model.strategy.ForagingStrategy;
 
 public class Goat extends Herbivore {
 
@@ -10,7 +10,7 @@ public class Goat extends Herbivore {
         // Tốc độ: 6.5, Tầm nhìn: 70.0
         super(position, 4.0, 60, 120, 6.5, 70.0);
         
-        this.setBrain(new PassiveStrategy());
+        this.setBrain(new ForagingStrategy());
     }
 }
  

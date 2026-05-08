@@ -1,7 +1,7 @@
 package model.herbivore;
 
 import model.Vector2D;
-import model.strategy.PassiveStrategy;
+import model.strategy.ForagingStrategy;
 
 public class Horse extends Herbivore {
 
@@ -12,6 +12,6 @@ public class Horse extends Herbivore {
         
         // Lắp não mặc định. 
         // TODO: Sau này thay bằng FlockingStrategy để chúng tự tìm nhau và đi theo đàn
-        this.setBrain(new PassiveStrategy());
+        this.setBrain(new ForagingStrategy());
     }
 }

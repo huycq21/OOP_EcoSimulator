@@ -80,18 +80,18 @@ public class CollisionHandler {
 
     // --- CÁC HÀM XỬ LÝ CHI TIẾT ---
 
-    // Xử lý săn bắt và rơi ra Xác chết
+        // Xử lý săn bắt và rơi ra Xác chết
     private static void handleCombat(Carnivore predator, Herbivore prey, List<Entity> newEntities) {
         // Nếu thỏ đang nấp trong bụi rậm thì Sói không cắn được
         if (prey.getCurrentState() == AnimalState.HIDING) return;
+        if (prey.getCurrentState() == AnimalState.DEAD) return;
+        if (!predator.canAttack(prey)) return;
 
         // Thú ăn thịt gọi hàm cắn (có tính toán Cooldown ở bên trong class Carnivore)
         predator.attack(prey);
 
         // Nếu con mồi cạn máu
-        if (prey.getHp() <= 0) {
-            prey.destroy(); // Chết!
-            
+        if (prey.getCurrentState() == AnimalState.DEAD && prey.shouldSpawnCarcass()) {
             // TẠO RA XÁC CHẾT (CARCASS) TẠI ĐÚNG VỊ TRÍ ĐÓ
             // Lượng thịt bằng chính năng lượng tối đa của con mồi
             Carcass meat = new Carcass(prey.getPosition(), prey.getSize(), prey.getMaxEnergy());
