@@ -3,6 +3,10 @@ package view;
 import model.Animal;
 import model.AnimalState;
 import model.Entity;
+import model.aquatic.FishFour;
+import model.aquatic.FishOne;
+import model.aquatic.FishThree;
+import model.aquatic.FishTwo;
 import model.carnivore.Fox;
 import model.carnivore.Wolf;
 import model.herbivore.BlackGrouse;
@@ -12,6 +16,8 @@ import model.herbivore.Rabbit;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +35,8 @@ public class SimulationPanel extends JPanel {
     private double renderScale;
     private int renderOffsetX;
     private int renderOffsetY;
+    private double cameraFocusX;
+    private double cameraFocusY;
     private final ForestTileMap forestTileMap;
 
     public SimulationPanel() {
@@ -38,7 +46,10 @@ public class SimulationPanel extends JPanel {
         this.worldWidth = forestTileMap.isLoaded() ? forestTileMap.getPixelWidth() : 800;
         this.worldHeight = forestTileMap.isLoaded() ? forestTileMap.getPixelHeight() : 600;
         this.renderScale = 1.0;
+        this.cameraFocusX = 0.5;
+        this.cameraFocusY = 0.5;
         setBackground(new Color(34, 139, 34));
+        installMouseCamera();
         loadSprites();
     }
 
@@ -97,6 +108,18 @@ public class SimulationPanel extends JPanel {
             drawn = drawEntitySprite(g, "hare", e, cx, cy, size * 2, size * 2)
                     || drawSprite(g, "rabbit", cx, cy, size * 2, size * 2);
             if (!drawn) drawRabbit(g, cx, cy, size);
+        } else if (e instanceof FishOne) {
+            drawn = drawEntitySprite(g, "fish_one", e, cx, cy, size * 3, size * 2);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof FishTwo) {
+            drawn = drawEntitySprite(g, "fish_two", e, cx, cy, size * 3, size * 2);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof FishThree) {
+            drawn = drawEntitySprite(g, "fish_three", e, cx, cy, size * 3, size * 2);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof FishFour) {
+            drawn = drawEntitySprite(g, "fish_four", e, cx, cy, size * 3, size * 2);
+            if (!drawn) drawDefault(g, cx, cy, size);
         } else if (e instanceof BlackGrouse) {
             drawn = drawEntitySprite(g, "black_grouse", e, cx, cy, size * 2, size * 2);
             if (!drawn) drawDefault(g, cx, cy, size);
@@ -128,6 +151,10 @@ public class SimulationPanel extends JPanel {
         loadEntitySpriteSet("boar", "Boar");
         loadEntitySpriteSet("deer", "Deer");
         loadEntitySpriteSet("black_grouse", "BlackGrouse");
+        loadFishSpriteSet("fish_one", "Fish1_animation.png");
+        loadFishSpriteSet("fish_two", "Fish2_animation.png");
+        loadFishSpriteSet("fish_three", "Fish3_animation.png");
+        loadFishSpriteSet("fish_four", "Fish4_animation.png");
 
         loadSprite("rabbit", "assets/Entities/Rabbit.png");
         loadSprite("wolf", "assets/Entities/Wolf.png");
@@ -161,6 +188,16 @@ public class SimulationPanel extends JPanel {
         }
     }
 
+    private void loadFishSpriteSet(String key, String fileName) {
+        EntitySpriteSet set = new EntitySpriteSet();
+        set.walk = loadSpriteSheet("assets/Entities/Firsh/" + fileName, 1, 9);
+        set.idle = set.walk;
+
+        if (set.hasAnyAnimation()) {
+            entitySprites.put(key, set);
+        }
+    }
+
     private SpriteSheet loadSpriteSheet(String path, int rows) {
         if (path == null) return null;
 
@@ -169,6 +206,20 @@ public class SimulationPanel extends JPanel {
 
         try {
             return new SpriteSheet(ImageIO.read(file), rows);
+        } catch (IOException e) {
+            System.err.println("Cannot load spritesheet: " + path);
+            return null;
+        }
+    }
+
+    private SpriteSheet loadSpriteSheet(String path, int rows, int columns) {
+        if (path == null) return null;
+
+        File file = new File(path);
+        if (!file.exists()) return null;
+
+        try {
+            return new SpriteSheet(ImageIO.read(file), rows, columns);
         } catch (IOException e) {
             System.err.println("Cannot load spritesheet: " + path);
             return null;
@@ -315,11 +366,19 @@ public class SimulationPanel extends JPanel {
     }
 
     private void updateRenderTransform() {
-        double scaleX = getWidth() / worldWidth;
-        double scaleY = getHeight() / worldHeight;
-        renderScale = Math.max(scaleX, scaleY);
-        renderOffsetX = (int) Math.floor((getWidth() - worldWidth * renderScale) / 2.0);
-        renderOffsetY = (int) Math.floor((getHeight() - worldHeight * renderScale) / 2.0);
+        renderScale = 1.0;
+
+        double scaledWorldWidth = worldWidth * renderScale;
+        double scaledWorldHeight = worldHeight * renderScale;
+        double overflowX = Math.max(0, scaledWorldWidth - getWidth());
+        double overflowY = Math.max(0, scaledWorldHeight - getHeight());
+
+        renderOffsetX = overflowX > 0
+                ? -(int) Math.floor(overflowX * cameraFocusX)
+                : (int) Math.floor((getWidth() - scaledWorldWidth) / 2.0);
+        renderOffsetY = overflowY > 0
+                ? -(int) Math.floor(overflowY * cameraFocusY)
+                : (int) Math.floor((getHeight() - scaledWorldHeight) / 2.0);
     }
 
     private int worldToScreenX(double x) {
@@ -331,8 +390,8 @@ public class SimulationPanel extends JPanel {
     }
 
     private void drawWorldBounds(Graphics2D g) {
-        int width = (int) Math.ceil(worldWidth * renderScale) + 2;
-        int height = (int) Math.ceil(worldHeight * renderScale) + 2;
+        int width = (int) Math.round(worldWidth * renderScale);
+        int height = (int) Math.round(worldHeight * renderScale);
 
         if (forestTileMap.isLoaded()) {
             forestTileMap.draw(g, renderOffsetX, renderOffsetY, width, height, renderScale);
@@ -343,6 +402,35 @@ public class SimulationPanel extends JPanel {
 
         g.setColor(new Color(23, 82, 40));
         g.drawRect(renderOffsetX, renderOffsetY, width - 1, height - 1);
+    }
+
+    private void installMouseCamera() {
+        MouseAdapter mouseCamera = new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                updateCameraFocus(e);
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                updateCameraFocus(e);
+            }
+        };
+
+        addMouseMotionListener(mouseCamera);
+    }
+
+    private void updateCameraFocus(MouseEvent e) {
+        int width = Math.max(1, getWidth());
+        int height = Math.max(1, getHeight());
+
+        cameraFocusX = clamp(e.getX() / (double) width, 0, 1);
+        cameraFocusY = clamp(e.getY() / (double) height, 0, 1);
+        repaint();
+    }
+
+    private double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private BufferedImage loadImage(String path) {
@@ -386,6 +474,14 @@ public class SimulationPanel extends JPanel {
             this.frameHeight = image.getHeight() / rows;
             this.frameWidth = frameHeight;
             this.columns = Math.max(1, image.getWidth() / frameWidth);
+        }
+
+        private SpriteSheet(BufferedImage image, int rows, int columns) {
+            this.image = image;
+            this.rows = rows;
+            this.columns = columns;
+            this.frameWidth = image.getWidth() / columns;
+            this.frameHeight = image.getHeight() / rows;
         }
 
         private BufferedImage getFrame(int column, int row) {

@@ -13,6 +13,8 @@ public abstract class Animal extends Entity implements Ageable {
     protected double maxEnergy;
     protected double speed;
     protected double visionRadius;
+    protected boolean canEnterWater;
+    protected boolean requiresWater;
     
     // 2. Trạng thái và Vật lý (Di chuyển)
     protected Vector2D velocity; 
@@ -36,6 +38,8 @@ public abstract class Animal extends Entity implements Ageable {
         
         this.speed = speed;
         this.visionRadius = visionRadius;
+        this.canEnterWater = false;
+        this.requiresWater = false;
         
         this.velocity = new Vector2D(0, 0); 
         this.currentState = AnimalState.WANDERING; 
@@ -165,6 +169,14 @@ public abstract class Animal extends Entity implements Ageable {
 
     public double getVisionRadius() {
         return visionRadius;
+    }
+
+    public boolean canEnterWater() {
+        return canEnterWater;
+    }
+
+    public boolean requiresWater() {
+        return requiresWater;
     }
 
     public double getEnergy() {

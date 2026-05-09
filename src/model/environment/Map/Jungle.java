@@ -1,6 +1,11 @@
 package model.environment.Map;
 
 import model.Vector2D;
+import model.aquatic.Fish;
+import model.aquatic.FishFour;
+import model.aquatic.FishOne;
+import model.aquatic.FishThree;
+import model.aquatic.FishTwo;
 import model.carnivore.Fox;
 import model.carnivore.Wolf;
 import model.herbivore.BlackGrouse;
@@ -10,6 +15,7 @@ import model.herbivore.Rabbit;
 import model.plant.Grass;
 import model.environment.Bush;
 import model.environment.Environment;
+import model.environment.TmxCollisionLoader;
 
 import java.util.Random;
 
@@ -20,9 +26,11 @@ public class Jungle extends Environment {
     public Jungle(double width, double height) {
         super(width, height);
         this.random = new Random();
+        TmxCollisionLoader.loadInto(this, "assets/Environment/Forest/Forest.tmx");
 
         spawnHerbivores();
         spawnCarnivores();
+        spawnFish();
         spawnPlantsAndCover();
     }
 
@@ -54,6 +62,21 @@ public class Jungle extends Environment {
         }
     }
 
+    private void spawnFish() {
+        for (int i = 0; i < 8; i++) {
+            addFish(new FishOne(randomWaterPosition(random, 4)));
+            addFish(new FishTwo(randomWaterPosition(random, 4)));
+            addFish(new FishThree(randomWaterPosition(random, 5)));
+            addFish(new FishFour(randomWaterPosition(random, 5)));
+        }
+    }
+
+    private void addFish(Fish fish) {
+        if (fish.getPosition() != null) {
+            addEntity(fish);
+        }
+    }
+
     private void spawnPlantsAndCover() {
         for (int i = 0; i < 90; i++) {
             addEntity(new Grass(randomPosition()));
@@ -65,9 +88,6 @@ public class Jungle extends Environment {
     }
 
     private Vector2D randomPosition() {
-        double margin = 60;
-        double x = margin + random.nextDouble() * (width - margin * 2);
-        double y = margin + random.nextDouble() * (height - margin * 2);
-        return new Vector2D(x, y);
+        return randomOpenPosition(random, 8);
     }
 }
