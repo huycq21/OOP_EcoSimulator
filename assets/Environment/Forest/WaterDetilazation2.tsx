@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.9" tiledversion="1.9.2" name="Water_detilazation2" tilewidth="16" tileheight="16" tilecount="2886" columns="37">
- <image source="water_detilazation_v2.png" width="592" height="1248"/>
+ <image source="WaterDetilazationV2.png" width="592" height="1248"/>
  <tile id="40">
   <animation>
    <frame tileid="40" duration="150"/>

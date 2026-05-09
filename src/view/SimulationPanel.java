@@ -2,7 +2,6 @@ package view;
 
 import model.Animal;
 import model.AnimalState;
-import model.Carcass;
 import model.Entity;
 import model.carnivore.Fox;
 import model.carnivore.Wolf;
@@ -10,9 +9,6 @@ import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
 import model.herbivore.Rabbit;
-import model.plant.Grass;
-import model.environment.Bush;
-import model.environment.Obstacle;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,12 +29,14 @@ public class SimulationPanel extends JPanel {
     private double renderScale;
     private int renderOffsetX;
     private int renderOffsetY;
+    private final ForestTileMap forestTileMap;
 
     public SimulationPanel() {
         this.sprites = new HashMap<>();
         this.entitySprites = new HashMap<>();
-        this.worldWidth = 800;
-        this.worldHeight = 600;
+        this.forestTileMap = new ForestTileMap("assets/Environment/Forest/Forest.tmx");
+        this.worldWidth = forestTileMap.isLoaded() ? forestTileMap.getPixelWidth() : 800;
+        this.worldHeight = forestTileMap.isLoaded() ? forestTileMap.getPixelHeight() : 600;
         this.renderScale = 1.0;
         setBackground(new Color(34, 139, 34));
         loadSprites();
@@ -47,6 +45,14 @@ public class SimulationPanel extends JPanel {
     public void setWorldSize(double width, double height) {
         this.worldWidth = width;
         this.worldHeight = height;
+    }
+
+    public double getWorldWidth() {
+        return worldWidth;
+    }
+
+    public double getWorldHeight() {
+        return worldHeight;
     }
 
     public void setEntities(List<Entity> entities) {
@@ -80,6 +86,8 @@ public class SimulationPanel extends JPanel {
     }
 
     private void drawEntity(Graphics2D g, Entity e) {
+        if (!(e instanceof Animal)) return;
+
         int cx = worldToScreenX(e.getPosition().getX());
         int cy = worldToScreenY(e.getPosition().getY());
         int size = Math.max(12, (int) (e.getSize() * 4 * renderScale));
@@ -105,18 +113,6 @@ public class SimulationPanel extends JPanel {
         } else if (e instanceof Deer) {
             drawn = drawEntitySprite(g, "deer", e, cx, cy, size * 2, size * 2);
             if (!drawn) drawDefault(g, cx, cy, size);
-        } else if (e instanceof Grass) {
-            drawn = drawSprite(g, "grass", cx, cy, size * 2, size * 2);
-            if (!drawn) drawGrass(g, cx, cy, size);
-        } else if (e instanceof Bush) {
-            drawn = drawSprite(g, "bush", cx, cy, size * 2, size * 2);
-            if (!drawn) drawBush(g, cx, cy, size);
-        } else if (e instanceof Carcass) {
-            drawn = drawSprite(g, "carcass", cx, cy, size * 2, size * 2);
-            if (!drawn) drawCarcass(g, cx, cy, size);
-        } else if (e instanceof Obstacle) {
-            drawn = drawSprite(g, "obstacle", cx, cy, size * 2, size * 2);
-            if (!drawn) drawObstacle(g, cx, cy, size);
         } else {
             drawDefault(g, cx, cy, size);
         }
@@ -135,10 +131,6 @@ public class SimulationPanel extends JPanel {
 
         loadSprite("rabbit", "assets/Entities/Rabbit.png");
         loadSprite("wolf", "assets/Entities/Wolf.png");
-        loadSprite("carcass", "assets/Entities/Carcass.png");
-        loadSprite("grass", "assets/Environment/Grass.png");
-        loadSprite("bush", "assets/Environment/Bush.png");
-        loadSprite("obstacle", "assets/Environment/Obstacle.png");
     }
 
     private void loadSprite(String key, String path) {
@@ -297,32 +289,6 @@ public class SimulationPanel extends JPanel {
         g.fillOval(cx + bodyW / 2 + size / 4, cy - 3, 4, 4);
     }
 
-    private void drawGrass(Graphics2D g, int cx, int cy, int size) {
-        g.setStroke(new BasicStroke(2));
-        g.setColor(new Color(96, 194, 76));
-        for (int i = -2; i <= 2; i++) {
-            g.drawLine(cx, cy + size / 2, cx + i * 4, cy - size / 2 + Math.abs(i) * 2);
-        }
-    }
-
-    private void drawBush(Graphics2D g, int cx, int cy, int size) {
-        g.setColor(new Color(32, 111, 52));
-        g.fillOval(cx - size / 2, cy - size / 3, size / 2, size / 2);
-        g.fillOval(cx - size / 4, cy - size / 2, size / 2, size / 2);
-        g.fillOval(cx, cy - size / 3, size / 2, size / 2);
-        g.fillOval(cx - size / 3, cy - size / 6, size, size / 2);
-    }
-
-    private void drawCarcass(Graphics2D g, int cx, int cy, int size) {
-        g.setColor(new Color(122, 56, 43));
-        g.fillOval(cx - size / 2, cy - size / 3, size, Math.max(10, size / 2));
-    }
-
-    private void drawObstacle(Graphics2D g, int cx, int cy, int size) {
-        g.setColor(new Color(92, 76, 55));
-        g.fillOval(cx - size / 2, cy - size / 2, size, size);
-    }
-
     private void drawDefault(Graphics2D g, int cx, int cy, int size) {
         g.setColor(Color.WHITE);
         g.fillOval(cx - size / 2, cy - size / 2, size, size);
@@ -351,9 +317,9 @@ public class SimulationPanel extends JPanel {
     private void updateRenderTransform() {
         double scaleX = getWidth() / worldWidth;
         double scaleY = getHeight() / worldHeight;
-        renderScale = Math.min(scaleX, scaleY);
-        renderOffsetX = (int) ((getWidth() - worldWidth * renderScale) / 2.0);
-        renderOffsetY = (int) ((getHeight() - worldHeight * renderScale) / 2.0);
+        renderScale = Math.max(scaleX, scaleY);
+        renderOffsetX = (int) Math.floor((getWidth() - worldWidth * renderScale) / 2.0);
+        renderOffsetY = (int) Math.floor((getHeight() - worldHeight * renderScale) / 2.0);
     }
 
     private int worldToScreenX(double x) {
@@ -365,11 +331,15 @@ public class SimulationPanel extends JPanel {
     }
 
     private void drawWorldBounds(Graphics2D g) {
-        int width = (int) Math.round(worldWidth * renderScale);
-        int height = (int) Math.round(worldHeight * renderScale);
+        int width = (int) Math.ceil(worldWidth * renderScale) + 2;
+        int height = (int) Math.ceil(worldHeight * renderScale) + 2;
 
-        g.setColor(new Color(27, 112, 49));
-        g.fillRect(renderOffsetX, renderOffsetY, width, height);
+        if (forestTileMap.isLoaded()) {
+            forestTileMap.draw(g, renderOffsetX, renderOffsetY, width, height, renderScale);
+        } else {
+            g.setColor(new Color(27, 112, 49));
+            g.fillRect(renderOffsetX, renderOffsetY, width, height);
+        }
 
         g.setColor(new Color(23, 82, 40));
         g.drawRect(renderOffsetX, renderOffsetY, width - 1, height - 1);

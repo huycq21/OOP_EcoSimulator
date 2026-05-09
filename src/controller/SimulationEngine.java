@@ -16,8 +16,8 @@ public class SimulationEngine {
     public SimulationEngine(SimulationPanel panel) {
         this.panel = panel;
         
-        // 1. Khởi tạo một môi trường CỤ THỂ với world lớn hơn cửa sổ render
-        this.env = new Jungle(4800, 3600); 
+        // 1. Khởi tạo môi trường theo đúng kích thước map TMX đang render
+        this.env = new Jungle(panel.getWorldWidth(), panel.getWorldHeight()); 
         this.panel.setWorldSize(this.env.getWidth(), this.env.getHeight());
         
         // 2. Kích hoạt Singleton để các con vật ở mọi nơi đều có thể gọi Environment.getInstance()
