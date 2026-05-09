@@ -3,8 +3,11 @@ package model.environment;
 import model.Animal;
 import model.Entity;
 import model.Vector2D;
+import model.domestic.DomesticAnimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import controller.CollisionHandler;
 
@@ -14,7 +17,9 @@ public abstract class Environment {
 
     protected List<Entity> entities;
     protected List<MapCollider> mapColliders;
+    protected List<MapCollider> wicketColliders;
     protected List<MapCollider> waterZones;
+    protected Map<String, List<MapCollider>> animalPens;
     protected MapCollider mapBounds;
     protected double width;
     protected double height;
@@ -44,7 +49,9 @@ public abstract class Environment {
             // 3. Chặn không cho ra khỏi map
             keepWithinBounds(entity);
             resolveWaterAccess(entity, previousX, previousY);
+            resolvePenAccess(entity, previousX, previousY);
             resolveMapCollisions(entity);
+            resolveWicketCollisions(entity);
 
             if (!entity.isAlive()) {
                 entitiesToRemove.add(entity);
@@ -101,6 +108,25 @@ public abstract class Environment {
         }
     }
 
+    protected void resolveWicketCollisions(Entity entity) {
+        if (!(entity instanceof Animal) || entity instanceof DomesticAnimal) return;
+
+        double radius = getCollisionRadius(entity);
+        boolean hitWicket = false;
+
+        for (MapCollider collider : wicketColliders) {
+            if (collider.resolveCircleCollision(entity.getPosition(), radius)) {
+                hitWicket = true;
+            }
+        }
+
+        if (hitWicket) {
+            Animal animal = (Animal) entity;
+            animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
+            animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
+        }
+    }
+
     protected void resolveWaterAccess(Entity entity, double previousX, double previousY) {
         if (waterZones.isEmpty() || !(entity instanceof Animal)) return;
 
@@ -115,12 +141,37 @@ public abstract class Environment {
         }
     }
 
+    protected void resolvePenAccess(Entity entity, double previousX, double previousY) {
+        if (!(entity instanceof DomesticAnimal)) return;
+
+        DomesticAnimal domesticAnimal = (DomesticAnimal) entity;
+        if (isInAnimalPen(domesticAnimal.getPenLayerName(), entity.getPosition(), getCollisionRadius(entity))) {
+            return;
+        }
+
+        entity.getPosition().setX(previousX);
+        entity.getPosition().setY(previousY);
+        domesticAnimal.getVelocity().setX(domesticAnimal.getVelocity().getX() * -0.35);
+        domesticAnimal.getVelocity().setY(domesticAnimal.getVelocity().getY() * -0.35);
+    }
+
     public boolean isCircleBlocked(Vector2D position, double radius) {
+        return isCircleBlocked(position, radius, true);
+    }
+
+    public boolean isCircleBlocked(Vector2D position, double radius, boolean includeWickets) {
         if (mapBounds != null && !mapBounds.containsCircle(position, radius)) return true;
 
         for (MapCollider collider : mapColliders) {
             Vector2D testPosition = new Vector2D(position.getX(), position.getY());
             if (collider.resolveCircleCollision(testPosition, radius)) return true;
+        }
+
+        if (includeWickets) {
+            for (MapCollider collider : wicketColliders) {
+                Vector2D testPosition = new Vector2D(position.getX(), position.getY());
+                if (collider.resolveCircleCollision(testPosition, radius)) return true;
+            }
         }
         return false;
     }
@@ -146,22 +197,41 @@ public abstract class Environment {
         return null;
     }
 
+    public Vector2D randomPenPosition(String penLayerName, Random random, double radius) {
+        List<MapCollider> pens = animalPens.get(penLayerName);
+        if (pens == null || pens.isEmpty()) return null;
+
+        for (int i = 0; i < 120; i++) {
+            MapCollider pen = chooseColliderByArea(pens, random);
+            Vector2D position = pen.randomPointInside(random, radius);
+            if (isInAnimalPen(penLayerName, position, radius) && !isCircleBlocked(position, radius, false)) {
+                return position;
+            }
+        }
+
+        return null;
+    }
+
     private MapCollider chooseWaterZoneByArea(Random random) {
+        return chooseColliderByArea(waterZones, random);
+    }
+
+    private MapCollider chooseColliderByArea(List<MapCollider> colliders, Random random) {
         double totalArea = 0;
-        for (MapCollider waterZone : waterZones) {
-            totalArea += waterZone.getArea();
+        for (MapCollider collider : colliders) {
+            totalArea += collider.getArea();
         }
 
         double selectedArea = random.nextDouble() * Math.max(1.0, totalArea);
         double currentArea = 0;
-        for (MapCollider waterZone : waterZones) {
+        for (MapCollider waterZone : colliders) {
             currentArea += waterZone.getArea();
             if (selectedArea <= currentArea) {
                 return waterZone;
             }
         }
 
-        return waterZones.get(waterZones.size() - 1);
+        return colliders.get(colliders.size() - 1);
     }
 
     public Vector2D randomOpenPosition(Random random, double radius) {
@@ -186,12 +256,30 @@ public abstract class Environment {
         mapColliders.add(collider);
     }
 
+    public void addWicketCollider(MapCollider collider) {
+        wicketColliders.add(collider);
+    }
+
     public void setMapBounds(MapCollider mapBounds) {
         this.mapBounds = mapBounds;
     }
 
     public void addWaterZone(MapCollider waterZone) {
         waterZones.add(waterZone);
+    }
+
+    public void addAnimalPen(String penLayerName, MapCollider penZone) {
+        animalPens.computeIfAbsent(penLayerName, key -> new ArrayList<>()).add(penZone);
+    }
+
+    private boolean isInAnimalPen(String penLayerName, Vector2D position, double radius) {
+        List<MapCollider> pens = animalPens.get(penLayerName);
+        if (pens == null) return false;
+
+        for (MapCollider pen : pens) {
+            if (pen.containsCircle(position, radius)) return true;
+        }
+        return false;
     }
 
     public void addEntity(Entity entity) {
@@ -221,7 +309,9 @@ public abstract class Environment {
         this.height = height;
         this.entities = new ArrayList<>();
         this.mapColliders = new ArrayList<>();
+        this.wicketColliders = new ArrayList<>();
         this.waterZones = new ArrayList<>();
+        this.animalPens = new HashMap<>();
     }
 
     public static void setActiveEnvironment(Environment env) {

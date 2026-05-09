@@ -9,6 +9,9 @@ import model.aquatic.FishThree;
 import model.aquatic.FishTwo;
 import model.carnivore.Fox;
 import model.carnivore.Wolf;
+import model.domestic.Chicken;
+import model.domestic.Cow;
+import model.domestic.Pig;
 import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
@@ -108,6 +111,15 @@ public class SimulationPanel extends JPanel {
             drawn = drawEntitySprite(g, "hare", e, cx, cy, size * 2, size * 2)
                     || drawSprite(g, "rabbit", cx, cy, size * 2, size * 2);
             if (!drawn) drawRabbit(g, cx, cy, size);
+        } else if (e instanceof Chicken) {
+            drawn = drawEntitySprite(g, "chicken", e, cx, cy, size * 2, size * 2);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Cow) {
+            drawn = drawEntitySprite(g, "cow", e, cx, cy, size * 2, size * 2);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Pig) {
+            drawn = drawEntitySprite(g, "pig", e, cx, cy, size * 2, size * 2);
+            if (!drawn) drawDefault(g, cx, cy, size);
         } else if (e instanceof FishOne) {
             drawn = drawEntitySprite(g, "fish_one", e, cx, cy, size * 3, size * 2);
             if (!drawn) drawDefault(g, cx, cy, size);
@@ -151,6 +163,9 @@ public class SimulationPanel extends JPanel {
         loadEntitySpriteSet("boar", "Boar");
         loadEntitySpriteSet("deer", "Deer");
         loadEntitySpriteSet("black_grouse", "BlackGrouse");
+        loadColumnAnimationSpriteSet("chicken", "assets/Entities/Chicken/Chicken_animation.png", 8);
+        loadColumnAnimationSpriteSet("cow", "assets/Entities/Cow/Cow_animation.png", 8);
+        loadColumnAnimationSpriteSet("pig", "assets/Entities/Pig/Pig_animation.png", 8);
         loadFishSpriteSet("fish_one", "Fish1_animation.png");
         loadFishSpriteSet("fish_two", "Fish2_animation.png");
         loadFishSpriteSet("fish_three", "Fish3_animation.png");
@@ -198,6 +213,27 @@ public class SimulationPanel extends JPanel {
         }
     }
 
+    private void loadFixedFrameAnimationSpriteSet(String key, String path, int frameWidth, int frameHeight) {
+        EntitySpriteSet set = new EntitySpriteSet();
+        set.walk = loadFixedFrameSpriteSheet(path, frameWidth, frameHeight);
+        set.idle = set.walk;
+
+        if (set.hasAnyAnimation()) {
+            entitySprites.put(key, set);
+        }
+    }
+
+    private void loadColumnAnimationSpriteSet(String key, String path, int columns) {
+        EntitySpriteSet set = new EntitySpriteSet();
+        set.walk = loadColumnSpriteSheet(path, columns);
+        set.idle = set.walk;
+        set.directionFramesInFirstRow = true;
+
+        if (set.hasAnyAnimation()) {
+            entitySprites.put(key, set);
+        }
+    }
+
     private SpriteSheet loadSpriteSheet(String path, int rows) {
         if (path == null) return null;
 
@@ -226,6 +262,38 @@ public class SimulationPanel extends JPanel {
         }
     }
 
+    private SpriteSheet loadFixedFrameSpriteSheet(String path, int frameWidth, int frameHeight) {
+        if (path == null) return null;
+
+        File file = new File(path);
+        if (!file.exists()) return null;
+
+        try {
+            return new SpriteSheet(ImageIO.read(file), frameWidth, frameHeight, true);
+        } catch (IOException e) {
+            System.err.println("Cannot load spritesheet: " + path);
+            return null;
+        }
+    }
+
+    private SpriteSheet loadColumnSpriteSheet(String path, int columns) {
+        if (path == null) return null;
+
+        File file = new File(path);
+        if (!file.exists()) return null;
+
+        try {
+            BufferedImage image = ImageIO.read(file);
+            int frameWidth = Math.max(1, image.getWidth() / columns);
+            int frameHeight = frameWidth;
+            int rows = Math.max(1, image.getHeight() / frameHeight);
+            return new SpriteSheet(image, rows, columns);
+        } catch (IOException e) {
+            System.err.println("Cannot load spritesheet: " + path);
+            return null;
+        }
+    }
+
     private boolean drawSprite(Graphics2D g, String key, int cx, int cy, int width, int height) {
         BufferedImage image = sprites.get(key);
         if (image == null) return false;
@@ -247,8 +315,10 @@ public class SimulationPanel extends JPanel {
         SpriteSheet sheet = selectAnimation(set, entity);
         if (sheet == null) return false;
 
-        int row = getDirectionRow(entity);
-        int frame = (int) ((System.currentTimeMillis() / 120) % sheet.columns);
+        int row = set.directionFramesInFirstRow ? 0 : getDirectionRow(entity);
+        int frame = set.directionFramesInFirstRow
+                ? getDirectionColumn(entity)
+                : (int) ((System.currentTimeMillis() / 120) % sheet.columns);
         BufferedImage image = sheet.getFrame(frame, row);
 
         g.drawImage(image, cx - width / 2, cy - height / 2, width, height, null);
@@ -284,6 +354,19 @@ public class SimulationPanel extends JPanel {
             return vx >= 0 ? 3 : 2;
         }
         return vy >= 0 ? 0 : 1;
+    }
+
+    private int getDirectionColumn(Entity entity) {
+        if (!(entity instanceof Animal)) return 0;
+
+        Animal animal = (Animal) entity;
+        double vx = animal.getVelocity().getX();
+        double vy = animal.getVelocity().getY();
+
+        if (Math.abs(vx) > Math.abs(vy)) {
+            return vx < 0 ? 2 : 3;
+        }
+        return vy < 0 ? 1 : 0;
     }
 
     private void drawRabbit(Graphics2D g, int cx, int cy, int size) {
@@ -455,6 +538,7 @@ public class SimulationPanel extends JPanel {
         private SpriteSheet hurt;
         private SpriteSheet death;
         private BufferedImage shadow;
+        private boolean directionFramesInFirstRow;
 
         private boolean hasAnyAnimation() {
             return idle != null || walk != null || run != null || attack != null || hurt != null || death != null;
@@ -482,6 +566,14 @@ public class SimulationPanel extends JPanel {
             this.columns = columns;
             this.frameWidth = image.getWidth() / columns;
             this.frameHeight = image.getHeight() / rows;
+        }
+
+        private SpriteSheet(BufferedImage image, int frameWidth, int frameHeight, boolean fixedFrameSize) {
+            this.image = image;
+            this.frameWidth = frameWidth;
+            this.frameHeight = frameHeight;
+            this.columns = Math.max(1, image.getWidth() / frameWidth);
+            this.rows = Math.max(1, image.getHeight() / frameHeight);
         }
 
         private BufferedImage getFrame(int column, int row) {

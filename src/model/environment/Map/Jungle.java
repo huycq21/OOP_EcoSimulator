@@ -8,6 +8,10 @@ import model.aquatic.FishThree;
 import model.aquatic.FishTwo;
 import model.carnivore.Fox;
 import model.carnivore.Wolf;
+import model.domestic.Chicken;
+import model.domestic.Cow;
+import model.domestic.DomesticAnimal;
+import model.domestic.Pig;
 import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
@@ -31,6 +35,7 @@ public class Jungle extends Environment {
         spawnHerbivores();
         spawnCarnivores();
         spawnFish();
+        spawnDomesticAnimals();
         spawnPlantsAndCover();
     }
 
@@ -74,6 +79,26 @@ public class Jungle extends Environment {
     private void addFish(Fish fish) {
         if (fish.getPosition() != null) {
             addEntity(fish);
+        }
+    }
+
+    private void spawnDomesticAnimals() {
+        for (int i = 0; i < 4; i++) {
+            addDomesticAnimal(new Chicken(randomPenPosition("coop", random, 4)));
+        }
+
+        for (int i = 0; i < 2; i++) {
+            addDomesticAnimal(new Cow(randomPenPosition("cowshed", random, 7)));
+        }
+
+        for (int i = 0; i < 3; i++) {
+            addDomesticAnimal(new Pig(randomPenPosition("pigsty", random, 6)));
+        }
+    }
+
+    private void addDomesticAnimal(DomesticAnimal animal) {
+        if (animal.getPosition() != null) {
+            addEntity(animal);
         }
     }
 

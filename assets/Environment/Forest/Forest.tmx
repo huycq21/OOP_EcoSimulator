@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="46" height="32" tilewidth="16" tileheight="16" infinite="1" nextlayerid="225" nextobjectid="142">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="46" height="32" tilewidth="16" tileheight="16" infinite="1" nextlayerid="230" nextobjectid="149">
  <tileset firstgid="1" name="Water_detilazation" tilewidth="16" tileheight="16" tilecount="2886" columns="37">
   <image source="WaterDetilazation.png" width="592" height="1248"/>
   <tile id="40">
@@ -10291,6 +10291,35 @@
   </object>
   <object id="126" x="813.652" y="472.763" width="26.6871" height="11.2643">
    <ellipse/>
+  </object>
+ </objectgroup>
+ <objectgroup id="226" name="coop">
+  <object id="143" x="-20.8385" y="943.569">
+   <polygon points="0,0 51.6796,0 51.6796,57.5144 35.8423,58.3479 35.8423,67.5169 -40.8435,66.6833 -43.3442,-1.66708 -37.5094,0 -35.8423,23.3392 -3.33417,23.3392"/>
+  </object>
+ </objectgroup>
+ <objectgroup id="227" name="cowshed">
+  <object id="144" x="145.87" y="945.236">
+   <polygon points="0,0 0,56.6808 13.3367,56.6808 15.8373,67.5169 76.6858,66.6833 76.6858,60.015 95.8573,56.6808 95.0238,-3.33417"/>
+  </object>
+ </objectgroup>
+ <objectgroup id="225" name="pigsty">
+  <object id="142" x="-223.389" y="771.026">
+   <polygon points="0,0 20.005,-1.66708 24.1727,27.5069 33.3417,21.6721 80.02,21.6721 87.5219,29.174 89.189,5.83479 92.5231,-3.33417 112.528,-3.33417 111.695,86.6883 96.6908,87.5219 95.8573,96.6908 17.5044,99.1915 14.1702,85.0213 0,86.6883"/>
+  </object>
+ </objectgroup>
+ <objectgroup id="229" name="wicket">
+  <object id="145" x="-224.231" y="765.438">
+   <polygon points="0,0 111.529,0 111.529,99.7887 2.34797,102.137"/>
+  </object>
+  <object id="146" x="-63.3952" y="945.058">
+   <polygon points="0,0 95.0927,-1.17398 95.0927,66.9171 2.34797,65.7431"/>
+  </object>
+  <object id="147" x="146.748" y="942.71">
+   <polygon points="0,0 92.7448,0 92.7448,68.0911 0,68.0911"/>
+  </object>
+  <object id="148" x="-255.929" y="279.408">
+   <polygon points="0,0 69.2651,0 81.0049,14.0878 154.966,14.0878 160.836,29.3496 234.797,30.5236 281.756,77.483 298.192,81.0049 316.976,99.7887 333.412,108.007 367.457,111.529 375.675,147.922 375.675,158.488 405.025,163.184 407.373,203.099 435.548,207.795 439.07,306.41 449.636,322.846 292.322,327.542 110.355,326.368 105.659,311.106 58.6992,309.932 50.4813,295.844 0,297.018"/>
   </object>
  </objectgroup>
  <objectgroup id="224" name="water_zone">

@@ -15,6 +15,10 @@ public class TmxCollisionLoader {
     private static final String COLLISION_LAYER = "collision";
     private static final String MAP_BOUNDS_LAYER = "map_bounds";
     private static final String WATER_ZONE_LAYER = "water_zone";
+    private static final String COOP_LAYER = "coop";
+    private static final String COWSHED_LAYER = "cowshed";
+    private static final String PIGSTY_LAYER = "pigsty";
+    private static final String WICKET_LAYER = "wicket";
 
     public static void loadInto(Environment environment, String tmxPath) {
         try {
@@ -29,6 +33,7 @@ public class TmxCollisionLoader {
             NodeList mapChildren = map.getChildNodes();
             int blockerCount = 0;
             int waterZoneCount = 0;
+            int penZoneCount = 0;
             for (int i = 0; i < mapChildren.getLength(); i++) {
                 Node node = mapChildren.item(i);
                 if (!(node instanceof Element) || !"objectgroup".equals(node.getNodeName())) continue;
@@ -49,15 +54,22 @@ public class TmxCollisionLoader {
                     } else if (COLLISION_LAYER.equals(layerName)) {
                         environment.addMapCollider(collider);
                         blockerCount++;
+                    } else if (WICKET_LAYER.equals(layerName)) {
+                        environment.addWicketCollider(collider);
+                        blockerCount++;
                     } else if (WATER_ZONE_LAYER.equals(layerName)) {
                         environment.addWaterZone(collider);
                         waterZoneCount++;
+                    } else if (isAnimalPenLayer(layerName)) {
+                        environment.addAnimalPen(layerName, collider);
+                        penZoneCount++;
                     }
                 }
             }
 
             System.out.println("Loaded TMX collision: " + blockerCount
-                    + " blockers, " + waterZoneCount + " water zones from " + tmxPath);
+                    + " blockers, " + waterZoneCount + " water zones, "
+                    + penZoneCount + " animal pens from " + tmxPath);
         } catch (Exception e) {
             System.err.println("Cannot load TMX collision: " + tmxPath);
             e.printStackTrace();
@@ -166,6 +178,12 @@ public class TmxCollisionLoader {
 
     private static boolean hasChild(Element parent, String name) {
         return firstChild(parent, name) != null;
+    }
+
+    private static boolean isAnimalPenLayer(String layerName) {
+        return COOP_LAYER.equals(layerName)
+                || COWSHED_LAYER.equals(layerName)
+                || PIGSTY_LAYER.equals(layerName);
     }
 
     private static int readInt(Element element, String attribute) {
