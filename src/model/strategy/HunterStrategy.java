@@ -2,7 +2,7 @@ package model.strategy;
 
 import model.*;
 import model.herbivore.Herbivore;
-import model.carnivore.Carnivore;
+import model.carnivore.*;
 import model.apex.Eagle;
 import model.environment.Environment;
 import model.environment.Rectangle; // Import thêm Rectangle để dùng QuadTree
@@ -99,42 +99,50 @@ public class HunterStrategy implements SurvivalStrategy {
         List<Entity> nearbyEntities = Environment.getInstance().getQuadTree().query(searchRange, null);
 
         for (Entity e : nearbyEntities) {
-            // Đang sống VÀ không nấp VÀ KHÔNG CÙNG LOÀI
-            if (e instanceof Animal && e.isAlive() && 
-                ((Animal) e).getCurrentState() != AnimalState.HIDING && 
-                e.getClass() != hunter.getClass()) { 
+            
+            if (e instanceof Animal && e.isAlive() && e.getClass() != hunter.getClass()) {
                 
                 Animal preyCandidate = (Animal) e;
-                boolean isValidPrey = false;
+                
+                // KIỂM TRA TẦM NHÌN CỦA KẺ ĐI SĂN
+                // Con mồi đang nấp lùm?
+                boolean isHiding = (preyCandidate.getCurrentState() == AnimalState.HIDING);
+                // Kẻ đi săn có thể nhìn thấy nếu: Con mồi KHÔNG nấp, HOẶC kẻ đi săn là Cáo (Fox)
+                boolean canSeePrey = !isHiding || (hunter instanceof Fox);
 
-                // 1. NẾU LÀ THÚ ĂN CỎ
-                if (preyCandidate instanceof Herbivore) {
-                    if (hunter instanceof Eagle) {
-                        if (preyCandidate.getSize() <= 5.0) isValidPrey = true;
-                    } else {
-                        isValidPrey = true; 
-                    }
-                } 
-                // 2. NẾU LÀ THÚ ĂN THỊT KHÁC LOÀI -> Cá lớn nuốt cá bé
-                else if (preyCandidate instanceof Carnivore && hunter instanceof Carnivore) {
-                    Carnivore predator = (Carnivore) hunter;
-                    Carnivore prey = (Carnivore) preyCandidate;
+                // Nếu thỏa mãn điều kiện nhìn thấy
+                if (canSeePrey) {
+                    boolean isValidPrey = false;
 
-                    // Chỉ săn nếu áp đảo hoàn toàn (> 1.3 lần đe dọa)
-                    if (predator.getStrengthWeight() > prey.getStrengthWeight() * 1.3) {
+                    // 1. NẾU LÀ THÚ ĂN CỎ
+                    if (preyCandidate instanceof Herbivore) {
                         if (hunter instanceof Eagle) {
-                            if (prey.getSize() <= 5.0) isValidPrey = true;
+                            if (preyCandidate.getSize() <= 5.0) isValidPrey = true;
                         } else {
                             isValidPrey = true;
                         }
-                    }
-                }
+                    } 
+                    // 2. NẾU LÀ THÚ ĂN THỊT KHÁC LOÀI -> Cá lớn nuốt cá bé
+                    else if (preyCandidate instanceof Carnivore && hunter instanceof Carnivore) {
+                        Carnivore predator = (Carnivore) hunter;
+                        Carnivore prey = (Carnivore) preyCandidate;
 
-                if (isValidPrey) {
-                    double dist = hunter.getPosition().distanceTo(preyCandidate.getPosition());
-                    if (dist <= vision && dist < minDistance) {
-                        minDistance = dist;
-                        nearestPrey = preyCandidate;
+                        if (predator.getStrengthWeight() > prey.getStrengthWeight() * 1.3) {
+                            if (hunter instanceof Eagle) {
+                                if (prey.getSize() <= 5.0) isValidPrey = true;
+                            } else {
+                                isValidPrey = true;
+                            }
+                        }
+                    }
+
+                    // Nếu xác nhận là mồi ngon, tính khoảng cách
+                    if (isValidPrey) {
+                        double dist = hunter.getPosition().distanceTo(preyCandidate.getPosition());
+                        if (dist <= vision && dist < minDistance) {
+                            minDistance = dist;
+                            nearestPrey = preyCandidate;
+                        }
                     }
                 }
             }

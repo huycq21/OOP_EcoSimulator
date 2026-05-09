@@ -10,10 +10,15 @@ import model.environment.Rectangle; // Chú ý import thêm Rectangle
 import java.util.List;
 
 public class ScaredStrategy implements SurvivalStrategy {
-    private PassiveStrategy wanderLogic;
+    private SurvivalStrategy idleLogic;
 
     public ScaredStrategy() {
-        this.wanderLogic = new PassiveStrategy();
+        this.idleLogic = new PassiveStrategy();
+    }
+
+    // THÊM CONSTRUCTOR NÀY
+    public ScaredStrategy(SurvivalStrategy customIdleLogic) {
+        this.idleLogic = customIdleLogic;
     }
 
     @Override
@@ -51,8 +56,8 @@ public class ScaredStrategy implements SurvivalStrategy {
             prey.getVelocity().setY(fleeVector.getY());
 
         } else {
-            // 4. Nếu không có thú săn mồi, quay lại đi dạo ăn cỏ bình thường
-            wanderLogic.execute(prey);
+            // BÍ QUYẾT: Nếu an toàn, truyền quyền điều khiển cho bộ não khác!
+            idleLogic.execute(prey);
         }
     }
 

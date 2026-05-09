@@ -1,7 +1,9 @@
 package model.herbivore;
 
 import model.Vector2D;
+import model.strategy.FlockingStrategy;
 import model.strategy.PassiveStrategy;
+import model.strategy.ScaredStrategy;
 
 public class Elephant extends Herbivore {
 
@@ -10,7 +12,8 @@ public class Elephant extends Herbivore {
         // Tốc độ: 2.0 (Chậm), Tầm nhìn: 50.0
         super(position, 12.0, 500, 400, 2.0, 50.0);
         
-        // Voi thì cứ đi dạongẫu nhiên thôi, thú nhỏ tự phải né nó
-        this.setBrain(new PassiveStrategy());
+        // Voi thì cứ đi dạo ngẫu nhiên thôi, thú nhỏ tự phải né nó
+        // Trong constructor của Zebra:
+        this.setBrain(new ScaredStrategy(new FlockingStrategy(new PassiveStrategy())));
     }
 }
