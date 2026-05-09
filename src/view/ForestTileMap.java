@@ -9,16 +9,17 @@ import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public class ForestTileMap {
-    private static final int FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-    private static final int FLIPPED_VERTICALLY_FLAG = 0x40000000;
-    private static final int FLIPPED_DIAGONALLY_FLAG = 0x20000000;
-    private static final int FLIPPED_HEXAGONAL_FLAG = 0x10000000;
+    private static final long FLIPPED_HORIZONTALLY_FLAG = 0x80000000L;
+    private static final long FLIPPED_VERTICALLY_FLAG = 0x40000000L;
+    private static final long FLIPPED_DIAGONALLY_FLAG = 0x20000000L;
+    private static final long FLIPPED_HEXAGONAL_FLAG = 0x10000000L;
 
     private final List<Tileset> tilesets;
     private final BufferedImage pattern;
@@ -193,7 +194,7 @@ public class ForestTileMap {
                 String[] rawGids = chunk.getTextContent().trim().split(",");
 
                 for (int tileIndex = 0; tileIndex < rawGids.length; tileIndex++) {
-                    int rawGid = parseGid(rawGids[tileIndex]);
+                    long rawGid = parseGid(rawGids[tileIndex]);
                     int gid = clearFlipFlags(rawGid);
                     if (gid == 0) continue;
 
@@ -201,26 +202,27 @@ public class ForestTileMap {
                     int localY = tileIndex / chunkWidth;
                     int worldTileX = chunkX + localX;
                     int worldTileY = chunkY + localY;
-                    drawTile(g, gid, (worldTileX - minTileX) * tileWidth, (worldTileY - minTileY) * tileHeight);
+                    drawTile(g, rawGid, (worldTileX - minTileX) * tileWidth, (worldTileY - minTileY) * tileHeight);
                 }
             }
         }
     }
 
-    private int parseGid(String raw) {
+    private long parseGid(String raw) {
         String trimmed = raw.trim();
         if (trimmed.isEmpty()) return 0;
-        return (int) Long.parseLong(trimmed);
+        return Long.parseLong(trimmed);
     }
 
-    private int clearFlipFlags(int gid) {
-        return gid & ~(FLIPPED_HORIZONTALLY_FLAG
+    private int clearFlipFlags(long gid) {
+        return (int) (gid & ~(FLIPPED_HORIZONTALLY_FLAG
                 | FLIPPED_VERTICALLY_FLAG
                 | FLIPPED_DIAGONALLY_FLAG
-                | FLIPPED_HEXAGONAL_FLAG);
+                | FLIPPED_HEXAGONAL_FLAG));
     }
 
-    private void drawTile(Graphics2D g, int gid, int x, int y) {
+    private void drawTile(Graphics2D g, long rawGid, int x, int y) {
+        int gid = clearFlipFlags(rawGid);
         Tileset tileset = findTileset(gid);
         if (tileset == null) return;
 
@@ -228,18 +230,35 @@ public class ForestTileMap {
         int sx = (localId % tileset.columns) * tileset.tileWidth;
         int sy = (localId / tileset.columns) * tileset.tileHeight;
 
-        g.drawImage(
-                tileset.image,
-                x,
-                y,
-                x + tileset.tileWidth,
-                y + tileset.tileHeight,
-                sx,
-                sy,
-                sx + tileset.tileWidth,
-                sy + tileset.tileHeight,
-                null
-        );
+        BufferedImage tile = tileset.image.getSubimage(sx, sy, tileset.tileWidth, tileset.tileHeight);
+        AffineTransform transform = createTileTransform(rawGid, x, y, tileset.tileWidth, tileset.tileHeight);
+        g.drawImage(tile, transform, null);
+    }
+
+    private AffineTransform createTileTransform(long rawGid, int x, int y, int tileWidth, int tileHeight) {
+        boolean flippedHorizontally = (rawGid & FLIPPED_HORIZONTALLY_FLAG) != 0;
+        boolean flippedVertically = (rawGid & FLIPPED_VERTICALLY_FLAG) != 0;
+        boolean flippedDiagonally = (rawGid & FLIPPED_DIAGONALLY_FLAG) != 0;
+
+        if (!flippedDiagonally) {
+            double scaleX = flippedHorizontally ? -1 : 1;
+            double scaleY = flippedVertically ? -1 : 1;
+            double translateX = flippedHorizontally ? x + tileWidth : x;
+            double translateY = flippedVertically ? y + tileHeight : y;
+            return new AffineTransform(scaleX, 0, 0, scaleY, translateX, translateY);
+        }
+
+        if (flippedHorizontally && flippedVertically) {
+            return new AffineTransform(0, -1, -1, 0, x + tileWidth, y + tileHeight);
+        }
+        if (flippedHorizontally) {
+            return new AffineTransform(0, 1, -1, 0, x + tileWidth, y);
+        }
+        if (flippedVertically) {
+            return new AffineTransform(0, -1, 1, 0, x, y + tileHeight);
+        }
+
+        return new AffineTransform(0, 1, 1, 0, x, y);
     }
 
     private Tileset findTileset(int gid) {
