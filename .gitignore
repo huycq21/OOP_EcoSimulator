@@ -1,0 +1,5 @@
+# Bỏ qua toàn bộ thư mục biên dịch bin
+bin/
+
+# Bỏ qua các file .class riêng lẻ (nếu có)
+*.class
