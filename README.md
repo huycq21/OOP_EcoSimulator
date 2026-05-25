@@ -71,6 +71,20 @@ Các sprite hiện đang được load:
 - `Fish2_animation`
 - `Fish3_animation`
 - `Fish4_animation`
+- `Chicken_animation`
+- `Cow_animation`
+- `Pig_animation`
+
+Riêng `Chicken`, `Cow`, `Pig` dùng 4 frame đầu tiên của hàng đầu tiên:
+
+```text
+frame 0: đi xuống
+frame 1: đi lên
+frame 2: đi trái
+frame 3: đi phải
+```
+
+Ba loài này không chạy animation nhiều frame, vì sprite sheet hiện tại xoay nhiều hướng trong cùng một sheet.
 
 ### `ForestTileMap`
 
@@ -98,6 +112,10 @@ Các layer logic đang được code đọc theo tên:
 map_bounds
 collision
 water_zone
+coop
+cowshed
+pigsty
+wicket
 ```
 
 ### `map_bounds`
@@ -128,6 +146,31 @@ Hiện tại chỉ cá được vào nước. Các loài khác nếu đi vào `w
 - Rectangle
 - Ellipse
 - Polygon
+
+### `coop`, `cowshed`, `pigsty`
+
+Đây là các object layer dùng làm chuồng nuôi:
+
+- `coop`: chuồng gà.
+- `cowshed`: chuồng bò.
+- `pigsty`: chuồng lợn.
+
+Các loài vật nuôi chỉ spawn trong đúng layer chuồng của nó:
+
+- `Chicken` chỉ spawn trong `coop`.
+- `Cow` chỉ spawn trong `cowshed`.
+- `Pig` chỉ spawn trong `pigsty`.
+
+Trong quá trình update, vật nuôi bị giữ lại trong đúng vùng chuồng. Nếu chúng đi ra ngoài polygon chuồng, hệ thống trả chúng về vị trí trước đó.
+
+### `wicket`
+
+Layer này dùng cho hàng rào/cửa chắn chuồng.
+
+`wicket` được xử lý như collider riêng:
+
+- Các loài bên ngoài bị chặn, không đi xuyên qua wicket.
+- `Chicken`, `Cow`, `Pig` được bỏ qua wicket để có thể spawn và đi lại bên trong chuồng.
 
 ## Đọc Collision Từ TMX
 
@@ -198,6 +241,7 @@ File: `src/model/environment/Map/Jungle.java`
 - Spawn thú ăn cỏ.
 - Spawn thú ăn thịt.
 - Spawn cá.
+- Spawn vật nuôi trong chuồng.
 - Spawn grass/bush dùng cho logic ăn uống và trú ẩn.
 
 Số lượng spawn hiện tại:
@@ -209,6 +253,9 @@ Số lượng spawn hiện tại:
 - `Wolf`: 5
 - `Fox`: 4
 - Mỗi loại cá: 8
+- `Chicken`: 4
+- `Cow`: 2
+- `Pig`: 3
 - `Grass`: 90
 - `Bush`: 22
 
@@ -393,6 +440,30 @@ Các loài cá hiện có:
 
 Vùng spawn cá được chọn bằng `randomWaterPosition(...)`. Hàm này ưu tiên vùng nước rộng bằng cách chọn `water_zone` theo diện tích.
 
+## Logic Vật Nuôi Và Chuồng
+
+### `DomesticAnimal`
+
+File: `src/model/domestic/DomesticAnimal.java`
+
+`DomesticAnimal` là class nền cho vật nuôi. Mỗi vật nuôi có một `penLayerName` để biết nó thuộc chuồng nào.
+
+Các loài hiện có:
+
+- `Chicken`: thuộc layer `coop`.
+- `Cow`: thuộc layer `cowshed`.
+- `Pig`: thuộc layer `pigsty`.
+
+Các loài này dùng `PassiveStrategy`, di chuyển chậm và có lúc đứng yên. Tốc độ hiện tại:
+
+- `Chicken`: `1.1`
+- `Cow`: `0.7`
+- `Pig`: `0.9`
+
+Vị trí spawn dùng `randomPenPosition(...)`, nghĩa là hệ thống chỉ lấy điểm ngẫu nhiên bên trong đúng polygon chuồng của loài đó.
+
+`wicket` không được tính là vật cản đối với vật nuôi trong chuồng, nhưng vẫn là vật cản đối với các loài khác.
+
 ## Va Chạm Entity
 
 ### `CollisionHandler`
@@ -416,11 +487,23 @@ Khi chỉnh `Forest.tmx`, cần giữ đúng tên layer:
 map_bounds
 collision
 water_zone
+coop
+cowshed
+pigsty
+wicket
 ```
 
 Nếu muốn thêm vật cản cứng, vẽ object vào `collision`.
 
 Nếu muốn thêm vùng nước, vẽ object vào `water_zone`. Nên dùng polygon để bao chính xác hình dạng ao/hồ/sông.
+
+Nếu muốn thêm chuồng, vẽ polygon vào đúng layer:
+
+- Gà: `coop`
+- Bò: `cowshed`
+- Lợn: `pigsty`
+
+Nếu muốn thêm hàng rào/cửa chắn chuồng, vẽ object vào `wicket`.
 
 Nếu muốn thay đổi biên map, sửa object trong `map_bounds`.
 
