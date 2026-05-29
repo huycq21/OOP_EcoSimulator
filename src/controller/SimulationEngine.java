@@ -53,7 +53,7 @@ public class SimulationEngine {
                 // BƯỚC 5: NGỦ ĐỂ GIỮ NHỊP 60 FPS
                 // ====================================================
                 try {
-                    Thread.sleep(16); // 1000ms / 60 = ~16.6ms
+                    Thread.sleep(SimulationConstant.FRAME_DELAY_MS); // 1000ms / 60 = ~16.6ms
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

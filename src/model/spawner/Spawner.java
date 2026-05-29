@@ -8,6 +8,7 @@ import model.plant.Grass;
 
 import java.util.Random;
 
+import controller.EventManager;
 import controller.SimulationConstant;
 
 public class Spawner {
@@ -54,6 +55,7 @@ public class Spawner {
 
             env.queueEntity(new Grass(pos));
         }
+        EventManager.plantSpawned("Grass");
     }
 
     private void spawnRabbit(int amount) {
@@ -65,5 +67,6 @@ public class Spawner {
 
             env.queueEntity(new Rabbit(pos));
         }
+        EventManager.animalBorn("Rabbit");
     }
-}
+} 

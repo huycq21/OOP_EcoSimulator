@@ -102,7 +102,42 @@ public class SimulationPanel extends JPanel {
             }
         }
         drawBuildUI(g2);
+        drawInfoPanel(g2);
         g2.dispose();
+    }
+
+    private void drawInfoPanel(Graphics2D g) {
+
+        if (entities == null) return;
+
+        int rabbit = 0;
+        int deer = 0;
+        int boar = 0;
+        int fox = 0;
+        int wolf = 0;
+        int grass = 0;
+
+        for(Entity e : entities) {
+
+            if(e instanceof Rabbit) rabbit++;
+            else if(e instanceof Deer) deer++;
+            else if(e instanceof Boar) boar++;
+            else if(e instanceof Fox) fox++;
+            else if(e instanceof Wolf) wolf++;
+            else if(e instanceof Grass) grass++;
+        }
+
+        g.setColor(new Color(0,0,0,180));
+        g.fillRoundRect(10,10,180,160,10,10);
+
+        g.setColor(Color.WHITE);
+
+        g.drawString("Rabbit : " + rabbit,20,35);
+        g.drawString("Deer : " + deer,20,55);
+        g.drawString("Boar : " + boar,20,75);
+        g.drawString("Fox : " + fox,20,95);
+        g.drawString("Wolf : " + wolf,20,115);
+        g.drawString("Grass : " + grass,20,135);
     }
 
     private void drawBuildUI(Graphics2D g) {

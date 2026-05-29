@@ -1,6 +1,7 @@
 package model;
 
 import model.strategy.SurvivalStrategy;
+import controller.EventManager;
 import controller.SimulationConstant;
 import model.*;
 import controller.SimulationConstant;
@@ -88,7 +89,7 @@ public abstract class Animal extends Entity implements Ageable {
             velocity.setY(0);
 
             if (hidingTicks <= 0) {
-
+                EventManager.animalLeaveBush(getClass().getSimpleName());
                 currentState = AnimalState.WANDERING;
                 justLeftBush = true;
 
@@ -170,6 +171,7 @@ public abstract class Animal extends Entity implements Ageable {
         this.stateLockTicks = SimulationConstant.DEAD_STATE_DURATION;
         this.velocity.setX(0);
         this.velocity.setY(0);
+        EventManager.animalDied(getClass().getSimpleName());
     }
 
     public boolean shouldSpawnCarcass() {
