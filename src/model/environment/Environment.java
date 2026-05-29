@@ -22,11 +22,13 @@ public abstract class Environment {
     protected List<MapCollider> waterZones;
     protected Map<String, List<MapCollider>> animalPens;
     protected MapCollider mapBounds;
+    protected Weather weather;
     protected double width;
     protected double height;
 
     // --- VÒNG LẶP CỐT LÕI (GAME LOOP) ---
     public void update() {
+        weather.update();
         // 1. [QUAN TRỌNG NHẤT] ĐẬP CÂY CŨ, XÂY CÂY MỚI Ở ĐẦU MỖI KHUNG HÌNH!
         Rectangle mapBoundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
         currentQuadTree = new QuadTree(mapBoundary, 4);
@@ -316,6 +318,7 @@ public abstract class Environment {
         this.wicketColliders = new ArrayList<>();
         this.waterZones = new ArrayList<>();
         this.animalPens = new HashMap<>();
+        this.weather = new Weather();
     }
 
     public static void setActiveEnvironment(Environment env) {
@@ -328,6 +331,10 @@ public abstract class Environment {
 
     public synchronized void queueEntity(Entity entity) {
         pendingEntities.add(entity);
+    }
+
+    public Weather getWeather() {
+        return weather;
     }
 }
 

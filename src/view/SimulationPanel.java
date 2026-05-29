@@ -117,6 +117,17 @@ public class SimulationPanel extends JPanel {
         int wolf = 0;
         int grass = 0;
 
+        String weather = "UNKNOWN";
+
+        if (Environment.getInstance() != null
+                && Environment.getInstance().getWeather() != null) {
+
+            weather = Environment.getInstance()
+                    .getWeather()
+                    .getCurrentWeather()
+                    .toString();
+        }
+
         for(Entity e : entities) {
 
             if(e instanceof Rabbit) rabbit++;
@@ -128,7 +139,7 @@ public class SimulationPanel extends JPanel {
         }
 
         g.setColor(new Color(0,0,0,180));
-        g.fillRoundRect(10,10,180,160,10,10);
+        g.fillRoundRect(10,10,180,190,10,10);
 
         g.setColor(Color.WHITE);
 
@@ -138,6 +149,7 @@ public class SimulationPanel extends JPanel {
         g.drawString("Fox : " + fox,20,95);
         g.drawString("Wolf : " + wolf,20,115);
         g.drawString("Grass : " + grass,20,135);
+        g.drawString("Weather : " + weather,20,165);
     }
 
     private void drawBuildUI(Graphics2D g) {
