@@ -1,7 +1,9 @@
 package model;
 
 import model.strategy.SurvivalStrategy;
+import controller.SimulationConstant;
 import model.*;
+import controller.SimulationConstant;
 
 public abstract class Animal extends Entity implements Ageable {
     // 1. Các chỉ số sinh tồn cơ bản
@@ -33,7 +35,7 @@ public abstract class Animal extends Entity implements Ageable {
         
         this.maxHp = maxHp;
         this.hp = maxHp;             
-        this.maxAge = 20000;
+        this.maxAge = SimulationConstant.DEFAULT_MAX_AGE;
         
         this.maxEnergy = maxEnergy;
         this.energy = maxEnergy;     
@@ -117,7 +119,7 @@ public abstract class Animal extends Entity implements Ageable {
 
     // Hàm giảm năng lượng cơ bản
     private void decreaseEnergy() {
-        this.energy -= 0.02; // Có thể đưa hệ số này ra SimulationConstant cho dễ chỉnh
+        this.energy -= SimulationConstant.ENERGY_DECAY_PER_TICK;
     }
 
     // --- CÁC HÀM GETTER / SETTER QUAN TRỌNG ---
@@ -142,7 +144,10 @@ public abstract class Animal extends Entity implements Ageable {
     }
 
     public void startAttackState() {
-        setTemporaryState(AnimalState.ATTACKING, 18);
+        setTemporaryState(
+                AnimalState.ATTACKING,
+                SimulationConstant.ATTACK_STATE_DURATION
+        );
     }
 
     public void receiveDamage(double damage) {
@@ -152,14 +157,17 @@ public abstract class Animal extends Entity implements Ageable {
         if (this.hp <= 0) {
             die();
         } else {
-            setTemporaryState(AnimalState.HURT, 20);
+            setTemporaryState(
+                    AnimalState.HURT,
+                    SimulationConstant.HURT_STATE_DURATION
+            );
         }
     }
 
     public void die() {
         this.hp = 0;
         this.currentState = AnimalState.DEAD;
-        this.stateLockTicks = 42;
+        this.stateLockTicks = SimulationConstant.DEAD_STATE_DURATION;
         this.velocity.setX(0);
         this.velocity.setY(0);
     }

@@ -8,13 +8,12 @@ import model.plant.Grass;
 
 import java.util.Random;
 
+import controller.SimulationConstant;
+
 public class Spawner {
 
     private final Environment env;
     private final Random random;
-
-    private static final int MIN_GRASS = 90;
-    private static final int MIN_RABBIT = 18;
 
     public Spawner(Environment env) {
         this.env = env;
@@ -37,12 +36,12 @@ public class Spawner {
             }
         }
 
-        if (grassCount < MIN_GRASS) {
-            spawnGrass(MIN_GRASS - grassCount);
+        if (grassCount < SimulationConstant.MIN_GRASS) {
+            spawnGrass(SimulationConstant.MIN_GRASS - grassCount);
         }
 
-        if (rabbitCount < MIN_RABBIT) {
-            spawnRabbit(MIN_RABBIT - rabbitCount);
+        if (rabbitCount < SimulationConstant.MIN_RABBIT) {
+            spawnRabbit(SimulationConstant.MIN_RABBIT - rabbitCount);
         }
     }
 

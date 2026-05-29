@@ -175,7 +175,7 @@ public class CollisionHandler {
             if (animal instanceof Rabbit && animal.getSize() <= hideable.getMaxAllowedSize()) {
                 hideable.hideEntity(animal);
                 animal.setCurrentState(AnimalState.HIDING);
-                animal.setHidingTicks(300);
+                animal.setHidingTicks(SimulationConstant.RABBIT_HIDE_DURATION);
                 // Gắn chặt vị trí con vật vào giữa bụi rậm và ép dừng lại
                 animal.getPosition().setX(obstacle.getPosition().getX());
                 animal.getPosition().setY(obstacle.getPosition().getY());
