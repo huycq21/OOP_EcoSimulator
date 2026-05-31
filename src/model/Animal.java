@@ -14,10 +14,14 @@ public abstract class Animal extends Entity implements Ageable {
     protected double speed;
 
     protected double visionRadius;
+    protected boolean canEnterWater;
+    protected boolean requiresWater;
     
     // 2. Trạng thái và Vật lý (Di chuyển)
     protected Vector2D velocity; 
     protected AnimalState currentState;
+    protected int stateLockTicks;
+    private boolean carcassSpawned;
     
     // 3. ĐÂY CHÍNH LÀ BỘ NÃO (Strategy Pattern)
     protected SurvivalStrategy brain; 
@@ -28,20 +32,36 @@ public abstract class Animal extends Entity implements Ageable {
         
         this.maxHp = maxHp;
         this.hp = maxHp;             
+        this.maxAge = 20000;
         
         this.maxEnergy = maxEnergy;
         this.energy = maxEnergy;     
         
         this.speed = speed;
         this.visionRadius = visionRadius;
+        this.canEnterWater = false;
+        this.requiresWater = false;
         
         this.velocity = new Vector2D(0, 0); 
         this.currentState = AnimalState.WANDERING; 
+        this.stateLockTicks = 0;
+        this.carcassSpawned = false;
     }
 
     @Override
     public void update() {
         if (!isAlive) return; 
+
+        if (currentState == AnimalState.DEAD) {
+            velocity.setX(0);
+            velocity.setY(0);
+            if (stateLockTicks > 0) {
+                stateLockTicks--;
+            } else {
+                destroy();
+            }
+            return;
+        }
 
         // 1. Giảm thể lực theo thời gian
         decreaseEnergy();
@@ -50,15 +70,16 @@ public abstract class Animal extends Entity implements Ageable {
 
         // 2. Kiểm tra sinh tử
         if (hp <= 0 || energy <= 0 || isTooOld()) {
-            this.currentState = AnimalState.DEAD;
-            this.destroy(); 
+            die();
             return; 
         }
 
         // 3. UỶ QUYỀN SUY NGHĨ CHO BỘ NÃO
         // Thú vị ở đây: Class Animal không cần biết nó đang chạy trốn hay đi dạo.
         // Nó chỉ gọi cái "não" ra và bảo: "Mày tính toán hướng đi cho tao đi!"
-        if (this.brain != null) {
+        if (stateLockTicks > 0) {
+            stateLockTicks--;
+        } else if (this.brain != null) {
             this.brain.execute(this); 
         }
         // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
@@ -87,7 +108,46 @@ public abstract class Animal extends Entity implements Ageable {
     }
 
     public void setCurrentState(AnimalState currentState) {
+        if (this.currentState == AnimalState.DEAD) return;
+        if (stateLockTicks > 0 && currentState != AnimalState.DEAD) return;
         this.currentState = currentState;
+    }
+
+    public void startAttackState() {
+        setTemporaryState(AnimalState.ATTACKING, 18);
+    }
+
+    public void receiveDamage(double damage) {
+        if (currentState == AnimalState.DEAD) return;
+
+        this.hp -= damage;
+        if (this.hp <= 0) {
+            die();
+        } else {
+            setTemporaryState(AnimalState.HURT, 20);
+        }
+    }
+
+    public void die() {
+        this.hp = 0;
+        this.currentState = AnimalState.DEAD;
+        this.stateLockTicks = 42;
+        this.velocity.setX(0);
+        this.velocity.setY(0);
+    }
+
+    public boolean shouldSpawnCarcass() {
+        if (currentState != AnimalState.DEAD || carcassSpawned) return false;
+
+        carcassSpawned = true;
+        return true;
+    }
+
+    private void setTemporaryState(AnimalState state, int ticks) {
+        if (currentState == AnimalState.DEAD) return;
+
+        this.currentState = state;
+        this.stateLockTicks = ticks;
     }
 
     @Override
@@ -112,6 +172,14 @@ public abstract class Animal extends Entity implements Ageable {
         return visionRadius;
     }
 
+    public boolean canEnterWater() {
+        return canEnterWater;
+    }
+
+    public boolean requiresWater() {
+        return requiresWater;
+    }
+
     public double getEnergy() {
         return energy;
     }
@@ -122,8 +190,15 @@ public abstract class Animal extends Entity implements Ageable {
     public double getHp() {
         return hp;
     }
+    public double getMaxHp() {
+        return maxHp;
+    }
     public void setHp(double x) {
-        this.hp = x;
+        if (x < this.hp) {
+            receiveDamage(this.hp - x);
+        } else {
+            this.hp = x;
+        }
     }
     public void setEnergy(double energy) {
         if(energy > maxEnergy) {

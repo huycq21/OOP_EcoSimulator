@@ -6,58 +6,91 @@ import model.Entity;
 import model.Vector2D;
 import model.environment.Environment;
 import model.environment.Rectangle;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FlockingStrategy implements SurvivalStrategy {
-    private SurvivalStrategy idleLogic; // Logic dự phòng khi đi 1 mình
+    private SurvivalStrategy nextLogic; 
 
-    // Constructor mặc định (rảnh thì đi dạo)
     public FlockingStrategy() {
-        this.idleLogic = new PassiveStrategy();
+        this.nextLogic = new PassiveStrategy();
     }
 
-    // Constructor linh hoạt (rảnh thì làm gì đó khác)
-    public FlockingStrategy(SurvivalStrategy customIdleLogic) {
-        this.idleLogic = customIdleLogic;
+    public FlockingStrategy(SurvivalStrategy customLogic) {
+        this.nextLogic = customLogic;
     }
 
     @Override
     public void execute(Animal animal) {
-        // KHÔNG CÒN fleeLogic Ở ĐÂY NỮA. CHỈ TẬP TRUNG TÌM ĐỒNG BỌN.
-        Entity ally = findNearestAlly(animal);
+        List<Animal> allies = findNearbyAllies(animal);
 
-        if (ally != null) {
+        // NẾU CÓ ĐỒNG BỌN -> KÍCH HOẠT TẬP TÍNH BẦY ĐÀN
+        if (!allies.isEmpty()) {
             animal.setCurrentState(AnimalState.WANDERING);
-            
-            double dist = animal.getPosition().distanceTo(ally.getPosition());
-            
-            // Cohesion: Đi lại gần nhau nếu cách xa
-            if (dist > 20.0) {
-                double dx = ally.getPosition().getX() - animal.getPosition().getX();
-                double dy = ally.getPosition().getY() - animal.getPosition().getY();
 
-                Vector2D flockVector = new Vector2D(dx, dy);
-                flockVector.normalize();
-                
-                flockVector.setX(flockVector.getX() * animal.getSpeed() * 0.6);
-                flockVector.setY(flockVector.getY() * animal.getSpeed() * 0.6);
+            Vector2D cohesion = new Vector2D(0, 0);   // Điểm đến chung (Tụ tập)
+            Vector2D alignment = new Vector2D(0, 0);  // Hướng đi chung (Đồng hướng)
+            Vector2D separation = new Vector2D(0, 0); // Lực đẩy (Giãn cách)
 
-                animal.getVelocity().setX(flockVector.getX());
-                animal.getVelocity().setY(flockVector.getY());
-            } else {
-                // Sát nhau rồi thì cùng tản bộ
-                idleLogic.execute(animal);
+            for (Animal ally : allies) {
+                double dist = animal.getPosition().distanceTo(ally.getPosition());
+
+                // 1. Cộng dồn tọa độ để tìm tâm điểm của bầy
+                cohesion.add(ally.getPosition());
+
+                // 2. Cộng dồn vector vận tốc để xem bầy đang trôi về đâu
+                alignment.add(ally.getVelocity());
+
+                // 3. Nếu đứng quá gần nhau (ví dụ < 15.0), tạo lực đẩy né nhau ra
+                if (dist < 15.0 && dist > 0) {
+                    double pushX = animal.getPosition().getX() - ally.getPosition().getX();
+                    double pushY = animal.getPosition().getY() - ally.getPosition().getY();
+                    // Càng gần lực đẩy càng mạnh (chia cho dist)
+                    separation.add(new Vector2D(pushX / dist, pushY / dist));
+                }
             }
+
+            int count = allies.size();
+
+            // Tính trung bình
+            cohesion.setX(cohesion.getX() / count);
+            cohesion.setY(cohesion.getY() / count);
+            
+            alignment.setX(alignment.getX() / count);
+            alignment.setY(alignment.getY() / count);
+
+            // Tính hướng đi từ bản thân tới Tâm của bầy (Cohesion Vector)
+            Vector2D steerToCenter = new Vector2D(
+                cohesion.getX() - animal.getPosition().getX(),
+                cohesion.getY() - animal.getPosition().getY()
+            );
+            steerToCenter.normalize();
+            alignment.normalize();
+            separation.normalize();
+
+            // TRỘN 3 LỰC LẠI VỚI NHAU (Bạn có thể tinh chỉnh các hệ số này)
+            // Ví dụ: Ưu tiên giãn cách (1.5) > Đồng hướng (1.0) = Tụ tập (1.0)
+            Vector2D finalVector = new Vector2D(
+                (steerToCenter.getX() * 1.0) + (alignment.getX() * 1.0) + (separation.getX() * 1.5),
+                (steerToCenter.getY() * 1.0) + (alignment.getY() * 1.0) + (separation.getY() * 1.5)
+            );
+            finalVector.normalize();
+
+            // Áp dụng vector mới
+            double pace = animal.getSpeed() * 0.6;
+            animal.getVelocity().setX(finalVector.getX() * pace);
+            animal.getVelocity().setY(finalVector.getY() * pace);
+            
         } else {
-            // Không thấy bầy -> Làm việc khác
-            idleLogic.execute(animal);
+            // NẾU ĐỨNG MỘT MÌNH KO THẤY AI -> TRỞ VỀ LÀM KẺ LANG THANG (nextLogic)
+            nextLogic.execute(animal);
         }
     }
 
-    private Entity findNearestAlly(Animal animal) {
-        Entity nearest = null;
+    // Đổi kiểu trả về thành List<Animal> để lấy nguyên bầy
+    protected List<Animal> findNearbyAllies(Animal animal) {
+        List<Animal> allies = new ArrayList<>();
         double vision = animal.getVisionRadius();
-        double minDistance = vision;
 
         Rectangle searchRange = new Rectangle(
             animal.getPosition().getX(), animal.getPosition().getY(), vision * 2, vision * 2
@@ -66,15 +99,13 @@ public class FlockingStrategy implements SurvivalStrategy {
         List<Entity> nearby = Environment.getInstance().getQuadTree().query(searchRange, null);
 
         for (Entity e : nearby) {
-            // Tìm CÙNG LOÀI, đang sống và không phải bản thân mình
             if (e.getClass() == animal.getClass() && e.isAlive() && e != animal) {
                 double dist = animal.getPosition().distanceTo(e.getPosition());
-                if (dist <= vision && dist < minDistance) {
-                    minDistance = dist;
-                    nearest = e;
+                if (dist <= vision) {
+                    allies.add((Animal) e);
                 }
             }
         }
-        return nearest;
+        return allies;
     }
 }

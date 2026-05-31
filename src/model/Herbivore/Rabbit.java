@@ -1,7 +1,7 @@
 package model.herbivore;
 
 import model.Vector2D;
-import model.strategy.PassiveStrategy;
+import model.strategy.ForagingStrategy;
 
 public class Rabbit extends Herbivore {
 
@@ -10,7 +10,7 @@ public class Rabbit extends Herbivore {
         super(position, 3.0, 50, 100, 5.0, 50.0);
         
         // QUAN TRỌNG: Lắp bộ não đi dạo cho thỏ ngay khi mới sinh ra
-        this.setBrain(new PassiveStrategy());
+        this.setBrain(new ForagingStrategy());
     }
 
     // Bạn thậm chí không cần ghi đè (override) hàm update() ở đây!

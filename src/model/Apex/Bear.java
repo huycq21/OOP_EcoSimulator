@@ -51,7 +51,6 @@ public class Bear extends ApexEntity {
             this.aoeRadius
         );
 
-        // 2. GỌI QUAD TREE LỌC THỰC THỂ (SIÊU NHANH)
         // Lưu ý: Class Environment của bạn cần có hàm getQuadTree() để lấy cây của frame hiện tại
         List<Entity> nearbyEntities = env.getQuadTree().query(aoeRange, null);
 

@@ -4,6 +4,7 @@ import model.Vector2D;
 import model.strategy.FlockingStrategy;
 import model.strategy.PassiveStrategy;
 import model.strategy.ScaredStrategy;
+import model.strategy.ForagingStrategy;
 
 public class Horse extends Herbivore {
 
@@ -12,6 +13,6 @@ public class Horse extends Herbivore {
         // Tốc độ: 5.5, Tầm nhìn: 60.0
         super(position, 5.0, 80, 150, 5.5, 60.0);
         // Trong constructor của Horse:
-        this.setBrain(new ScaredStrategy(new FlockingStrategy(new PassiveStrategy())));
+        this.setBrain(new ForagingStrategy(new FlockingStrategy(new PassiveStrategy())));
     }
 }
