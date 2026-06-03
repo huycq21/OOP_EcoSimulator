@@ -31,13 +31,19 @@ public class SimulationEngine {
     public void start() {
         // Tạo một Thread (Luồng) riêng để vòng lặp while(true) không làm đơ giao diện cửa sổ Swing
         Thread gameThread = new Thread(() -> {
+            double updateAccumulator = 0.0;
             while (true) {
                 // ====================================================
                 // BƯỚC 1, 2, 3: ĐÃ ĐƯỢC GÓI GỌN TRONG HÀM UPDATE
                 // ====================================================
                 // Hàm này sẽ tự động: Xây QuadTree -> Gọi Entity.update() -> Xét Va chạm -> Dọn xác chết
-                env.update(); 
-                spawner.update();
+                updateAccumulator += SimulationTime.getTimeScale();
+                int updatesThisFrame = Math.min(20, (int) updateAccumulator);
+                for (int i = 0; i < updatesThisFrame; i++) {
+                    env.update();
+                    spawner.update();
+                }
+                updateAccumulator -= updatesThisFrame;
 
                 // ====================================================
                 // BƯỚC 4: VẼ LÊN MÀN HÌNH

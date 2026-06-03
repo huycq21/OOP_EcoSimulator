@@ -1,5 +1,6 @@
 package view;
 
+import controller.SimulationTime;
 import model.Animal;
 import model.AnimalState;
 import model.Entity;
@@ -17,9 +18,16 @@ import model.herbivore.Boar;
 import model.herbivore.Deer;
 import model.herbivore.Rabbit;
 import model.environment.Environment;
+import model.plant.Algae;
+import model.plant.Berry;
 import model.plant.Grass;
+import model.plant.GrowthStage;
+import model.plant.Mushroom;
+import model.plant.Plant;
 import model.environment.Bush;
+import model.plant.SmallTree;
 import model.environment.OldTree;
+import model.plant.TreePlant;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,6 +36,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +46,10 @@ public class SimulationPanel extends JPanel {
     private List<Entity> entities;
     private final Map<String, BufferedImage> sprites;
     private final Map<String, EntitySpriteSet> entitySprites;
+    private final Map<String, PlantSpriteSet> plantSprites;
+    private JPanel timelinePanel;
+    private JLabel speedLabel;
+    private JSlider speedSlider;
     private double worldWidth;
     private double worldHeight;
     private double renderScale;
@@ -50,16 +63,20 @@ public class SimulationPanel extends JPanel {
     public SimulationPanel() {
         this.sprites = new HashMap<>();
         this.entitySprites = new HashMap<>();
+        this.plantSprites = new HashMap<>();
         this.forestTileMap = new ForestTileMap("assets/Environment/Forest/Forest.tmx");
         this.worldWidth = forestTileMap.isLoaded() ? forestTileMap.getPixelWidth() : 800;
         this.worldHeight = forestTileMap.isLoaded() ? forestTileMap.getPixelHeight() : 600;
         this.renderScale = 1.0;
         this.cameraFocusX = 0.5;
         this.cameraFocusY = 0.5;
+        setLayout(null);
         setBackground(new Color(34, 139, 34));
         installMouseCamera();
+        installTimelineControls();
         installBuildControls();
         loadSprites();
+        loadPlantSprites();
     }
 
     public void setWorldSize(double width, double height) {
@@ -73,6 +90,16 @@ public class SimulationPanel extends JPanel {
 
     public double getWorldHeight() {
         return worldHeight;
+    }
+
+    @Override
+    public void doLayout() {
+        super.doLayout();
+        if (timelinePanel == null) return;
+        int width = 240;
+        int height = 56;
+        int margin = 12;
+        timelinePanel.setBounds(Math.max(margin, getWidth() - width - margin), margin, width, height);
     }
 
     public void setEntities(List<Entity> entities) {
@@ -288,6 +315,49 @@ public class SimulationPanel extends JPanel {
 
         loadSprite("rabbit", "assets/Entities/Rabbit.png");
         loadSprite("wolf", "assets/Entities/Wolf.png");
+    }
+
+    private void loadPlantSprites() {
+        PlantSpriteSet smallTree = new PlantSpriteSet();
+        String plantsPath = "assets/Environment/Forest/Plants2.png";
+        smallTree.put(GrowthStage.SEED, cropImage(plantsPath, 0, 0, 16, 16));
+        smallTree.put(GrowthStage.SPROUT, cropImage(plantsPath, 16, 0, 16, 32));
+        smallTree.put(GrowthStage.YOUNG, cropImage(plantsPath, 32, 0, 32, 32));
+        smallTree.put(GrowthStage.MATURE, cropImage(plantsPath, 96, 0, 48, 48));
+        smallTree.put(GrowthStage.OLD, cropImage(plantsPath, 144, 0, 64, 64));
+        if (smallTree.hasAnyImage()) {
+            plantSprites.put("small_tree", smallTree);
+            plantSprites.put("oak", smallTree);
+        }
+        PlantSpriteSet pine = new PlantSpriteSet();
+        pine.put(GrowthStage.SEED, cropImage(plantsPath, 0, 80, 16, 16));
+        pine.put(GrowthStage.SPROUT, cropImage(plantsPath, 16, 80, 16, 16));
+        pine.put(GrowthStage.YOUNG, cropImage(plantsPath, 80, 80, 32, 32));
+        pine.put(GrowthStage.MATURE, cropImage(plantsPath, 128, 80, 48, 48));
+        pine.put(GrowthStage.OLD, cropImage(plantsPath, 176, 80, 64, 64));
+        if (pine.hasAnyImage()) {
+            plantSprites.put("pine", pine);
+        }
+        PlantSpriteSet palm = new PlantSpriteSet();
+        palm.put(GrowthStage.SEED, cropImage(plantsPath, 112, 208, 16, 16));
+        palm.put(GrowthStage.SPROUT, cropImage(plantsPath, 144, 192, 32, 32));
+        palm.put(GrowthStage.YOUNG, cropImage(plantsPath, 192, 176, 48, 48));
+        palm.put(GrowthStage.MATURE, cropImage(plantsPath, 256, 160, 64, 64));
+        palm.put(GrowthStage.OLD, cropImage(plantsPath, 336, 160, 64, 64));
+        if (palm.hasAnyImage()) {
+            plantSprites.put("palm", palm);
+        }
+        PlantSpriteSet vine = new PlantSpriteSet();
+        String vinePath = "assets/Environment/Forest/Vine.png";
+        vine.put(GrowthStage.SEED, cropImage(vinePath, 0, 0, 32, 48));
+        vine.put(GrowthStage.SPROUT, cropImage(vinePath, 32, 0, 32, 48));
+        vine.put(GrowthStage.YOUNG, cropImage(vinePath, 64, 0, 32, 48));
+        vine.put(GrowthStage.MATURE, cropImage(vinePath, 96, 0, 32, 48));
+        vine.put(GrowthStage.OLD, cropImage(vinePath, 96, 0, 32, 48));
+        if (vine.hasAnyImage()) {
+            plantSprites.put("vine", vine);
+            plantSprites.put("nho", vine);
+        }
     }
 
     private void loadSprite(String key, String path) {
@@ -543,6 +613,81 @@ public class SimulationPanel extends JPanel {
         g.fillOval(cx - size / 2, cy - size / 2, size, size);
     }
 
+    private void drawPlant(Graphics2D g, Plant plant) {
+        int cx = worldToScreenX(plant.getPosition().getX());
+        int cy = worldToScreenY(plant.getPosition().getY());
+        int size = Math.max(4, (int) Math.round(plant.getSize() * 4 * renderScale));
+        if (drawPlantSprite(g, plant.getSpeciesKey(), plant, cx, cy, size)) {
+            return;
+        }
+        if (plant instanceof SmallTree || plant instanceof TreePlant) {
+            if (!drawPlantSprite(g, "small_tree", plant, cx, cy, size)) {
+                drawSmallTree(g, cx, cy, size, plant.getGrowthStage());
+            }
+        } else if (plant instanceof Grass || plant instanceof Algae) {
+            drawGrass(g, cx, cy, size);
+        } else if (plant instanceof Berry) {
+            drawBerry(g, cx, cy, size, ((Berry) plant).hasFruits());
+        } else if (plant instanceof Mushroom) {
+            drawMushroom(g, cx, cy, size);
+        } else {
+            drawGrass(g, cx, cy, size);
+        }
+    }
+    private boolean drawPlantSprite(Graphics2D g, String key, Plant plant, int cx, int cy, int size) {
+        PlantSpriteSet set = plantSprites.get(key);
+        if (set == null) return false;
+        BufferedImage image = set.get(plant.getGrowthStage());
+        if (image == null) return false;
+        double scale = size / 32.0;
+        int width = Math.max(8, (int) Math.round(image.getWidth() * scale));
+        int height = Math.max(8, (int) Math.round(image.getHeight() * scale));
+        g.drawImage(image, cx - width / 2, cy - height + size / 4, width, height, null);
+        return true;
+    }
+    private void drawSmallTree(Graphics2D g, int cx, int cy, int size, GrowthStage stage) {
+        int trunkHeight = Math.max(6, size / 2);
+        int trunkWidth = Math.max(3, size / 7);
+        int canopySize = Math.max(8, size);
+        if (stage == GrowthStage.SEED) {
+            g.setColor(new Color(96, 67, 38));
+            g.fillOval(cx - size / 8, cy - size / 8, Math.max(3, size / 4), Math.max(3, size / 4));
+            return;
+        }
+        g.setColor(new Color(104, 70, 38));
+        g.fillRoundRect(cx - trunkWidth / 2, cy - trunkHeight / 2, trunkWidth, trunkHeight, 4, 4);
+        Color leafColor = stage == GrowthStage.OLD
+                ? new Color(91, 128, 55)
+                : new Color(42, 139, 61);
+        g.setColor(leafColor);
+        g.fillOval(cx - canopySize / 2, cy - trunkHeight / 2 - canopySize / 2, canopySize, canopySize);
+        g.setColor(new Color(29, 104, 49));
+        g.fillOval(cx - canopySize / 3, cy - trunkHeight / 2 - canopySize / 3, canopySize / 2, canopySize / 2);
+    }
+    private void drawGrass(Graphics2D g, int cx, int cy, int size) {
+        g.setColor(new Color(55, 154, 58));
+        int bladeHeight = Math.max(5, size);
+        g.drawLine(cx, cy, cx, cy - bladeHeight);
+        g.drawLine(cx, cy, cx - size / 3, cy - bladeHeight * 2 / 3);
+        g.drawLine(cx, cy, cx + size / 3, cy - bladeHeight * 2 / 3);
+    }
+    private void drawBerry(Graphics2D g, int cx, int cy, int size, boolean hasFruits) {
+        drawGrass(g, cx, cy, size);
+        if (!hasFruits) return;
+        g.setColor(new Color(182, 38, 62));
+        int berrySize = Math.max(3, size / 4);
+        g.fillOval(cx - berrySize, cy - size, berrySize, berrySize);
+        g.fillOval(cx + berrySize / 2, cy - size * 3 / 4, berrySize, berrySize);
+    }
+    private void drawMushroom(Graphics2D g, int cx, int cy, int size) {
+        int stemWidth = Math.max(3, size / 4);
+        int stemHeight = Math.max(5, size / 2);
+        g.setColor(new Color(232, 220, 185));
+        g.fillRoundRect(cx - stemWidth / 2, cy - stemHeight / 2, stemWidth, stemHeight, 4, 4);
+        g.setColor(new Color(185, 45, 48));
+        g.fillArc(cx - size / 2, cy - stemHeight, size, size, 0, 180);
+    }
+
     private void drawHealthBar(Graphics2D g, Animal animal, int cx, int cy, int size) {
         if (animal.getCurrentState() == AnimalState.DEAD) return;
 
@@ -714,6 +859,30 @@ public class SimulationPanel extends JPanel {
         repaint();
     }
 
+    private void installTimelineControls() {
+        timelinePanel = new JPanel();
+        timelinePanel.setLayout(new BorderLayout(8, 2));
+        timelinePanel.setOpaque(true);
+        timelinePanel.setBackground(new Color(20, 32, 25, 210));
+        timelinePanel.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        speedLabel = new JLabel("Time x1.00");
+        speedLabel.setForeground(Color.WHITE);
+        speedLabel.setFont(speedLabel.getFont().deriveFont(Font.BOLD, 12f));
+        speedSlider = new JSlider(0, 800, 100);
+        speedSlider.setOpaque(false);
+        speedSlider.setFocusable(false);
+        speedSlider.setMajorTickSpacing(100);
+        speedSlider.setMinorTickSpacing(25);
+        speedSlider.addChangeListener(event -> {
+            double scale = speedSlider.getValue() / 100.0;
+            SimulationTime.setTimeScale(scale);
+            speedLabel.setText(String.format("Time x%.2f", SimulationTime.getTimeScale()));
+        });
+        timelinePanel.add(speedLabel, BorderLayout.NORTH);
+        timelinePanel.add(speedSlider, BorderLayout.CENTER);
+        add(timelinePanel);
+    }
+
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }
@@ -729,6 +898,42 @@ public class SimulationPanel extends JPanel {
         } catch (IOException e) {
             System.err.println("Cannot load image: " + path);
             return null;
+        }
+    }
+
+    private BufferedImage cropImage(String path, int x, int y, int width, int height) {
+        BufferedImage image = loadImage(path);
+        if (image == null) return null;
+        if (x < 0 || y < 0 || x + width > image.getWidth() || y + height > image.getHeight()) {
+            return null;
+        }
+        return image.getSubimage(x, y, width, height);
+    }
+    private static class PlantSpriteSet {
+        private final Map<GrowthStage, BufferedImage> images = new EnumMap<>(GrowthStage.class);
+        private void put(GrowthStage stage, BufferedImage image) {
+            if (image != null) {
+                images.put(stage, image);
+            }
+        }
+        private BufferedImage get(GrowthStage stage) {
+            BufferedImage image = images.get(stage);
+            if (image != null) return image;
+            GrowthStage[] stages = GrowthStage.values();
+            int stageIndex = stage.ordinal();
+            for (int i = stageIndex - 1; i >= 0; i--) {
+                image = images.get(stages[i]);
+                if (image != null) return image;
+            }
+            for (int i = stageIndex + 1; i < stages.length; i++) {
+                image = images.get(stages[i]);
+                if (image != null) return image;
+            }
+            return null;
+        }
+
+        private boolean hasAnyImage() {
+            return !images.isEmpty();
         }
     }
 

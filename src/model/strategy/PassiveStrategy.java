@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import controller.SimulationConstant;
+
 public class PassiveStrategy implements SurvivalStrategy {
     private final Random random;
     private final Map<Integer, Vector2D> wanderDirections;
@@ -71,7 +73,7 @@ public class PassiveStrategy implements SurvivalStrategy {
         Environment env = Environment.getInstance();
         if (env == null) return;
 
-        double margin = 80;
+        double margin = SimulationConstant.EDGE_MARGIN;
         double x = animal.getPosition().getX();
         double y = animal.getPosition().getY();
         Vector2D velocity = animal.getVelocity();
