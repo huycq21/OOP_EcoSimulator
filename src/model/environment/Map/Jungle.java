@@ -20,6 +20,7 @@ import model.plant.Grass;
 import model.environment.Bush;
 import model.environment.Environment;
 import model.environment.TmxCollisionLoader;
+import model.environment.TmxPlantLoader;
 
 import java.util.Random;
 
@@ -31,6 +32,7 @@ public class Jungle extends Environment {
         super(width, height);
         this.random = new Random();
         TmxCollisionLoader.loadInto(this, "assets/Environment/Forest/Forest.tmx");
+        TmxPlantLoader.loadInto(this, "assets/Environment/Forest/Forest.tmx");
 
         spawnHerbivores();
         spawnCarnivores();
