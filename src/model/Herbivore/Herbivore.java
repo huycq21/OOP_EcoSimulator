@@ -10,6 +10,11 @@ public abstract class Herbivore extends Animal {
         super(position, size, maxHp, maxEnergy, speed, visionRadius);
     }
 
-    // Tạm thời chưa thêm logic gì phức tạp, 
-    // sau này ta có thể thêm các hàm đặc thù của loài ăn cỏ như eatPlant(Plant p) vào đây.
+    public double getVisionRadius() {
+        return visionRadius;
+    }
+
+    public void setVisionRadius(double Radius) {
+        this.visionRadius = Radius;
+    }
 }

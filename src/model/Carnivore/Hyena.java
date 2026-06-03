@@ -1,21 +1,35 @@
 package model.carnivore;
 
 import model.Vector2D;
-import model.strategy.FlockingStrategy;
-import model.strategy.HunterStrategy;
-import model.strategy.PassiveStrategy;
-import model.strategy.ScavengerStrategy;
-import model.strategy.SurvivalStrategy;
+import model.strategy.*;
+import model.herbivore.Deer;
+import model.herbivore.Boar;
+import model.herbivore.Rabbit;
 
 public class Hyena extends Carnivore {
-
     public Hyena(Vector2D position) {
-        // Tầm nhìn xa 150.0 để đánh hơi xác chết
+        // Tầm nhìn xa (150.0) cực kỳ lợi thế cho việc đánh hơi xác chết!
         super(position, 4.5, 90, 160, 4.5, 150.0, 50.0, 35.0, 45);
-        SurvivalStrategy huntLogic = new HunterStrategy(new PassiveStrategy());
-        SurvivalStrategy flockLogic = new FlockingStrategy(huntLogic);
-        SurvivalStrategy hyenaBrain = new ScavengerStrategy(flockLogic);
-        this.setBrain(hyenaBrain);
-        //Ưu tiên xác > Đi theo bầy > Không có xác mới săn mồi
+        
+        // --- 1. THỰC ĐƠN PHÒNG KHI ĐÓI MÀ KHÔNG CÓ XÁC ---
+        this.addPreyType(model.herbivore.Rabbit.class);
+        this.addPreyType(model.herbivore.Deer.class);
+        this.addPreyType(model.herbivore.Boar.class);
+        this.addPreyType(model.herbivore.Goat.class);
+        this.addPreyType(model.domestic.Cow.class);
+        this.addPreyType(model.domestic.Pig.class);
+        
+        // --- 2. LẮP RÁP BỘ NÃO 5 TẦNG ---
+        SurvivalStrategy passive = new PassiveStrategy();
+        SurvivalStrategy hunter = new HunterStrategy(passive);
+        SurvivalStrategy packLogic = new PackFlockingStrategy(hunter, 0.25, 3.5);
+        
+        // SỢ HÃI BỌC BÊN TRONG (Bảo vệ tính mạng khi đi dạo/đi săn)
+        SurvivalStrategy scared = new ScaredStrategy(packLogic);
+        
+        // NHẶT XÁC ĐẶT RA NGOÀI CÙNG!
+        SurvivalStrategy scavenger = new ScavengerStrategy(scared);
+        
+        this.setBrain(scavenger);
     }
 }

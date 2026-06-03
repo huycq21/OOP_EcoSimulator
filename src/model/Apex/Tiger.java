@@ -3,60 +3,66 @@ package model.apex;
 import model.Vector2D;
 import model.environment.Environment;
 import model.environment.Rectangle;
-import model.strategy.HunterStrategy;
+import model.strategy.*;
 import model.Entity;
 import model.Animal;
+import model.herbivore.*;
+import model.carnivore.*;
+import model.domestic.*;
 
 import java.util.List;
 
 public class Tiger extends ApexEntity {
 
-    private double pounceRadius; // Tầm vồ mồi (xa hơn đòn đánh thường)
-    private double critMultiplier; // Hệ số sát thương chí mạng khi vồ
+    private double pounceRadius; // Tầm nhảy vồ mồi
 
     public Tiger(Vector2D position) {
-        // Cân bằng so với Sói (HP 100, Speed 5.5, Dmg 60) và Gấu (HP 400, Speed 3.0, Dmg 100)
-        super(
-            position,
-            10.0,        // size: To hơn Sói nhưng gọn gàng hơn Gấu (12.0)
-            250.0,       // maxHp: Sinh tồn tốt, nhưng không "trâu" bằng Gấu
-            400.0,       // maxEnergy: Năng lượng cao để rình rập và bứt tốc
-            6.0,         // speed: Nhanh hơn Sói (5.5)
-            120.0,       // visionRadius: Tầm nhìn cực xa
-            140.0,       // strengthWeight: Mức độ đe dọa cực cao, chỉ kém Gấu
-            120.0,       // attackDamage: Sát thương tay đôi CAO NHẤT
-            70,          // attackCooldown: Tốc độ ra đòn nhanh hơn Gấu (90)
-            240          // spAttackCooldown: THÊM VÀO ĐÂY! (Hồi chiêu vồ mồi 240 tick)
-        );
+        // Stats: Nhanh hơn Gấu (7.0), Máu khá (300), Sát thương (85)
+        // Mức độ đe dọa: 180.0 (Cao nhất rừng hiện tại, Sói max bầy đàn cũng chỉ 152.0)
+        super(position, 9.0, 300.0, 400.0, 7.0, 100.0, 180.0, 85.0, 60, 250);
         
-        // Tầm vồ mồi xa gấp 4 lần kích thước cơ thể, cho phép lao đến bất ngờ
+        // Tầm vồ mồi xa gấp 4 lần cơ thể (Không cần áp sát quá gần như đánh thường)
         this.pounceRadius = this.getSize() * 4.0; 
+
+        // --- 1. THỰC ĐƠN CỦA VUA ---
+        this.addPreyType(Deer.class);
+        this.addPreyType(Boar.class);
+        this.addPreyType(Cow.class);
+        this.addPreyType(Pig.class);
+        this.addPreyType(Wolf.class);
+        this.addPreyType(Fox.class);
+        this.addPreyType(Hyena.class); // Hổ rất ghét Linh cẩu, thấy là vả!
+
+        // --- 2. LẮP NÃO CHÚA TỂ ---
+        SurvivalStrategy passive = new PassiveStrategy();
+        SurvivalStrategy hunter = new HunterStrategy(passive);
         
-        // Đòn vồ mồi sẽ gây 1.5x sát thương thông thường (120 * 1.5 = 180 dmg)
-        this.critMultiplier = 1.5;
-        this.setBrain(new HunterStrategy()); // Dùng constructor mặc định
+        // Hổ đi lẻ, không cần bầy đàn. Ưu tiên ăn xác nếu có.
+        // Mức đe dọa 180.0 nên Hổ không ngán ai, bỏ luôn ScaredStrategy!
+        SurvivalStrategy scavenger = new ScavengerStrategy(hunter);
+        
+        this.setBrain(scavenger);
     }
 
+    // --- KỸ NĂNG: CÚ VỒ CHÍ MẠNG ---
     @Override
     public void performSpecialAbility(Environment env) {
-        // Nếu đã chết hoặc đang chờ hồi chiêu thì không làm gì cả
-        if (!isAlive() || currentCooldownTimer > 0) return;
+        // Bỏ qua nếu đã chết hoặc chiêu chưa hồi xong
+        if (!isAlive() || currentSpAttack > 0) return;
 
-        // 1. TẠO VÙNG TÌM KIẾM CHO KỸ NĂNG VỒ MỒI
+        // Tạo khung chữ nhật bao quanh tầm vồ mồi (Đường kính = pounceRadius * 2)
         Rectangle pounceRange = new Rectangle(
             this.getPosition().getX(), 
             this.getPosition().getY(), 
-            this.pounceRadius, 
-            this.pounceRadius
+            this.pounceRadius * 2, 
+            this.pounceRadius * 2
         );
 
-        // 2. LỌC THỰC THỂ XUNG QUANH TỪ QUAD TREE
         List<Entity> nearbyEntities = env.getQuadTree().query(pounceRange, null);
-
-        Animal closestPrey = null;
+        Animal target = null;
         double minDistance = Double.MAX_VALUE;
 
-        // 3. TÌM CON MỒI GẦN NHẤT TRONG TẦM VỒ (Đặc trưng săn mồi đơn độc, nhắm vào 1 mục tiêu)
+        // Tìm con mồi xấu số GẦN NHẤT trong tầm nhảy
         for (Entity entity : nearbyEntities) {
             if (entity != this && entity.isAlive() && entity instanceof Animal && entity.getClass() != this.getClass()) {
                 
@@ -65,26 +71,23 @@ public class Tiger extends ApexEntity {
 
                 if (distance <= this.pounceRadius && distance < minDistance) {
                     minDistance = distance;
-                    closestPrey = prey;
+                    target = prey;
                 }
             }
         }
 
-        // 4. THỰC HIỆN KỸ NĂNG: ÁP SÁT VÀ KẾT LIỄU
-        if (closestPrey != null) {
-            // Hổ lập tức lao đến (áp sát) vị trí của con mồi
-            this.getPosition().setX(closestPrey.getPosition().getX());
-            this.getPosition().setY(closestPrey.getPosition().getY());
+        // THỰC THI SÁT THƯƠNG NẾU TÌM THẤY MỤC TIÊU
+        if (target != null) {
+            // Sát thương chí mạng: X2 Đam cơ bản (85 * 2 = 170 Đam)
+            // Lợn rừng, Sói, Hươu... dính 1 vồ này là "đăng xuất" ngay lập tức!
+            double critDamage = this.attackDamage * 2.0;
+            target.setHp(target.getHp() - critDamage);
 
-            // Gây sát thương chí mạng
-            double finalDamage = this.attackDamage * this.critMultiplier;
-            closestPrey.setHp(closestPrey.getHp() - finalDamage);
-            
-            System.out.println("Hổ lao đến vồ chí mạng " + closestPrey.getClass().getSimpleName() 
-                               + " (-" + finalDamage + " HP)! Kẻ săn mồi áp đảo!");
+            System.out.println("GÀOOO!! Hổ vồ chí mạng " + target.getClass().getSimpleName() + " (-" + critDamage + " HP)!");
 
-            // Đưa kỹ năng vào thời gian hồi
-            this.currentCooldownTimer = this.attackCooldown;
+            // Đưa chiêu cuối vào thời gian chờ, đồng thời reset luôn đòn đánh thường
+            this.currentSpAttack = this.spAttackCooldown;
+            this.currentCooldownTimer = this.attackCooldown; 
         }
     }
 }

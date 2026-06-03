@@ -1,69 +1,86 @@
 package model.apex;
 
 import model.Vector2D;
-import model.environment.Environment;
-import model.environment.Rectangle;
-import model.strategy.HunterStrategy;
-import model.Entity;
-import model.Animal;
-import java.util.List;
+import model.strategy.*;
+import model.AnimalState;
+import model.herbivore.*;
+import model.carnivore.*;
+import model.domestic.*;
 
 public class Eagle extends ApexEntity {
 
+    private boolean isDiving;
+    private int diveTimer;
+    private double baseSpeed;
+    private double baseDamage;
+
     public Eagle(Vector2D position) {
-        super(
-            position,
-            3.0,         // size: Nhỏ gọn
-            60.0,        // maxHp: Máu cực thấp, bị cắn là chết
-            200.0,       // maxEnergy: Không cần nhiều năng lượng vì bay
-            12.0,        // speed: Tốc độ bay xé gió
-            600.0,       // visionRadius: Mắt đại bàng (quét toàn bản đồ)
-            70.0,        // strengthWeight: Đe dọa thấp dưới mặt đất
-            80.0,        // attackDamage: Móng vuốt sắc bén
-            50,          // attackCooldown: Tấn công liên tục
-            200          // spAttackCooldown: Cú bổ nhào hồi nhanh
-        );
-        this.setBrain(new HunterStrategy()); // Dùng constructor mặc định
+        super(position, 3.0, 60.0, 200.0, 12.0, 600.0, 70.0, 80.0, 50, 200);
+        
+        this.baseSpeed = this.getSpeed();
+        this.baseDamage = this.getAttackDamage();
+        this.isDiving = false;
+        this.diveTimer = 0;
+
+        // --- Ý TƯỞNG THIÊN TÀI CỦA BẠN: KHÔNG CẦN RÓN RÉN ---
+        // Thấy mồi là lao vào rượt luôn!
+        this.setStrikeRadius(this.getPreyDetectionRadius());
+
+        this.addPreyType(Rabbit.class);
+        this.addPreyType(BlackGrouse.class);
+        this.addPreyType(Chicken.class);
+        this.addPreyType(Fox.class);
+
+        SurvivalStrategy passive = new PassiveStrategy();
+        SurvivalStrategy hunter = new HunterStrategy(passive);
+        SurvivalStrategy scared = new ScaredStrategy(hunter); 
+        SurvivalStrategy scavenger = new ScavengerStrategy(scared);
+        
+        this.setBrain(scavenger); 
     }
 
     @Override
-    public void performSpecialAbility(Environment env) {
-        Rectangle visionRange = new Rectangle(
-            this.getPosition().getX(), 
-            this.getPosition().getY(), 
-            this.getVisionRadius(), 
-            this.getVisionRadius()
-        );
+    public void update() {
+        super.update(); // Xử lý giảm cooldown cơ bản
 
-        List<Entity> visibleEntities = env.getQuadTree().query(visionRange, null);
-        Animal target = null;
-        double minDistance = Double.MAX_VALUE;
+        if (!isAlive()) return;
 
-        for (Entity entity : visibleEntities) {
-            if (entity != this && entity.isAlive() && entity instanceof Animal && entity.getClass() != this.getClass()) {
-                Animal prey = (Animal) entity;
+        // 1. NẾU ĐANG TRONG TRẠNG THÁI BỔ NHÀO (Đã được buff)
+        if (isDiving) {
+            diveTimer--;
+            
+            // Hết đà bổ nhào hoặc lỡ chuyển sang state khác (ví dụ: bị dọa sợ FLEEING)
+            if (diveTimer <= 0 || this.getCurrentState() != AnimalState.CHASING) {
+                isDiving = false;
+                this.setSpeed(baseSpeed);
+                this.setAttackDamage(baseDamage);
+                System.out.println("Đại bàng kết thúc bổ nhào, trở lại chỉ số bình thường.");
+            }
+        } 
+        // 2. NẾU CHƯA BỔ NHÀO & CHIÊU ĐÃ HỒI & NÃO ĐANG BẬT MODE RƯỢT ĐUỔI
+        else {
+            if (this.getCurrentState() == AnimalState.CHASING && this.currentSpAttack <= 0) {
                 
-                // Đại bàng chỉ bắt các con vật nhỏ (size <= 5.0) như Thỏ, Cáo, chuột...
-                if (prey.getSize() <= 5.0) {
-                    double distance = this.getPosition().distanceTo(prey.getPosition());
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        target = prey;
-                    }
-                }
+                // Kích hoạt bứt tốc!
+                this.isDiving = true;
+                this.diveTimer = 90; // Kéo dài 1.5 giây
+
+                this.setSpeed(baseSpeed * 1.5); 
+                this.setAttackDamage(baseDamage * 2.0);
+                
+                // Reset cooldown chiêu cuối
+                this.currentSpAttack = this.spAttackCooldown;
+                
+                System.out.println("ÉÉÉ!! Đại bàng khóa mục tiêu! Tốc độ xé gió kích hoạt!");
             }
         }
+    }
 
-        if (target != null) {
-            // Đại bàng bổ nhào (dịch chuyển tức thời đến con mồi nhỏ)
-            this.getPosition().setX(target.getPosition().getX());
-            this.getPosition().setY(target.getPosition().getY());
-
-            // Móng vuốt xuyên thấu: Gây sát thương cực lớn (đủ sức 1-shot thú nhỏ)
-            target.setHp(target.getHp() - 200.0);
-            System.out.println("Đại bàng bổ nhào từ trên không, quắp trúng " + target.getClass().getSimpleName() + "!");
-            
-            this.currentSpAttack = this.spAttackCooldown;
-        }
+    // Vì chúng ta xài nội tại buff theo State, hàm này có thể để trống 
+    // (hoặc nếu Interface bắt buộc đè thì cứ để nó rỗng)
+    @Override
+    public void performSpecialAbility(model.environment.Environment env) {
+        // Kỹ năng của Đại bàng là Nội tại (Passive Trigger) dựa trên State CHASING.
+        // Không cần làm gì ở đây cả!
     }
 }

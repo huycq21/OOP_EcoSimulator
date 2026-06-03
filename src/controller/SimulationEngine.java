@@ -4,6 +4,11 @@ import model.environment.Environment;
 import model.environment.Map.Jungle;
 import view.SimulationPanel;
 
+import javax.swing.SwingUtilities;
+import java.util.ArrayList;
+import java.util.List;
+import model.Entity;
+
 public class SimulationEngine {
     private SimulationPanel panel;
     private Environment env; 
@@ -11,8 +16,9 @@ public class SimulationEngine {
     public SimulationEngine(SimulationPanel panel) {
         this.panel = panel;
         
-        // 1. Khởi tạo một môi trường CỤ THỂ (Ví dụ: Rừng kích thước 800x600)
-        this.env = new Jungle(800, 600); 
+        // 1. Khởi tạo môi trường theo đúng kích thước map TMX đang render
+        this.env = new Jungle(panel.getWorldWidth(), panel.getWorldHeight()); 
+        this.panel.setWorldSize(this.env.getWidth(), this.env.getHeight());
         
         // 2. Kích hoạt Singleton để các con vật ở mọi nơi đều có thể gọi Environment.getInstance()
         Environment.setActiveEnvironment(this.env); 
@@ -32,8 +38,11 @@ public class SimulationEngine {
                 // BƯỚC 4: VẼ LÊN MÀN HÌNH
                 // ====================================================
                 // Truyền danh sách thực thể mới nhất qua cho Panel
-                panel.setEntities(env.getEntities()); 
-                panel.repaint(); // Yêu cầu cửa sổ vẽ lại hình ảnh
+                List<Entity> renderSnapshot = new ArrayList<>(env.getEntities());
+                SwingUtilities.invokeLater(() -> {
+                    panel.setEntities(renderSnapshot);
+                    panel.repaint(); // Yêu cầu cửa sổ vẽ lại hình ảnh
+                });
 
                 // ====================================================
                 // BƯỚC 5: NGỦ ĐỂ GIỮ NHỊP 60 FPS

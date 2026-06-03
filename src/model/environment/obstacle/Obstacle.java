@@ -1,4 +1,4 @@
-package model.environment;
+package model.environment.obstacle;
 
 import model.Entity;
 import model.Vector2D;

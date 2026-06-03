@@ -19,14 +19,14 @@ public class Human extends ApexEntity {
             100.0,       // maxHp: Thể chất yếu, máu bằng con Sói
             250.0,       // maxEnergy: Thể lực kém
             4.0,         // speed: Đi bộ chậm chạp
-            300.0,       // visionRadius: Ống nhòm giúp nhìn rất xa
+            30.0,       // visionRadius: Ống nhòm giúp nhìn rất xa
             2000.0,      // strengthWeight: SIÊU ĐE DỌA. Mọi con vật gặp người đều bỏ chạy!
             30.0,        // attackDamage: Đánh tay bo/dao găm cùi bắp
             60,          // attackCooldown: Hồi đánh tay
-            180          // spAttackCooldown: Hồi đạn nhanh (180 tick)
+            1800          // spAttackCooldown: Hồi đạn lâu cho cân bằng (30s)
         );
         // Tầm bắn của súng
-        this.gunRange = 250.0;
+        this.gunRange = 50.0;
         
     }
 

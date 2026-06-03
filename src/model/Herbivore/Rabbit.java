@@ -1,7 +1,10 @@
 package model.herbivore;
 
 import model.Vector2D;
+import model.strategy.ForagingStrategy;
 import model.strategy.PassiveStrategy;
+import model.strategy.ScaredStrategy;
+import model.strategy.SurvivalStrategy;
 
 public class Rabbit extends Herbivore {
 
@@ -9,10 +12,9 @@ public class Rabbit extends Herbivore {
     public Rabbit(Vector2D position) {
         super(position, 3.0, 50, 100, 5.0, 50.0);
         
-        // QUAN TRỌNG: Lắp bộ não đi dạo cho thỏ ngay khi mới sinh ra
-        this.setBrain(new PassiveStrategy());
+        SurvivalStrategy passive = new PassiveStrategy();
+        SurvivalStrategy foraging = new ForagingStrategy(passive);
+        SurvivalStrategy scared = new ScaredStrategy(foraging); 
+        this.setBrain(scared);
     }
-
-    // Bạn thậm chí không cần ghi đè (override) hàm update() ở đây!
-    // Con Thỏ sẽ tự động dùng hàm update() của Animal, tự động gọi não PassiveStrategy để tính toán.
 }

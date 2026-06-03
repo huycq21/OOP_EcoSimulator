@@ -1,6 +1,9 @@
 package controller;
 
 import model.environment.*;
+import model.environment.obstacle.Hideable;
+import model.environment.obstacle.Obstacle;
+import model.environment.obstacle.OldTree;
 import model.*;
 import model.apex.ApexEntity;
 import model.carnivore.*;
@@ -17,26 +20,30 @@ public class CollisionHandler {
 
         QuadTree qTree = env.getQuadTree();
 
+        // Fix Bán kính tìm kiếm: Phải đủ rộng để bắt được con to nhất game (Ví dụ Voi size 15)
+        double maxEntitySize = 15.0; 
+
         for (Entity e1 : entities) {
             if (!e1.isAlive()) continue;
 
-            double searchRadius = e1.getSize() * 2; 
+            double searchRadius = e1.getSize() / 2.0 + maxEntitySize; 
             
             Rectangle searchRange = new Rectangle(
                     e1.getPosition().getX(), 
                     e1.getPosition().getY(), 
-                    searchRadius, searchRadius
+                    searchRadius * 2, searchRadius * 2
             );
 
             List<Entity> nearbyEntities = qTree.query(searchRange, null);
 
             for (Entity e2 : nearbyEntities) {
-                if (e1 != e2 && e2.isAlive()) {
+                // BUG FIX 1: Thêm e1.getId() < e2.getId() để chống xử lý va chạm 2 lần!
+                if (e1 != e2 && e2.isAlive() && e1.getId() < e2.getId()) {
+                    
                     double distance = e1.getPosition().distanceTo(e2.getPosition());
                     double collisionRadius = (e1.getSize() + e2.getSize()) / 2.0;
 
                     if (distance < collisionRadius) {
-                        // CHÚ Ý 1: Truyền thêm 'env' vào đây
                         resolveCollision(e1, e2, newEntities, env);
                     }
                 }
@@ -49,55 +56,59 @@ public class CollisionHandler {
 
     // --- PHÂN LOẠI VÀ XỬ LÝ TỪNG TRƯỜNG HỢP ---
     // CHÚ Ý 2: Thêm tham số Environment env
-    private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntities, Environment env) {
+private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntities, Environment env) {
         
-        // 1. TRƯỜNG HỢP: ApexEntity đụng độ Thú ăn thịt thường (Ví dụ: Hổ vs Sói/Cáo)
-        if (e1 instanceof ApexEntity && e2 instanceof Carnivore && !(e2 instanceof ApexEntity)) {
-            handleCombat((Carnivore) e1, (Animal) e2, newEntities, env);
-        } else if (e2 instanceof ApexEntity && e1 instanceof Carnivore && !(e1 instanceof ApexEntity)) {
-            handleCombat((Carnivore) e2, (Animal) e1, newEntities, env);
+        // --- CHỐNG ĐÈ LÊN NHAU TẤT CẢ CÁC LOÀI ĐỘNG VẬT ---
+        if (e1 instanceof Animal && e2 instanceof Animal) {
+            resolveOverlap(e1, e2);
+        }
+        
+        // ==========================================
+        // LAYER 1: VẬT LÝ (CHƯỚNG NGẠI VẬT) 
+        // ==========================================
+
+        if (e1 instanceof Animal && e2 instanceof Obstacle) {
+            handleObstacleCollision((Animal) e1, (Obstacle) e2);
+        } else if (e2 instanceof Animal && e1 instanceof Obstacle) {
+            handleObstacleCollision((Animal) e2, (Obstacle) e1);
         }
 
-        // 2. TRƯỜNG HỢP: Động vật ăn thịt (bao gồm cả Apex) đụng Động vật ăn cỏ
-        else if (e1 instanceof Carnivore && e2 instanceof Herbivore) {
-            handleCombat((Carnivore) e1, (Animal) e2, newEntities, env);
-        } else if (e2 instanceof Carnivore && e1 instanceof Herbivore) {
-            handleCombat((Carnivore) e2, (Animal) e1, newEntities, env);
+        // ==========================================
+        // LAYER 2: TƯƠNG TÁC SINH HỌC 
+        // ==========================================
+        
+        // 1. Thú ăn thịt đụng Xác chết (Ưu tiên kiểm tra trước)
+        if (e1 instanceof Carnivore && e2 instanceof Carcass) {
+            handleEatingCarcass((Carnivore) e1, (Carcass) e2);
+        } else if (e2 instanceof Carnivore && e1 instanceof Carcass) {
+            handleEatingCarcass((Carnivore) e2, (Carcass) e1);
         }
-
-        // 3. TRƯỜNG HỢP: Động vật ăn cỏ đụng Eatable
+        
+        // 2. Động vật ăn cỏ đụng Eatable
         else if (e1 instanceof Herbivore && e2 instanceof Eatable && !(e2 instanceof Carcass)) {
             handleEating((Herbivore) e1, (Eatable) e2);
         } else if (e2 instanceof Herbivore && e1 instanceof Eatable && !(e1 instanceof Carcass)) {
             handleEating((Herbivore) e2, (Eatable) e1);
         }
 
-        // 4. TRƯỜNG HỢP: Động vật đụng Bụi rậm / Chướng ngại vật
-        else if (e1 instanceof Animal && e2 instanceof Obstacle) {
-            handleObstacleCollision((Animal) e1, (Obstacle) e2);
-        } else if (e2 instanceof Animal && e1 instanceof Obstacle) {
-            handleObstacleCollision((Animal) e2, (Obstacle) e1);
+        // 3. Hai thú ăn thịt đụng nhau (Turf War)
+        else if (e1 instanceof Carnivore && e2 instanceof Carnivore) {
+            handleTurfWar((Carnivore) e1, (Carnivore) e2, newEntities, env);
         }
 
-        // 5. TRƯỜNG HỢP: Thú ăn thịt đụng Xác chết (Ăn xác)
-        else if (e1 instanceof Carnivore && e2 instanceof Carcass) {
-            handleEatingCarcass((Carnivore) e1, (Carcass) e2);
-        } else if (e2 instanceof Carnivore && e1 instanceof Carcass) {
-            handleEatingCarcass((Carnivore) e2, (Carcass) e1);
-        }
-        // --- LUẬT MỚI: 2 THÚ ĂN THỊT ĐỤNG NHAU (TRANH GIÀNH) ---
-        if (e1 instanceof Carnivore && e2 instanceof Carnivore) {
-            handleTurfWar((Carnivore) e1, (Carnivore) e2, newEntities, env);
+        // 5. Thú ăn thịt (Apex/Thường) đụng Thú ăn cỏ
+        else if (e1 instanceof Carnivore && e2 instanceof Herbivore) {
+            handleCombat((Carnivore) e1, (Animal) e2, newEntities, env);
+        } else if (e2 instanceof Carnivore && e1 instanceof Herbivore) {
+            handleCombat((Carnivore) e2, (Animal) e1, newEntities, env);
         }
     }
 
     // --- CÁC HÀM XỬ LÝ CHI TIẾT ---
-
-    // Đã đổi Herbivore thành Animal để Predator có thể thịt cả Carnivore nhỏ hơn
     private static void handleCombat(Carnivore predator, Animal prey, List<Entity> newEntities, Environment env) {
         // Xử lý cơ chế nấp lùm
         if (prey.getCurrentState() == AnimalState.HIDING) {
-            if (predator instanceof Fox) {
+            if (predator.getSize() < 5) {
                 // Cáo vẫn tấn công chay bình thường
                 predator.attack(prey);
             } else {
@@ -107,14 +118,7 @@ public class CollisionHandler {
             // NẾU KHÔNG NẤP TRONG LÙM: Phân biệt Apex và Thường
             if (predator instanceof ApexEntity) {
                 ApexEntity apex = (ApexEntity) predator;
-                
-                // Nếu chiêu đặc biệt đã hồi xong
-                if (apex.getCurrentCooldownTimer() <= 0) {
-                    apex.performSpecialAbility(env);
-                } else {
-                    // Đang hồi chiêu thì phải cắn chay
-                    apex.attack(prey);
-                }
+                apex.attack(prey,env);
             } else {
                 // Thú ăn thịt thông thường cắn chay
                 predator.attack(prey);
@@ -189,78 +193,99 @@ public class CollisionHandler {
 
     // Xử lý đụng tường / chui bụi rậm
     private static void handleObstacleCollision(Animal animal, Obstacle obstacle) {
-        // Nếu chướng ngại vật là một chỗ trốn (Hideable) như Bush
-        if (animal instanceof Elephant) return; // Voi thì không bị chướng ngại vật nào cản được, bỏ qua hết
+        if (animal instanceof Elephant) return; // Voi càn quét mọi thứ
+
         if (obstacle instanceof Hideable) {
             Hideable hideable = (Hideable) obstacle;
             
-            // Nếu con vật chui vừa (ví dụ Cáo/Thỏ size <= 4.0 chui vừa Bush)
-            if (animal.getSize() <= hideable.getMaxAllowedSize()) {
-                hideable.hideEntity(animal);
+            // ĐIỀU KIỆN ĐỂ ĐƯỢC CHUI VÀO BỤI:
+            // 1. Phải chui lọt (size)
+            // 2. Bụi chưa đầy (chống kẹt)
+            // 3. Quan trọng nhất: Con vật phải đang BỎ CHẠY (FLEEING) hoặc ĐÃ NẤP (HIDING)
+            boolean isScared = (animal.getCurrentState() == AnimalState.FLEEING || animal.getCurrentState() == AnimalState.HIDING);
+            
+            if (animal.getSize() <= hideable.getMaxAllowedSize() && !hideable.isFull() && isScared) {
+                
+                // Tránh lỗi 1 con chiếm 2 slot nếu logic bị lặp
+                // (Giả sử bạn đã thêm hàm getHiddenEntities() vào Hideable/Bush)
+                if (!hideable.getHiddenEntities().contains(animal)) {
+                    hideable.hideEntity(animal);
+                }
+                
+                // Khóa chặt trạng thái và vị trí
                 animal.setCurrentState(AnimalState.HIDING);
-                // Gắn chặt vị trí con vật vào giữa bụi rậm và ép dừng lại
                 animal.getPosition().setX(obstacle.getPosition().getX());
                 animal.getPosition().setY(obstacle.getPosition().getY());
                 animal.getVelocity().setX(0);
                 animal.getVelocity().setY(0);
-                return; // Xong, không xét đụng tường nữa
+                return; // Đã trốn xong, kết thúc vật lý va chạm
             }
         }
 
-        // NẾU KHÔNG THỂ CHUI VÀO (Ví dụ: Sói quá to, hoặc đụng trúng Cây cổ thụ Tree)
-        // Hiệu ứng dội ngược: Đảo ngược vận tốc để nảy ra
-        animal.getVelocity().setX(animal.getVelocity().getX() * -1);
-        animal.getVelocity().setY(animal.getVelocity().getY() * -1);
+        // NẾU KHÔNG THỂ CHUI VÀO (Do quá to, bụi đầy, hoặc CHỈ ĐANG ĐI DẠO NGANG QUA)
+        // -> Chuyển sang logic đẩy dạt ra ngoài (trượt quanh mép cây)
+        double dist = animal.getPosition().distanceTo(obstacle.getPosition());
+        double minCollisionDist = (animal.getSize() + obstacle.getSize()) / 2.0;
+
+        if (dist < minCollisionDist && dist > 0) {
+            double overlap = minCollisionDist - dist;
+            
+            double dx = animal.getPosition().getX() - obstacle.getPosition().getX();
+            double dy = animal.getPosition().getY() - obstacle.getPosition().getY();
+            
+            dx /= dist;
+            dy /= dist;
+
+            // Đẩy dạt ra ngoài
+            animal.getPosition().setX(animal.getPosition().getX() + dx * overlap);
+            animal.getPosition().setY(animal.getPosition().getY() + dy * overlap);
+        }
     }
 
     // --- HÀM MỚI: XỬ LÝ TRANH GIÀNH GIỮA CÁC LOÀI ĂN THỊT ---
-    private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEntities, Environment env) {
-        // Lấy sức mạnh thực tế (đã bao gồm bầy đàn)
-        double str1 = c1.getEffectiveStrength(env);
-        double str2 = c2.getEffectiveStrength(env);
+private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEntities, Environment env) {
+        
+        boolean c1Attacking = (c1.getCurrentState() == AnimalState.ATTACKING);
+        boolean c2Attacking = (c2.getCurrentState() == AnimalState.ATTACKING);
 
-        // Phân loại Kẻ mạnh (Dominant) và Kẻ yếu (Submissive)
-        Carnivore dominant = str1 >= str2 ? c1 : c2;
-        Carnivore submissive = str1 >= str2 ? c2 : c1;
+        // 1. NẾU CẢ 2 KHÔNG AI CÓ Ý ĐỊNH ĐÁNH NHAU
+        // (Ví dụ: Cả 2 cùng đang đi dạo ngang qua, hoặc cùng đang chạy trốn kẻ khác)
+        if (!c1Attacking && !c2Attacking) {
+            // Không gây sát thương, chỉ đẩy nhau ra vật lý để khỏi xuyên thấu
+            resolveOverlap(c1, c2);
+            return;
+        }
 
-        // Nếu kẻ mạnh áp đảo hoàn toàn kẻ yếu (ví dụ: Sức mạnh chênh lệch hơn 1.3 lần)
-        if (dominant.getEffectiveStrength(env) > submissive.getEffectiveStrength(env) * 1.3) {
-            
-            // KẺ YẾU KIỂM TRA ĐỘ ĐÓI
-            if (submissive.isStarving()) {
-                // Chó cùng dứt giậu! Đói quá rồi, liều mạng cắn trả!
-                System.out.println(submissive.getClass().getSimpleName() + " đang đói khát! Nó liều mạng tấn công " + dominant.getClass().getSimpleName() + "!");
-                
-                // Cả 2 cùng tấn công nhau (Dùng lại logic đánh nhau của bạn)
-                executeAttack(submissive, dominant, env);
-                executeAttack(dominant, submissive, env);
-                
-            } else {
-                // Chưa đến mức chết đói -> Sợ hãi, nhường đồ ăn và BỎ CHẠY
-                submissive.setCurrentState(AnimalState.FLEEING); // Chuyển state để né
-                
-                // Toán học Vector: Kẻ yếu nảy ngược/chạy trốn ra xa khỏi kẻ mạnh
-                double dx = submissive.getPosition().getX() - dominant.getPosition().getX();
-                double dy = submissive.getPosition().getY() - dominant.getPosition().getY();
-                Vector2D fleeVector = new Vector2D(dx, dy);
-                fleeVector.normalize();
-                
-                submissive.getVelocity().setX(fleeVector.getX() * submissive.getSpeed());
-                submissive.getVelocity().setY(fleeVector.getY() * submissive.getSpeed());
-                
-                // Kẻ mạnh có thể cắn với 1 cái làm cảnh cáo (tùy bạn)
-                executeAttack(dominant, submissive, env); 
+        // 2. CƠ CHẾ PHẢN XẠ TỰ VỆ (AGGRO)
+        // Nếu 1 con cắn, con kia dù đang ăn xác hay đi dạo cũng phải bừng tỉnh và cắn lại!
+        if (c1Attacking && !c2Attacking) {
+            // Con c2 nếu đang bỏ chạy (FLEEING) thì chỉ lo chạy, không cắn lại.
+            // Nhưng nếu nó đang làm việc khác (WANDERING, EATING...), nó bị chọc điên và tự vệ!
+            if (c2.getCurrentState() != AnimalState.FLEEING) {
+                c2.setCurrentState(AnimalState.ATTACKING);
+                c2Attacking = true;
             }
-        } 
-        else {
-            // Sức mạnh ngang ngửa nhau (ví dụ: Bầy Linh cẩu đụng độ Hổ đơn độc) -> TỬ CHIẾN!
+        } else if (c2Attacking && !c1Attacking) {
+            if (c1.getCurrentState() != AnimalState.FLEEING) {
+                c1.setCurrentState(AnimalState.ATTACKING);
+                c1Attacking = true;
+            }
+        }
+
+        // 3. THỰC THI SÁT THƯƠNG KHI STATE LÀ ATTACKING
+        // Ai đang bật Mode đánh nhau thì người đó mới vung tay cắn
+        if (c1Attacking) {
             executeAttack(c1, c2, env);
+        }
+        if (c2Attacking) {
             executeAttack(c2, c1, env);
         }
 
-        // Kiểm tra xem có đứa nào chết sau pha va chạm không để rơi thịt
+        // 4. KIỂM TRA CHẾT VÀ TÁCH VẬT LÝ
         checkDeathAndDropCarcass(c1, c2, newEntities);
         checkDeathAndDropCarcass(c2, c1, newEntities);
+        
+        resolveOverlap(c1, c2); // Xô nhau văng ra một chút, không cho đè lên nhau
     }
     // --- HÀM HỖ TRỢ ĐỂ TÁI SỬ DỤNG CODE TẤN CÔNG (DÙNG CHO CẢ APEX VÀ THƯỜNG) ---
     private static void executeAttack(Carnivore attacker, Animal victim, Environment env) {
@@ -281,6 +306,32 @@ public class CollisionHandler {
             newEntities.add(meat);
             System.out.println("TỬ CHIẾN THÚ ĂN THỊT: " + victim.getClass().getSimpleName() 
                                + " đã bị xé xác bởi " + killer.getClass().getSimpleName() + "!");
+        }
+    }
+
+    // Chống đè lên nhau
+    private static void resolveOverlap(Entity e1, Entity e2) {
+        double dist = e1.getPosition().distanceTo(e2.getPosition());
+        double minCollisionDist = (e1.getSize() + e2.getSize()) / 2.0;
+
+        // Nếu khoảng cách thực tế nhỏ hơn bán kính va chạm -> Chúng đang lún vào nhau!
+        if (dist < minCollisionDist && dist > 0) {
+            double overlap = minCollisionDist - dist; // Độ lún (pixel)
+
+            // Vector hướng từ e2 sang e1
+            double dx = e1.getPosition().getX() - e2.getPosition().getX();
+            double dy = e1.getPosition().getY() - e2.getPosition().getY();
+            
+            // Chuẩn hóa vector
+            dx /= dist;
+            dy /= dist;
+
+            // Đẩy mỗi con lùi lại một nửa độ lún (để chúng vừa khít chạm nhau)
+            e1.getPosition().setX(e1.getPosition().getX() + dx * (overlap / 2.0));
+            e1.getPosition().setY(e1.getPosition().getY() + dy * (overlap / 2.0));
+
+            e2.getPosition().setX(e2.getPosition().getX() - dx * (overlap / 2.0));
+            e2.getPosition().setY(e2.getPosition().getY() - dy * (overlap / 2.0));
         }
     }
 }
