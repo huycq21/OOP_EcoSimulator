@@ -43,7 +43,6 @@ public class Crocodile extends ApexEntity {
         // Nếu đang hồi chiêu -> Hiện hình trở lại (không được HIDING nữa)
         else if (this.currentSpAttack > 0 && isSubmerged) {
             isSubmerged = false;
-            this.setCurrentState(AnimalState.IDLE);
         }
     }
 
