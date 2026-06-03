@@ -20,6 +20,7 @@ public class InfoPanel extends JPanel {
     private int foxCount;
     private int wolfCount;
     private int grassCount;
+    private String season = "";
 
     public InfoPanel() {
 
@@ -28,6 +29,10 @@ public class InfoPanel extends JPanel {
         setOpaque(true);
 
         setBackground(new Color(0,0,0,170));
+    }
+
+    public void setSeason(String season) {
+        this.season = season;
     }
 
     public void updateStats(List<Entity> entities) {
@@ -87,5 +92,8 @@ public class InfoPanel extends JPanel {
 
         y += 20;
         g2.drawString("Grass : " + grassCount, 10, y);
+
+        y += 20;
+        g2.drawString("Season : " + season, 10, y);
     }
 }

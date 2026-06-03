@@ -18,13 +18,15 @@ public final class SimulationConstant {
     public static final int ATTACK_STATE_DURATION = 18;
 
     public static final int RABBIT_HIDE_DURATION = 300;
+    public static final int MAX_RABBIT = 24;
+    public static final int REPRODUCTION_INTERVAL = 1800;
 
     public static final int DEFAULT_MAX_AGE = 20000;
 
     // ===== SPAWNER =====
 
     public static final int MIN_GRASS = 90;
-    public static final int MIN_RABBIT = 18;
+    public static final int MIN_RABBIT = 12;
 
     // ===== PLANT =====
 
