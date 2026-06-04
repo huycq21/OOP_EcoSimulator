@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import controller.CollisionHandler;
+import util.SoundManager;
+import javax.sound.sampled.Clip;
 
 public abstract class Environment {
     private static Environment activeEnvironment;
@@ -25,10 +27,42 @@ public abstract class Environment {
     protected Weather weather;
     protected double width;
     protected double height;
+    private WeatherType lastWeather;
+    private Clip rainClip;
 
     // --- VÒNG LẶP CỐT LÕI (GAME LOOP) ---
     public void update() {
         weather.update();
+        WeatherType currentWeather = weather.getCurrentWeather();
+
+        if (currentWeather != lastWeather) {
+
+            boolean wasRaining =
+                    lastWeather == WeatherType.RAINY;
+
+            boolean isRaining =
+                    currentWeather == WeatherType.RAINY;
+
+            if (!wasRaining && isRaining) {
+
+                rainClip =
+                        SoundManager.playLoop("rain.wav");
+
+            } else if (wasRaining && !isRaining) {
+
+                SoundManager.stopSound(rainClip);
+                rainClip = null;
+            }
+
+            lastWeather = currentWeather;
+
+            System.out.println(
+                "Weather changed from "
+                + lastWeather
+                + " to "
+                + currentWeather
+            );
+        }
         // 1. [QUAN TRỌNG NHẤT] ĐẬP CÂY CŨ, XÂY CÂY MỚI Ở ĐẦU MỖI KHUNG HÌNH!
         Rectangle mapBoundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
         currentQuadTree = new QuadTree(mapBoundary, 4);
@@ -319,6 +353,7 @@ public abstract class Environment {
         this.waterZones = new ArrayList<>();
         this.animalPens = new HashMap<>();
         this.weather = new Weather();
+        this.lastWeather = weather.getCurrentWeather();
     }
 
     public static void setActiveEnvironment(Environment env) {

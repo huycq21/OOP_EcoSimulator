@@ -7,6 +7,7 @@ import model.herbivore.Herbivore;
 
 import java.util.ArrayList;
 import java.util.List;
+import util.SoundManager;
 
 
 public abstract class Carnivore extends Animal {
@@ -50,6 +51,7 @@ public abstract class Carnivore extends Animal {
 
             // Trừ máu con mồi
             prey.receiveDamage(this.attackDamage);
+            SoundManager.playSound("attack_swipe.wav");
             
             // Reset lại thời gian chờ (Ví dụ: 30 tick = nửa giây)
             this.currentCooldownTimer = this.attackCooldown;

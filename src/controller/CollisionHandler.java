@@ -7,6 +7,7 @@ import model.herbivore.*;
 import model.plant.*;
 import java.util.List;
 import java.util.ArrayList;
+import util.SoundManager;
 
 public class CollisionHandler {
 
@@ -174,6 +175,8 @@ public class CollisionHandler {
             // Tạm thời chỉ dể thỏ chui
             if (animal instanceof Rabbit && animal.getSize() <= hideable.getMaxAllowedSize()) {
                 hideable.hideEntity(animal);
+                System.out.println("RABBIT HIDING");
+                SoundManager.playSound("bush_rustle.wav");
                 animal.setCurrentState(AnimalState.HIDING);
                 animal.setHidingTicks(SimulationConstant.RABBIT_HIDE_DURATION); //may change later for universal
                 EventManager.animalHide(animal.getClass().getSimpleName());

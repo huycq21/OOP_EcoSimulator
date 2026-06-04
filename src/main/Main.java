@@ -1,6 +1,9 @@
 package main;
 import view.SimulationPanel;
 import controller.SimulationEngine;
+import util.SoundManager;
+import javax.sound.sampled.Clip;
+
 import javax.swing.JFrame;
 
 public class Main {
