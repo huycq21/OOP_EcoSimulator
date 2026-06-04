@@ -4,6 +4,9 @@ import controller.SimulationTime;
 import model.Animal;
 import model.AnimalState;
 import model.Entity;
+import model.apex.Human;
+import model.apex.Lion;
+import model.apex.Tiger;
 import model.aquatic.FishFour;
 import model.aquatic.FishOne;
 import model.aquatic.FishThree;
@@ -16,6 +19,7 @@ import model.domestic.Pig;
 import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
+import model.herbivore.Elephant;
 import model.herbivore.Rabbit;
 import model.environment.Environment;
 import model.plant.Algae;
@@ -312,39 +316,143 @@ public class SimulationPanel extends JPanel {
             int cx,
             int cy) {
 
-        int size = Math.max(
-                8,
-                (int)(e.getSize() * 4 * renderScale)
-        );
+        int size = 10;
+
+        // ========= PLANTS =========
+
+        if (e instanceof Grass) {
+            g.setColor(new Color(0, 180, 0));
+
+            Polygon p = new Polygon();
+            p.addPoint(cx, cy - size);
+            p.addPoint(cx - size, cy + size);
+            p.addPoint(cx + size, cy + size);
+
+            g.fillPolygon(p);
+            return;
+        }
+
+        if (e instanceof Berry) {
+            g.setColor(Color.MAGENTA);
+
+            Polygon p = new Polygon();
+            p.addPoint(cx, cy - size);
+            p.addPoint(cx - size, cy + size);
+            p.addPoint(cx + size, cy + size);
+
+            g.fillPolygon(p);
+            return;
+        }
+
+        if (e instanceof Mushroom) {
+            g.setColor(Color.PINK);
+
+            Polygon p = new Polygon();
+            p.addPoint(cx, cy - size);
+            p.addPoint(cx - size, cy + size);
+            p.addPoint(cx + size, cy + size);
+
+            g.fillPolygon(p);
+            return;
+        }
+
+        // ========= HERBIVORES =========
 
         if (e instanceof Rabbit) {
             g.setColor(Color.GREEN);
-
-        } else if (e instanceof Deer) {
-            g.setColor(Color.ORANGE);
-
-        } else if (e instanceof Boar) {
-            g.setColor(Color.GRAY);
-
-        } else if (e instanceof Fox) {
-            g.setColor(Color.RED);
-
-        } else if (e instanceof Wolf) {
-            g.setColor(Color.DARK_GRAY);
-
-        } else if (e instanceof Grass) {
-            g.setColor(Color.GREEN.darker());
-
-        } else {
-            g.setColor(Color.WHITE);
+            g.fillOval(cx - size, cy - size, size * 2, size * 2);
+            return;
         }
 
-        g.fillOval(
-                cx - size/2,
-                cy - size/2,
-                size,
-                size
-        );
+        if (e instanceof Deer) {
+            g.setColor(Color.ORANGE);
+            g.fillOval(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
+        if (e instanceof Boar) {
+            g.setColor(new Color(120, 70, 20));
+            g.fillOval(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
+        if (e instanceof Elephant) {
+            g.setColor(Color.GRAY);
+            g.fillOval(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
+        // ========= CARNIVORES =========
+
+        if (e instanceof Fox) {
+            g.setColor(Color.RED);
+            g.fillRect(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
+        if (e instanceof Wolf) {
+            g.setColor(Color.DARK_GRAY);
+            g.fillRect(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
+        // tiger
+        // lion
+
+        // ========= AQUATIC =========
+
+        if (e instanceof model.aquatic.Fish) {
+
+            g.setColor(Color.BLUE);
+
+            Polygon diamond = new Polygon();
+            diamond.addPoint(cx, cy - size);
+            diamond.addPoint(cx + size, cy);
+            diamond.addPoint(cx, cy + size);
+            diamond.addPoint(cx - size, cy);
+
+            g.fillPolygon(diamond);
+            return;
+        }
+
+        // ========= HUMAN =========
+
+        // ========= BUSH =========
+
+        if (e instanceof Bush) {
+
+            g.setColor(new Color(0, 100, 0));
+
+            g.fillRoundRect(
+                    cx - size,
+                    cy - size,
+                    size * 2,
+                    size * 2,
+                    6,
+                    6
+            );
+            return;
+        }
+
+        // ========= TREE =========
+
+        if (e instanceof OldTree) {
+
+            g.setColor(new Color(120, 70, 20));
+
+            g.fillRect(
+                    cx - size,
+                    cy - size,
+                    size * 2,
+                    size * 2
+            );
+            return;
+        }
+
+        // ========= UNKNOWN =========
+
+        g.setColor(Color.BLACK);
+        g.fillOval(cx - 4, cy - 4, 8, 8);
     }
 
     private void loadSprites() {
