@@ -50,6 +50,7 @@ public class SimulationPanel extends JPanel {
     private JPanel timelinePanel;
     private JLabel speedLabel;
     private JSlider speedSlider;
+    private JButton viewModeButton;
     private double worldWidth;
     private double worldHeight;
     private double renderScale;
@@ -58,7 +59,9 @@ public class SimulationPanel extends JPanel {
     private double cameraFocusX;
     private double cameraFocusY;
     private final ForestTileMap forestTileMap;
+    private boolean basicMode = false;
     private String buildMode = "FOOD_PLANT";
+    
 
     public SimulationPanel() {
         this.sprites = new HashMap<>();
@@ -97,7 +100,7 @@ public class SimulationPanel extends JPanel {
         super.doLayout();
         if (timelinePanel == null) return;
         int width = 240;
-        int height = 56;
+        int height = 96;
         int margin = 12;
         timelinePanel.setBounds(Math.max(margin, getWidth() - width - margin), margin, width, height);
     }
@@ -222,6 +225,10 @@ public class SimulationPanel extends JPanel {
 
         int cx = worldToScreenX(e.getPosition().getX());
         int cy = worldToScreenY(e.getPosition().getY());
+        if (basicMode) {
+            drawBasicEntity(g, e, cx, cy);
+            return;
+        }
         int size = Math.max(12, (int) (e.getSize() * 4 * renderScale));
         boolean drawn = false;
 
@@ -297,6 +304,47 @@ public class SimulationPanel extends JPanel {
         if (e instanceof Animal) {
             drawHealthBar(g, (Animal) e, cx, cy, size);
         }
+    }
+
+    private void drawBasicEntity(
+            Graphics2D g,
+            Entity e,
+            int cx,
+            int cy) {
+
+        int size = Math.max(
+                8,
+                (int)(e.getSize() * 4 * renderScale)
+        );
+
+        if (e instanceof Rabbit) {
+            g.setColor(Color.GREEN);
+
+        } else if (e instanceof Deer) {
+            g.setColor(Color.ORANGE);
+
+        } else if (e instanceof Boar) {
+            g.setColor(Color.GRAY);
+
+        } else if (e instanceof Fox) {
+            g.setColor(Color.RED);
+
+        } else if (e instanceof Wolf) {
+            g.setColor(Color.DARK_GRAY);
+
+        } else if (e instanceof Grass) {
+            g.setColor(Color.GREEN.darker());
+
+        } else {
+            g.setColor(Color.WHITE);
+        }
+
+        g.fillOval(
+                cx - size/2,
+                cy - size/2,
+                size,
+                size
+        );
     }
 
     private void loadSprites() {
@@ -861,7 +909,7 @@ public class SimulationPanel extends JPanel {
 
     private void installTimelineControls() {
         timelinePanel = new JPanel();
-        timelinePanel.setLayout(new BorderLayout(8, 2));
+        timelinePanel.setLayout(new BorderLayout(8, 4));
         timelinePanel.setOpaque(true);
         timelinePanel.setBackground(new Color(20, 32, 25, 210));
         timelinePanel.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
@@ -878,8 +926,29 @@ public class SimulationPanel extends JPanel {
             SimulationTime.setTimeScale(scale);
             speedLabel.setText(String.format("Time x%.2f", SimulationTime.getTimeScale()));
         });
-        timelinePanel.add(speedLabel, BorderLayout.NORTH);
-        timelinePanel.add(speedSlider, BorderLayout.CENTER);
+
+        viewModeButton = new JButton("Switch to Basic");
+
+        viewModeButton.addActionListener(e -> {
+
+            basicMode = !basicMode;
+
+            viewModeButton.setText(
+                    basicMode
+                            ? "Switch to Graphics"
+                            : "Switch to Basic"
+            );
+
+            repaint();
+        });
+        JPanel speedPanel = new JPanel(new BorderLayout(0, 4));
+        speedPanel.setOpaque(false);
+
+        speedPanel.add(speedLabel, BorderLayout.NORTH);
+        speedPanel.add(speedSlider, BorderLayout.CENTER);
+
+        timelinePanel.add(speedPanel, BorderLayout.CENTER);
+        timelinePanel.add(viewModeButton, BorderLayout.SOUTH);
         add(timelinePanel);
     }
 
