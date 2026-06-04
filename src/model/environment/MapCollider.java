@@ -180,8 +180,8 @@ public class MapCollider {
             return true;
         }
 
-        center.setX(closest.getX() - (dx / distance) * radius);
-        center.setY(closest.getY() - (dy / distance) * radius);
+        center.setX(closest.getX() + (dx / distance) * radius);
+        center.setY(closest.getY() + (dy / distance) * radius);
         return true;
     }
 

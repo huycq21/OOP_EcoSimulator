@@ -34,9 +34,9 @@ public class Jungle extends Environment {
 
         spawnHerbivores();
         spawnCarnivores();
-        spawnFish();
-        spawnDomesticAnimals();
-        spawnPlantsAndCover();
+        // spawnFish();
+        // spawnDomesticAnimals();
+        // spawnPlantsAndCover();
     }
 
     private void spawnHerbivores() {
@@ -44,17 +44,17 @@ public class Jungle extends Environment {
             addEntity(new Rabbit(randomPosition()));
         }
 
-        for (int i = 0; i < 14; i++) {
-            addEntity(new BlackGrouse(randomPosition()));
-        }
+        // for (int i = 0; i < 14; i++) {
+        //     addEntity(new BlackGrouse(randomPosition()));
+        // }
 
-        for (int i = 0; i < 8; i++) {
-            addEntity(new Deer(randomPosition()));
-        }
+        // for (int i = 0; i < 8; i++) {
+        //     addEntity(new Deer(randomPosition()));
+        // }
 
-        for (int i = 0; i < 6; i++) {
-            addEntity(new Boar(randomPosition()));
-        }
+        // for (int i = 0; i < 6; i++) {
+        //     addEntity(new Boar(randomPosition()));
+        // }
     }
 
     private void spawnCarnivores() {
@@ -62,9 +62,9 @@ public class Jungle extends Environment {
             addEntity(new Wolf(randomPosition()));
         }
 
-        for (int i = 0; i < 4; i++) {
-            addEntity(new Fox(randomPosition()));
-        }
+        // for (int i = 0; i < 4; i++) {
+        //     addEntity(new Fox(randomPosition()));
+        // }
     }
 
     private void spawnFish() {

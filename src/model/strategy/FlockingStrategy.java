@@ -41,7 +41,7 @@ public class FlockingStrategy implements SurvivalStrategy {
                 // 2. Cộng dồn vector vận tốc để xem bầy đang trôi về đâu
                 alignment.add(ally.getVelocity());
 
-                // 3. Nếu đứng quá gần nhau (ví dụ < 15.0), tạo lực đẩy né nhau ra
+                // 3. Nếu đứng quá gần nhau (ví dụ < 30.0), tạo lực đẩy né nhau ra
                 if (dist < 15.0 && dist > 0) {
                     double pushX = animal.getPosition().getX() - ally.getPosition().getX();
                     double pushY = animal.getPosition().getY() - ally.getPosition().getY();
@@ -64,9 +64,9 @@ public class FlockingStrategy implements SurvivalStrategy {
                 cohesion.getX() - animal.getPosition().getX(),
                 cohesion.getY() - animal.getPosition().getY()
             );
-            steerToCenter.normalize();
-            alignment.normalize();
-            separation.normalize();
+            // steerToCenter.normalize();
+            // alignment.normalize();
+            // separation.normalize();
 
             // TRỘN 3 LỰC LẠI VỚI NHAU (Bạn có thể tinh chỉnh các hệ số này)
             // Ví dụ: Ưu tiên giãn cách (1.5) > Đồng hướng (1.0) = Tụ tập (1.0)

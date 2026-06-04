@@ -89,7 +89,7 @@ public abstract class Animal extends Entity implements Ageable {
 
     // Hàm giảm năng lượng cơ bản
     private void decreaseEnergy() {
-        this.energy -= 0.02; // Có thể đưa hệ số này ra SimulationConstant cho dễ chỉnh
+        this.energy -= 0.05; // Có thể đưa hệ số này ra SimulationConstant cho dễ chỉnh
     }
 
     // --- CÁC HÀM GETTER / SETTER QUAN TRỌNG ---

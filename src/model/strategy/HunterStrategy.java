@@ -62,7 +62,7 @@ public class HunterStrategy implements SurvivalStrategy {
             // NẾU MỒI CHƯA BIẾT GÌ VÀ ĐANG Ở NGOÀI TẦM BUNG SỨC -> RÓN RÉN
             else {
                 hunter.setCurrentState(AnimalState.SNEAKING);
-                currentMoveSpeed = hunter.getSpeed() * 0.45; 
+                currentMoveSpeed = hunter.getSpeed() * 0.1; 
             }
 
             // Áp dụng vector vận tốc di chuyển tới con mồi
@@ -111,12 +111,7 @@ public class HunterStrategy implements SurvivalStrategy {
                     boolean isPreyValid = false;
 
                     if (preyCandidate instanceof Herbivore) {
-                        if (hunter instanceof Eagle) {
-                            // Đại bàng chỉ cắp được mồi nhỏ (size <= 5.0)
-                            if (preyCandidate.getSize() <= 5.0) isPreyValid = true;
-                        } else {
-                            isPreyValid = true;
-                        }
+                        isPreyValid = true;
                     } 
                     
                     if (isPreyValid) {
