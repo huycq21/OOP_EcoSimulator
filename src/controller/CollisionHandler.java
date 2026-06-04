@@ -314,8 +314,19 @@ private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEn
         double dist = e1.getPosition().distanceTo(e2.getPosition());
         double minCollisionDist = (e1.getSize() + e2.getSize()) / 2.0;
 
-        // Nếu khoảng cách thực tế nhỏ hơn bán kính va chạm -> Chúng đang lún vào nhau!
-        if (dist < minCollisionDist && dist > 0) {
+        // XỬ LÝ LỖI TRÙNG KHÍT (Khoảng cách = 0)
+        if (dist == 0) {
+            // Đẩy nhẹ e1 một khoảng siêu nhỏ (vd: 0.3) sang phải hoặc ngẫu nhiên
+            // Mục đích chỉ là để tạo ra dist > 0, sau đó vòng lặp vật lý sẽ tự lo phần còn lại
+            e1.getPosition().setX(e1.getPosition().getX() + 0.3);
+            e1.getPosition().setY(e1.getPosition().getY() + 0.3);
+            
+            // Cập nhật lại khoảng cách sau khi đã "lệch" ra
+            dist = e1.getPosition().distanceTo(e2.getPosition()); 
+        }
+
+        // Xử lý đẩy lùi (Lúc này dist chắc chắn > 0)
+        if (dist < minCollisionDist) {
             double overlap = minCollisionDist - dist; // Độ lún (pixel)
 
             // Vector hướng từ e2 sang e1

@@ -40,7 +40,7 @@ public class Jungle extends Environment {
     }
 
     private void spawnHerbivores() {
-        for (int i = 0; i < 18; i++) {
+        for (int i = 0; i < 30; i++) {
             addEntity(new Rabbit(randomPosition()));
         }
 
@@ -58,7 +58,7 @@ public class Jungle extends Environment {
     }
 
     private void spawnCarnivores() {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 30; i++) {
             addEntity(new Wolf(randomPosition()));
         }
 
