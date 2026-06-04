@@ -359,7 +359,7 @@ public class SimulationPanel extends JPanel {
         // ========= HERBIVORES =========
 
         if (e instanceof Rabbit) {
-            g.setColor(Color.GREEN);
+            g.setColor(Color.PINK);
             g.fillOval(cx - size, cy - size, size * 2, size * 2);
             return;
         }
@@ -403,7 +403,7 @@ public class SimulationPanel extends JPanel {
 
         if (e instanceof model.aquatic.Fish) {
 
-            g.setColor(Color.BLUE);
+            g.setColor(Color.CYAN);
 
             Polygon diamond = new Polygon();
             diamond.addPoint(cx, cy - size);
@@ -421,7 +421,7 @@ public class SimulationPanel extends JPanel {
 
         if (e instanceof Bush) {
 
-            g.setColor(new Color(0, 100, 0));
+            g.setColor(Color.BLUE);
 
             g.fillRoundRect(
                     cx - size,
