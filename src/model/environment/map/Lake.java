@@ -1,4 +1,4 @@
-package model.environment.Map;
+package model.environment.map;
 
 public class Lake {
 

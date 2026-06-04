@@ -4,6 +4,8 @@ import model.strategy.SurvivalStrategy;
 import controller.EventManager;
 import controller.SimulationConstant;
 import model.*;
+import model.environment.Environment;
+import model.environment.TerrainType;
 import controller.SimulationConstant;
 
 public abstract class Animal extends Entity implements Ageable {
@@ -29,6 +31,8 @@ public abstract class Animal extends Entity implements Ageable {
     
     // 3. ĐÂY CHÍNH LÀ BỘ NÃO (Strategy Pattern)
     protected SurvivalStrategy brain; 
+
+    protected double terrainSpeedMultiplier = 1.0;
 
     // Constructor
     public Animal(Vector2D position, double size, double maxHp, double maxEnergy, double speed, double visionRadius) {
@@ -115,6 +119,13 @@ public abstract class Animal extends Entity implements Ageable {
         }
         // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
         // Vận tốc này vừa được cái "não" ở bước 3 tính toán xong
+        TerrainType terrain =
+                Environment.getInstance()
+                        .getTerrainAt(position);
+
+        terrainSpeedMultiplier =
+                terrain.getSpeedMultiplier();
+                
         position.add(velocity);
     }
 
@@ -203,7 +214,7 @@ public abstract class Animal extends Entity implements Ageable {
     }
 
     public double getSpeed() {
-        return speed;
+        return speed * terrainSpeedMultiplier;
     }
 
     public double getVisionRadius() {
@@ -257,6 +268,10 @@ public abstract class Animal extends Entity implements Ageable {
 
     public void setJustLeftBush(boolean value) {
         this.justLeftBush = value;
+    }
+
+    public double getTerrainSpeedMultiplier() {
+        return terrainSpeedMultiplier;
     }
 }
 

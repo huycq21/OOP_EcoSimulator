@@ -1,7 +1,7 @@
 package controller;
 
 import model.environment.Environment;
-import model.environment.Map.Jungle;
+import model.environment.map.Jungle;
 import view.SimulationPanel;
 import model.spawner.Spawner;
 

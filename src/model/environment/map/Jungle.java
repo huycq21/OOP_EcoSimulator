@@ -1,4 +1,4 @@
-package model.environment.Map;
+package model.environment.map;
 
 import model.Vector2D;
 import model.aquatic.Fish;
@@ -15,6 +15,7 @@ import model.domestic.Pig;
 import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
+import model.herbivore.Elephant;
 import model.herbivore.Rabbit;
 import model.plant.Grass;
 import model.environment.Bush;
@@ -56,6 +57,10 @@ public class Jungle extends Environment {
 
         for (int i = 0; i < 6; i++) {
             addEntity(new Boar(randomPosition()));
+        }
+
+        for (int i = 0; i < 2; i++) {
+            addEntity(new Elephant(randomPosition()));
         }
     }
 

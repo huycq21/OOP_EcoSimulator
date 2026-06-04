@@ -368,6 +368,15 @@ public abstract class Environment {
         pendingEntities.add(entity);
     }
 
+    public TerrainType getTerrainAt(Vector2D position) {
+
+        if (isInWaterZone(position, 0)) {
+            return TerrainType.WATER;
+        }
+
+        return TerrainType.FOREST;
+    }
+
     public Weather getWeather() {
         return weather;
     }
