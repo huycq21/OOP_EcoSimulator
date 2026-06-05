@@ -50,8 +50,8 @@ public abstract class Environment {
             keepWithinBounds(entity);
             resolveWaterAccess(entity, previousX, previousY);
             resolvePenAccess(entity, previousX, previousY);
-            resolveMapCollisions(entity);
-            resolveWicketCollisions(entity);
+            resolveMapCollisions(entity, previousX, previousY); 
+            resolveWicketCollisions(entity, previousX, previousY);
 
             if (!entity.isAlive()) {
                 entitiesToRemove.add(entity);
@@ -85,30 +85,37 @@ public abstract class Environment {
         }
     }
 
-    protected void resolveMapCollisions(Entity entity) {
-        if (!(entity instanceof Animal)) return;
+// Đổi tham số đầu vào
+    protected void resolveMapCollisions(Entity entity, double previousX, double previousY) {
+    if (!(entity instanceof Animal)) return;
 
-        double radius = getCollisionRadius(entity);
-        boolean hitMap = false;
+    double radius = getCollisionRadius(entity);
+    boolean hitMap = false;
 
-        if (mapBounds != null) {
-            hitMap = mapBounds.clampCircleInside(entity.getPosition(), radius);
-        }
+    if (mapBounds != null) {
+        hitMap = mapBounds.clampCircleInside(entity.getPosition(), radius);
+    }
 
-        for (MapCollider collider : mapColliders) {
-            if (collider.resolveCircleCollision(entity.getPosition(), radius)) {
-                hitMap = true;
-            }
-        }
-
-        if (hitMap) {
-            Animal animal = (Animal) entity;
-            animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
-            animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
+    for (MapCollider collider : mapColliders) {
+        if (collider.resolveCircleCollision(entity.getPosition(), radius)) {
+            hitMap = true;
         }
     }
 
-    protected void resolveWicketCollisions(Entity entity) {
+    if (hitMap) {
+        // 1. KÉO CON VẬT TRỞ LẠI VỊ TRÍ AN TOÀN BÊN NGOÀI
+        entity.getPosition().setX(previousX);
+        entity.getPosition().setY(previousY);
+
+        // 2. SAU ĐÓ MỚI ĐẢO VẬN TỐC
+        Animal animal = (Animal) entity;
+        animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
+        animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
+    }
+    }
+
+    // LÀM TƯƠNG TỰ VỚI resolveWicketCollisions
+    protected void resolveWicketCollisions(Entity entity, double previousX, double previousY) {
         if (!(entity instanceof Animal) || entity instanceof DomesticAnimal) return;
 
         double radius = getCollisionRadius(entity);
@@ -121,6 +128,11 @@ public abstract class Environment {
         }
 
         if (hitWicket) {
+            // 1. ROLLBACK VỊ TRÍ
+            entity.getPosition().setX(previousX);
+            entity.getPosition().setY(previousY);
+
+            // 2. ĐẢO VẬN TỐC
             Animal animal = (Animal) entity;
             animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
             animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
