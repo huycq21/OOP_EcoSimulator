@@ -11,7 +11,7 @@ public class Wolf extends Carnivore {
     public Wolf(Vector2D position) {
         // Stats: Kích thước 5.0, HP 100, Năng lượng 200, Tốc độ 5.5, Tầm nhìn 50.0
         // Khí chất đe dọa 80.0, Sát thương 60.0, Cooldown 60 tick (~1 giây)
-        super(position, 5.0, 100.0, 200.0, 5.5, 50.0, 80.0, 60.0, 60);
+        super(position, 5.0, 100.0, 200.0, 5.5, 150.0, 80.0, 60.0, 60);
 
         // --- 1. THỰC ĐƠN CỦA SÓI ---
         this.addPreyType(model.herbivore.Rabbit.class);
@@ -26,15 +26,16 @@ public class Wolf extends Carnivore {
         SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
         
         // Đói thì chuyển sang chế độ đi săn
-        SurvivalStrategy hunter = new HunterStrategy(passive); 
         
         // TẬP TÍNH BẦY ĐÀN (Bọc ngoài Đi săn)
         // Tìm đồng loại hú hét đi chung. Mỗi đồng bọn buff 30% sức mạnh (0.3), Tối đa x1.9 sức mạnh.
         // Sói đi 3 con: 80.0 * 1.6 = 128.0 (Đủ sức dọa lợn rừng và linh cẩu)
-        SurvivalStrategy packLogic = new PackFlockingStrategy(hunter, 0.30, 2);
-        
+        // rảnh thì đi cùng nhau
+
+        SurvivalStrategy packLogic = new PackFlockingStrategy(passive, 0.30, 2);
+        SurvivalStrategy hunter = new HunterStrategy(packLogic); 
         // Rảnh thì đi cùng nhau
-        SurvivalStrategy scared = new ScaredStrategy(packLogic);
+        SurvivalStrategy scared = new ScaredStrategy(hunter);
         
         // NHẶT XÁC ĐẶT RA NGOÀI CÙNG!
         SurvivalStrategy scavenger = new ScavengerStrategy(scared);
