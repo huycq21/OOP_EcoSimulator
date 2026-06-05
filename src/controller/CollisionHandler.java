@@ -244,7 +244,12 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
 
     // --- HÀM MỚI: XỬ LÝ TRANH GIÀNH GIỮA CÁC LOÀI ĂN THỊT ---
 private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEntities, Environment env) {
-        
+        if(c1.getClass() == c2.getClass()) {
+            // Nếu cùng loài, có thể bỏ qua va chạm hoặc chỉ đẩy nhau ra vật
+            resolveOverlap(c1, c2);
+            return;
+        }
+
         boolean c1Attacking = (c1.getCurrentState() == AnimalState.ATTACKING);
         boolean c2Attacking = (c2.getCurrentState() == AnimalState.ATTACKING);
 
@@ -318,8 +323,8 @@ private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEn
         if (dist == 0) {
             // Đẩy nhẹ e1 một khoảng siêu nhỏ (vd: 0.3) sang phải hoặc ngẫu nhiên
             // Mục đích chỉ là để tạo ra dist > 0, sau đó vòng lặp vật lý sẽ tự lo phần còn lại
-            e1.getPosition().setX(e1.getPosition().getX() + 0.3);
-            e1.getPosition().setY(e1.getPosition().getY() + 0.3);
+            e1.getPosition().setX(e1.getPosition().getX() + 0.2);
+            e1.getPosition().setY(e1.getPosition().getY() + 0.2);
             
             // Cập nhật lại khoảng cách sau khi đã "lệch" ra
             dist = e1.getPosition().distanceTo(e2.getPosition()); 

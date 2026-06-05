@@ -45,7 +45,7 @@ public class PassiveStrategy implements SurvivalStrategy {
         }
 
         // 3. Đang trong thời gian đi dạo -> Tiếp tục di chuyển
-        double pace = animal.getSpeed() * 0.25;
+        double pace = animal.getSpeed() * 0.2; // Đi chậm hơn tốc độ tối đa để trông có vẻ đang thong thả đi dạo
         animal.getVelocity().setX(currentWanderDirection.getX() * pace);
         animal.getVelocity().setY(currentWanderDirection.getY() * pace);
         

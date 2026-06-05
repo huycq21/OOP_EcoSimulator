@@ -41,12 +41,12 @@ public class FlockingStrategy implements SurvivalStrategy {
                 // 2. Cộng dồn vector vận tốc để xem bầy đang trôi về đâu
                 alignment.add(ally.getVelocity());
 
-                // 3. Nếu đứng quá gần nhau (ví dụ < 30.0), tạo lực đẩy né nhau ra
-                if (dist < 15.0 && dist > 0) {
+                // 3. Nếu đứng quá gần nhau (ví dụ < 60.0), tạo lực đẩy né nhau ra
+                if (dist < 60.0 && dist > 0) {
                     double pushX = animal.getPosition().getX() - ally.getPosition().getX();
                     double pushY = animal.getPosition().getY() - ally.getPosition().getY();
-                    // Càng gần lực đẩy càng mạnh (chia cho dist)
-                    separation.add(new Vector2D(pushX / dist, pushY / dist));
+                    // Càng gần lực đẩy càng mạnh (chia cho dist^2)
+                    separation.add(new Vector2D(pushX / dist / dist * 10, pushY / dist / dist * 10));
                 }
             }
 
@@ -77,7 +77,7 @@ public class FlockingStrategy implements SurvivalStrategy {
             finalVector.normalize();
 
             // Áp dụng vector mới
-            double pace = animal.getSpeed() * 0.6;
+            double pace = animal.getSpeed() * 0.2;
             animal.getVelocity().setX(finalVector.getX() * pace);
             animal.getVelocity().setY(finalVector.getY() * pace);
             
