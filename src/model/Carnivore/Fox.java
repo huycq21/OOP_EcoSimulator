@@ -11,10 +11,7 @@ public class Fox extends Carnivore {
     public Fox(Vector2D position) {
         // Kích thước 3.5, Máu 60, Năng lượng 120, Tốc độ 6.0, Tầm nhìn 70.0
         // Khí chất đe dọa 40.0, Sát thương 30.0, Hồi chiêu 40 tick
-        super(position, 3.5, 60, 120, 6.0, 70.0, 40.0, 30.0, 40);
-        
-        // Cáo có mũi cực thính để săn mồi
-        this.setPreyDetectionRadius(110.0);
+        super(position, 3.5, 60, 120, 6.0, 160.0, 40.0, 30.0, 40);
         
         // Thực đơn của Cáo
         this.addPreyType(model.herbivore.Rabbit.class);
