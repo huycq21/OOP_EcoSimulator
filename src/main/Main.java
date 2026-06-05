@@ -24,7 +24,7 @@ public class Main {
         Random rand = new Random();
         
         // Sinh ra 30 con Sói và 30 con Thỏ ở vị trí ngẫu nhiên
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 2; i++) {
             // Random tọa độ cho Sói (từ 0 đến viền map)
             double wolfX = rand.nextDouble() * mapWidth;
             double wolfY = rand.nextDouble() * mapHeight;
