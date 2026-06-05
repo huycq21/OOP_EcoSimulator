@@ -19,7 +19,7 @@ public class Human extends ApexEntity {
             100.0,       // maxHp: Thể chất yếu, máu bằng con Sói
             250.0,       // maxEnergy: Thể lực kém
             4.0,         // speed: Đi bộ chậm chạp
-            30.0,       // visionRadius: Ống nhòm giúp nhìn rất xa
+            200.0,       // visionRadius:
             2000.0,      // strengthWeight: SIÊU ĐE DỌA. Mọi con vật gặp người đều bỏ chạy!
             30.0,        // attackDamage: Đánh tay bo/dao găm cùi bắp
             60,          // attackCooldown: Hồi đánh tay

@@ -18,7 +18,7 @@ public class Bear extends ApexEntity {
 
     public Bear(Vector2D position) {
         // Cân bằng hoàn hảo: Trâu, Đam to, AOE bự, nhưng Chậm.
-        super(position, 12.0, 400.0, 500.0, 3.0, 80.0, 150.0, 100.0, 90, 300);
+        super(position, 12.0, 400.0, 500.0, 3.0, 230.0, 150.0, 100.0, 90, 300);
         
         // Tầm vả AOE vươn ra gấp 1.5 lần cơ thể
         this.aoeRadius = this.getSize() * 1.5; 

@@ -19,7 +19,7 @@ public class Tiger extends ApexEntity {
     public Tiger(Vector2D position) {
         // Stats: Nhanh hơn Gấu (7.0), Máu khá (300), Sát thương (85)
         // Mức độ đe dọa: 180.0 (Cao nhất rừng hiện tại, Sói max bầy đàn cũng chỉ 152.0)
-        super(position, 9.0, 300.0, 400.0, 7.0, 100.0, 180.0, 85.0, 60, 250);
+        super(position, 9.0, 300.0, 400.0, 7.0, 200.0, 180.0, 85.0, 60, 250);
         
         // Tầm vồ mồi xa gấp 4 lần cơ thể (Không cần áp sát quá gần như đánh thường)
         this.pounceRadius = this.getSize() * 4.0; 
