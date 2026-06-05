@@ -243,7 +243,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
     }
 
     // --- HÀM MỚI: XỬ LÝ TRANH GIÀNH GIỮA CÁC LOÀI ĂN THỊT ---
-private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEntities, Environment env) {
+    private static void handleTurfWar(Carnivore c1, Carnivore c2, List<Entity> newEntities, Environment env) {
         if(c1.getClass() == c2.getClass()) {
             // Nếu cùng loài, có thể bỏ qua va chạm hoặc chỉ đẩy nhau ra vật
             resolveOverlap(c1, c2);

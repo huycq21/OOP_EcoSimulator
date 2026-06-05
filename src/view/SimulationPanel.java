@@ -496,7 +496,7 @@ public class SimulationPanel extends JPanel {
         if (forestTileMap != null && forestTileMap.isLoaded()) {
             forestTileMap.draw(g, renderOffsetX, renderOffsetY, width, height, renderScale);
         } else {
-            g.setColor(new Color(27, 112, 49));
+            g.setColor(Color.WHITE); // Hoặc dùng new Color(255, 255, 255)
             g.fillRect(renderOffsetX, renderOffsetY, width, height);
         }
 
