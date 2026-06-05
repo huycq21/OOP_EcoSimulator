@@ -12,6 +12,8 @@ import model.carnivore.Wolf;
 import model.domestic.Chicken;
 import model.domestic.Cow;
 import model.domestic.Pig;
+import model.environment.Environment;
+import model.environment.Map.EmptyMap;
 import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
@@ -41,13 +43,27 @@ public class SimulationPanel extends JPanel {
     private double cameraFocusX;
     private double cameraFocusY;
     private final ForestTileMap forestTileMap;
+    private Environment env;
 
-    public SimulationPanel() {
+    public SimulationPanel(Environment env) {
+        this.env = env;
         this.sprites = new HashMap<>();
         this.entitySprites = new HashMap<>();
-        this.forestTileMap = new ForestTileMap("assets/Environment/Forest/Forest.tmx");
-        this.worldWidth = forestTileMap.isLoaded() ? forestTileMap.getPixelWidth() : 800;
-        this.worldHeight = forestTileMap.isLoaded() ? forestTileMap.getPixelHeight() : 600;
+        // 1. Phân biệt Map rỗng và Map có đồ họa
+        if (env instanceof EmptyMap) {
+            this.forestTileMap = null; 
+            
+            // Lấy kích thước linh hoạt trực tiếp từ đối tượng môi trường
+            this.worldWidth = env.getWidth(); 
+            this.worldHeight = env.getHeight();
+            
+        } else {
+            // Nếu là map thường thì load đồ họa
+            this.forestTileMap = new ForestTileMap("assets/Environment/Forest/Forest.tmx");
+            boolean mapLoaded = (forestTileMap != null && forestTileMap.isLoaded());
+            this.worldWidth = mapLoaded ? forestTileMap.getPixelWidth() : env.getWidth();
+            this.worldHeight = mapLoaded ? forestTileMap.getPixelHeight() : env.getHeight();
+        }
         this.renderScale = 1.0;
         this.cameraFocusX = 0.5;
         this.cameraFocusY = 0.5;
@@ -476,7 +492,8 @@ public class SimulationPanel extends JPanel {
         int width = (int) Math.round(worldWidth * renderScale);
         int height = (int) Math.round(worldHeight * renderScale);
 
-        if (forestTileMap.isLoaded()) {
+        // ĐÃ THÊM KIỂM TRA NULL Ở ĐÂY
+        if (forestTileMap != null && forestTileMap.isLoaded()) {
             forestTileMap.draw(g, renderOffsetX, renderOffsetY, width, height, renderScale);
         } else {
             g.setColor(new Color(27, 112, 49));
