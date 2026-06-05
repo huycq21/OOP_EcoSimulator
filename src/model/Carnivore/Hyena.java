@@ -9,7 +9,7 @@ import model.herbivore.Rabbit;
 public class Hyena extends Carnivore {
     public Hyena(Vector2D position) {
         // Tầm nhìn xa (150.0) cực kỳ lợi thế cho việc đánh hơi xác chết!
-        super(position, 4.5, 90, 160, 4.5, 500.0, 50.0, 35.0, 45);
+        super(position, 4.5, 90, 160, 7.0, 500.0, 50.0, 35.0, 45);
         
         // --- 1. THỰC ĐƠN PHÒNG KHI ĐÓI MÀ KHÔNG CÓ XÁC ---
         this.addPreyType(model.herbivore.Rabbit.class);

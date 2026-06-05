@@ -11,7 +11,7 @@ public class Wolf extends Carnivore {
     public Wolf(Vector2D position) {
         // Stats: Kích thước 5.0, HP 100, Năng lượng 200, Tốc độ 5.5, Tầm nhìn 50.0
         // Khí chất đe dọa 80.0, Sát thương 60.0, Cooldown 60 tick (~1 giây)
-        super(position, 5.0, 100.0, 200.0, 5.5, 150.0, 80.0, 60.0, 60);
+        super(position, 5.0, 100.0, 200.0, 7.5, 150.0, 80.0, 60.0, 60);
 
         // --- 1. THỰC ĐƠN CỦA SÓI ---
         this.addPreyType(model.herbivore.Rabbit.class);
