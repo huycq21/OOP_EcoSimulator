@@ -1,7 +1,12 @@
 package model;
 
 import model.strategy.SurvivalStrategy;
+import controller.EventManager;
+import controller.SimulationConstant;
 import model.*;
+import model.environment.Environment;
+import model.environment.TerrainType;
+import controller.SimulationConstant;
 
 public abstract class Animal extends Entity implements Ageable {
     // 1. Các chỉ số sinh tồn cơ bản
@@ -12,7 +17,6 @@ public abstract class Animal extends Entity implements Ageable {
     protected double energy;
     protected double maxEnergy;
     protected double speed;
-
     protected double visionRadius;
     protected boolean canEnterWater;
     protected boolean requiresWater;
@@ -22,9 +26,13 @@ public abstract class Animal extends Entity implements Ageable {
     protected AnimalState currentState;
     protected int stateLockTicks;
     private boolean carcassSpawned;
+    private int hidingTicks;
+    private boolean justLeftBush = false;
     
     // 3. ĐÂY CHÍNH LÀ BỘ NÃO (Strategy Pattern)
     protected SurvivalStrategy brain; 
+
+    protected double terrainSpeedMultiplier = 1.0;
 
     // Constructor
     public Animal(Vector2D position, double size, double maxHp, double maxEnergy, double speed, double visionRadius) {
@@ -32,7 +40,7 @@ public abstract class Animal extends Entity implements Ageable {
         
         this.maxHp = maxHp;
         this.hp = maxHp;             
-        this.maxAge = 20000;
+        this.maxAge = SimulationConstant.DEFAULT_MAX_AGE;
         
         this.maxEnergy = maxEnergy;
         this.energy = maxEnergy;     
@@ -84,12 +92,54 @@ public abstract class Animal extends Entity implements Ageable {
         }
         // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
         // Vận tốc này vừa được cái "não" ở bước 3 tính toán xong
+        // if (currentState == AnimalState.HIDING) {
+
+        //     hidingTicks--;
+
+        //     velocity.setX(0);
+        //     velocity.setY(0);
+
+        //     if (hidingTicks <= 0) {
+        //         EventManager.animalLeaveBush(getClass().getSimpleName());
+        //         currentState = AnimalState.WANDERING;
+        //         justLeftBush = true;
+
+        //         double angle = Math.random() * Math.PI * 2;
+
+        //         position.setX(
+        //             position.getX() + Math.cos(angle) * 50
+        //         );
+
+        //         position.setY(
+        //             position.getY() + Math.sin(angle) * 50
+        //         );
+        //     }
+
+        // } else if (stateLockTicks > 0) {
+
+        //     stateLockTicks--;
+
+        // } else
+        if (this.brain != null) {
+
+            this.brain.execute(this);
+
+        }
+        // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
+        // Vận tốc này vừa được cái "não" ở bước 3 tính toán xong
+        TerrainType terrain =
+                Environment.getInstance()
+                        .getTerrainAt(position);
+
+        terrainSpeedMultiplier =
+                terrain.getSpeedMultiplier();
+                
         position.add(velocity);
     }
 
     // Hàm giảm năng lượng cơ bản
     private void decreaseEnergy() {
-        this.energy -= 0.05; // Có thể đưa hệ số này ra SimulationConstant cho dễ chỉnh
+        this.energy -= SimulationConstant.ENERGY_DECAY_PER_TICK;
     }
 
     // --- CÁC HÀM GETTER / SETTER QUAN TRỌNG ---
@@ -114,7 +164,10 @@ public abstract class Animal extends Entity implements Ageable {
     }
 
     public void startAttackState() {
-        setTemporaryState(AnimalState.ATTACKING, 18);
+        setTemporaryState(
+                AnimalState.ATTACKING,
+                SimulationConstant.ATTACK_STATE_DURATION
+        );
     }
 
     public void receiveDamage(double damage) {
@@ -124,16 +177,20 @@ public abstract class Animal extends Entity implements Ageable {
         if (this.hp <= 0) {
             die();
         } else {
-            setTemporaryState(AnimalState.HURT, 20);
+            setTemporaryState(
+                    AnimalState.HURT,
+                    SimulationConstant.HURT_STATE_DURATION
+            );
         }
     }
 
     public void die() {
         this.hp = 0;
         this.currentState = AnimalState.DEAD;
-        this.stateLockTicks = 42;
+        this.stateLockTicks = SimulationConstant.DEAD_STATE_DURATION;
         this.velocity.setX(0);
         this.velocity.setY(0);
+        EventManager.animalDied(getClass().getSimpleName());
     }
 
     public boolean shouldSpawnCarcass() {
@@ -165,7 +222,7 @@ public abstract class Animal extends Entity implements Ageable {
     }
 
     public double getSpeed() {
-        return speed;
+        return speed * terrainSpeedMultiplier;
     }
 
     public double getVisionRadius() {
@@ -210,5 +267,26 @@ public abstract class Animal extends Entity implements Ageable {
     public void setSpeed(double speed) {
         this.speed = speed;
     }
-    // (Bạn có thể thêm các getter/setter khác cho hp, maxHp... nếu cần)
+    
+    public int getHidingTicks() {
+        return hidingTicks;
+    }
+
+    public void setHidingTicks(int hidingTicks) {
+        this.hidingTicks = hidingTicks;
+    }
+
+    public boolean hasJustLeftBush() {
+        return justLeftBush;
+    }
+
+    public void setJustLeftBush(boolean value) {
+        this.justLeftBush = value;
+    }
+
+    public double getTerrainSpeedMultiplier() {
+        return terrainSpeedMultiplier;
+    }
 }
+
+

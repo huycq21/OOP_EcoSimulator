@@ -5,6 +5,7 @@ public abstract class Entity {
     protected Vector2D position;
     protected double size;        // Kích thước (bán kính) để tính va chạm
     protected boolean isAlive;    // Trạng thái sống/tồn tại
+    protected boolean runtimePlaced = false;
     
     // Một ID duy nhất để phân biệt các thực thể (rất hữu ích khi debug)
     private static int idCounter = 0;
@@ -36,6 +37,14 @@ public abstract class Entity {
 
     public boolean isAlive() {
         return isAlive;
+    }
+
+    public boolean isRuntimePlaced() {
+        return runtimePlaced;
+    }
+
+    public void setRuntimePlaced(boolean runtimePlaced) {
+        this.runtimePlaced = runtimePlaced;
     }
 
     // Khi con vật chết hoặc cây bị ăn hết, gọi hàm này

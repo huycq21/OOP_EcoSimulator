@@ -10,10 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import controller.CollisionHandler;
+import util.SoundManager;
+import javax.sound.sampled.Clip;
 
 public abstract class Environment {
     private static Environment activeEnvironment;
     private QuadTree currentQuadTree; 
+    private final List<Entity> pendingEntities = new ArrayList<>();
 
     protected List<Entity> entities;
     protected List<MapCollider> mapColliders;
@@ -21,11 +24,45 @@ public abstract class Environment {
     protected List<MapCollider> waterZones;
     protected Map<String, List<MapCollider>> animalPens;
     protected MapCollider mapBounds;
+    protected Weather weather;
     protected double width;
     protected double height;
+    private WeatherType lastWeather;
+    private Clip rainClip;
 
     // --- VÒNG LẶP CỐT LÕI (GAME LOOP) ---
     public void update() {
+        weather.update();
+        WeatherType currentWeather = weather.getCurrentWeather();
+
+        if (currentWeather != lastWeather) {
+
+            boolean wasRaining =
+                    lastWeather == WeatherType.RAINY;
+
+            boolean isRaining =
+                    currentWeather == WeatherType.RAINY;
+
+            if (!wasRaining && isRaining) {
+
+                rainClip =
+                        SoundManager.playLoop("rain.wav");
+
+            } else if (wasRaining && !isRaining) {
+
+                SoundManager.stopSound(rainClip);
+                rainClip = null;
+            }
+
+            lastWeather = currentWeather;
+
+            System.out.println(
+                "Weather changed from "
+                + lastWeather
+                + " to "
+                + currentWeather
+            );
+        }
         // 1. [QUAN TRỌNG NHẤT] ĐẬP CÂY CŨ, XÂY CÂY MỚI Ở ĐẦU MỖI KHUNG HÌNH!
         Rectangle mapBoundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
         currentQuadTree = new QuadTree(mapBoundary, 4);
@@ -64,6 +101,9 @@ public abstract class Environment {
         // 5. Dọn dẹp xác chết
         entities.removeAll(entitiesToRemove);
         entities.removeIf(entity -> !entity.isAlive());
+
+        entities.addAll(pendingEntities);
+        pendingEntities.clear();
     }
 
     // --- HÀM HỖ TRỢ VẬT LÝ ---
@@ -295,7 +335,7 @@ public abstract class Environment {
     }
 
     public void addEntity(Entity entity) {
-        entities.add(entity); 
+        pendingEntities.add(entity);
     }
     public void removeEntity(Entity entity) {
         entities.remove(entity);
@@ -324,6 +364,8 @@ public abstract class Environment {
         this.wicketColliders = new ArrayList<>();
         this.waterZones = new ArrayList<>();
         this.animalPens = new HashMap<>();
+        this.weather = new Weather();
+        this.lastWeather = weather.getCurrentWeather();
     }
 
     public static void setActiveEnvironment(Environment env) {
@@ -333,4 +375,23 @@ public abstract class Environment {
     public static Environment getInstance() {
         return activeEnvironment;
     }
+
+    public synchronized void queueEntity(Entity entity) {
+        pendingEntities.add(entity);
+    }
+
+    public TerrainType getTerrainAt(Vector2D position) {
+
+        if (isInWaterZone(position, 0)) {
+            return TerrainType.WATER;
+        }
+
+        return TerrainType.FOREST;
+    }
+
+    public Weather getWeather() {
+        return weather;
+    }
 }
+
+

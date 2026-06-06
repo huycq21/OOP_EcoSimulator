@@ -179,7 +179,10 @@ public class ForestTileMap {
             Node node = layerNodes.item(i);
             if (!(node instanceof Element) || !"layer".equals(node.getNodeName())) continue;
 
-            Element data = firstChild((Element) node, "data");
+            Element layer = (Element) node;
+            if (isDynamicEntityLayer(layer.getAttribute("name"))) continue;
+            Element data = firstChild(layer, "data");
+
             if (data == null) continue;
 
             NodeList chunks = data.getChildNodes();
@@ -206,6 +209,12 @@ public class ForestTileMap {
                 }
             }
         }
+    }
+
+    private boolean isDynamicEntityLayer(String layerName) {
+        if (layerName == null) return false;
+        String normalized = layerName.trim().toLowerCase();
+        return "vine".equals(normalized) || "plants".equals(normalized) || "trees".equals(normalized);
     }
 
     private long parseGid(String raw) {

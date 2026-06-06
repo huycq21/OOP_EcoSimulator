@@ -11,6 +11,7 @@ import model.herbivore.*;
 import model.plant.*;
 import java.util.List;
 import java.util.ArrayList;
+import util.SoundManager;
 
 public class CollisionHandler {
 
@@ -193,23 +194,41 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
 
     // Xử lý đụng tường / chui bụi rậm
     private static void handleObstacleCollision(Animal animal, Obstacle obstacle) {
-        if (animal instanceof Elephant) return; // Voi càn quét mọi thứ
+        // Voi càn quét mọi thứ, không bị cản
+        if (animal instanceof Elephant) return; 
 
         if (obstacle instanceof Hideable) {
+            // (Đồng nghiệp) Tối ưu: Nếu đang trốn rồi thì thoát luôn, không cần tính toán thêm
+            if (animal.getCurrentState() == AnimalState.HIDING) {
+                return;
+            }
+
             Hideable hideable = (Hideable) obstacle;
+
+            // (Đồng nghiệp) Cooldown: Tránh lỗi con vật vừa chui ra lại tự động chui tọt vào lại
+            if (animal.hasJustLeftBush()) {
+                animal.setJustLeftBush(false);
+                return;
+            }
             
-            // ĐIỀU KIỆN ĐỂ ĐƯỢC CHUI VÀO BỤI:
-            // 1. Phải chui lọt (size)
-            // 2. Bụi chưa đầy (chống kẹt)
-            // 3. Quan trọng nhất: Con vật phải đang BỎ CHẠY (FLEEING) hoặc ĐÃ NẤP (HIDING)
-            boolean isScared = (animal.getCurrentState() == AnimalState.FLEEING || animal.getCurrentState() == AnimalState.HIDING);
+            // (Tùng) Điều kiện khắt khe: Phải đang bỏ chạy mới được trốn
+            // Chú ý: Đã bỏ check HIDING ở đây vì đã return thẳng ở dòng 7
+            boolean isScared = (animal.getCurrentState() == AnimalState.FLEEING);
             
+            // KẾT HỢP: 
+            // - Dùng logic size và isFull của Tùng để áp dụng cho mọi con vật (không chỉ Rabbit)
+            // - Phải đang sợ hãi (isScared)
             if (animal.getSize() <= hideable.getMaxAllowedSize() && !hideable.isFull() && isScared) {
                 
-                // Tránh lỗi 1 con chiếm 2 slot nếu logic bị lặp
-                // (Giả sử bạn đã thêm hàm getHiddenEntities() vào Hideable/Bush)
+                // (Tùng) Chống lỗi 1 con chiếm 2 slot
                 if (!hideable.getHiddenEntities().contains(animal)) {
                     hideable.hideEntity(animal);
+                    
+                    // (Đồng nghiệp) Thêm âm thanh, sự kiện và thời gian nấp
+                    System.out.println(animal.getClass().getSimpleName() + " HIDING");
+                    SoundManager.playSound("bush_rustle.wav");
+                    animal.setHidingTicks(SimulationConstant.RABBIT_HIDE_DURATION); // Có thể refactor thành ANIMAL_HIDE_DURATION sau
+                    EventManager.animalHide(animal.getClass().getSimpleName());
                 }
                 
                 // Khóa chặt trạng thái và vị trí
@@ -218,6 +237,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
                 animal.getPosition().setY(obstacle.getPosition().getY());
                 animal.getVelocity().setX(0);
                 animal.getVelocity().setY(0);
+                
                 return; // Đã trốn xong, kết thúc vật lý va chạm
             }
         }
