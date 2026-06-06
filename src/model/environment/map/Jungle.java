@@ -35,11 +35,11 @@ public class Jungle extends Environment {
         TmxCollisionLoader.loadInto(this, "assets/Environment/Forest/Forest.tmx");
         TmxPlantLoader.loadInto(this, "assets/Environment/Forest/Forest.tmx");
 
-        spawnHerbivores();
-        spawnCarnivores();
-        spawnFish();
-        spawnDomesticAnimals();
-        spawnPlantsAndCover();
+        // spawnHerbivores();
+        // spawnCarnivores();
+        // spawnFish();
+        // spawnDomesticAnimals();
+        // spawnPlantsAndCover();
     }
 
     private void spawnHerbivores() {

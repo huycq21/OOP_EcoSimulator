@@ -24,10 +24,10 @@ public class Spawner {
         this.random = new Random();
         
         // Đã sửa "rabit" thành "rabbit"
-        spawnTestEntities("wolf", 5);  
+        spawnTestEntities("wolf", 10);  
         spawnTestEntities("rabbit", 10); 
-        spawnTestEntities("deer", 15); 
-        spawnTestEntities("grass", 30);
+        spawnTestEntities("deer", 10); 
+        spawnTestEntities("grass", 10);
     }
 
     public void update() {
