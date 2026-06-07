@@ -10,10 +10,12 @@ public abstract class Entity {
     // Một ID duy nhất để phân biệt các thực thể (rất hữu ích khi debug)
     private static int idCounter = 0;
     protected final int id;
+    protected Vector2D previousPosition;
 
     public Entity(Vector2D position, double size) {
         this.id = ++idCounter;
         this.position = position;
+        this.previousPosition = new Vector2D(position.getX(), position.getY());
         this.size = size;
         this.isAlive = true;
     }
@@ -29,6 +31,16 @@ public abstract class Entity {
 
     public void setPosition(Vector2D position) {
         this.position = position;
+    }
+
+    public Vector2D getPreviousPosition() {
+        return previousPosition;
+    }
+
+    // Hàm này sẽ được gọi ngay trước khi con vật di chuyển
+    public void saveCurrentPosition() {
+        this.previousPosition.setX(this.position.getX());
+        this.previousPosition.setY(this.position.getY());
     }
 
     public double getSize() {

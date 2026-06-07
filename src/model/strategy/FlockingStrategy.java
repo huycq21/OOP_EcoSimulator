@@ -8,6 +8,7 @@ import model.environment.Environment;
 import model.environment.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+import controller.SimulationConstant;
 
 public class FlockingStrategy implements SurvivalStrategy {
     private SurvivalStrategy nextLogic; 
@@ -23,9 +24,37 @@ public class FlockingStrategy implements SurvivalStrategy {
     @Override
     public void execute(Animal animal) {
         List<Animal> allies = findNearbyAllies(animal);
+        // Đi đàn tối đa 10 giây
+        // Tách bầy đi dạo 3 giây
+        if (animal.isRestingFromFlock()) {
+            animal.setRestingTimer(animal.getRestingTimer() + 1);
+            
+            if (animal.getRestingTimer() >= SimulationConstant.REST_TICKS) {
+                // Đã nghỉ XONG -> Dỡ bỏ lệnh ép nghỉ và làm sạch thời gian đi đàn
+                animal.setRestingFromFlock(false);
+                animal.setRestingTimer(0);
+                animal.setFlockingTimer(0); // <--- CHỈ ĐƯỢC RESET TẠI ĐÂY
+            } else {
+                // Vẫn đang trong thời gian nghỉ ngơi -> Không quan tâm đến đàn
+                nextLogic.execute(animal);
+                return;
+            }
+        }
 
         // NẾU CÓ ĐỒNG BỌN -> KÍCH HOẠT TẬP TÍNH BẦY ĐÀN
         if (!allies.isEmpty()) {
+            // Tăng đồng hồ tính giờ đi đàn
+            animal.setFlockingTimer(animal.getFlockingTimer() + 1);
+
+            // Chạm ngưỡng mệt mỏi -> Ép vào trạng thái nghỉ
+            if (animal.getFlockingTimer() >= SimulationConstant.MAX_FLOCK_TICKS) {
+                animal.setRestingFromFlock(true);
+                animal.setRestingTimer(0); // Bắt đầu bấm giờ nghỉ ngơi
+                
+                nextLogic.execute(animal);
+                return;
+            }
+
             animal.setCurrentState(AnimalState.WANDERING);
 
             Vector2D cohesion = new Vector2D(0, 0);   // Điểm đến chung (Tụ tập)
@@ -99,10 +128,19 @@ public class FlockingStrategy implements SurvivalStrategy {
         List<Entity> nearby = Environment.getInstance().getQuadTree().query(searchRange, null);
 
         for (Entity e : nearby) {
+            // Kiểm tra: Cùng loài, còn sống, và không phải chính mình
             if (e.getClass() == animal.getClass() && e.isAlive() && e != animal) {
-                double dist = animal.getPosition().distanceTo(e.getPosition());
-                if (dist <= vision) {
-                    allies.add((Animal) e);
+                
+                Animal potentialAlly = (Animal) e; // Ép kiểu ra biến riêng cho an toàn và sạch sẽ
+                
+                // NẾU ĐỒNG BỌN KHÔNG ĐANG NGHỈ NGƠI THÌ MỚI THEO
+                if (!potentialAlly.isRestingFromFlock()) {
+                    
+                    double dist = animal.getPosition().distanceTo(potentialAlly.getPosition());
+                    
+                    if (dist <= vision) {
+                        allies.add(potentialAlly);
+                    }
                 }
             }
         }

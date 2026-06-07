@@ -59,10 +59,6 @@ public class CollisionHandler {
     // CHÚ Ý 2: Thêm tham số Environment env
 private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntities, Environment env) {
         
-        // --- CHỐNG ĐÈ LÊN NHAU TẤT CẢ CÁC LOÀI ĐỘNG VẬT ---
-        if (e1 instanceof Animal && e2 instanceof Animal) {
-            resolveOverlap(e1, e2);
-        }
         
         // ==========================================
         // LAYER 1: VẬT LÝ (CHƯỚNG NGẠI VẬT) 
@@ -102,6 +98,11 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
             handleCombat((Carnivore) e1, (Animal) e2, newEntities, env);
         } else if (e2 instanceof Carnivore && e1 instanceof Herbivore) {
             handleCombat((Carnivore) e2, (Animal) e1, newEntities, env);
+        }
+
+        // --- CHỐNG ĐÈ LÊN NHAU TẤT CẢ CÁC LOÀI ĐỘNG VẬT ---
+        else if (e1 instanceof Animal && e2 instanceof Animal) {
+            resolveOverlap(e1, e2);
         }
     }
 
@@ -343,8 +344,8 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         if (dist == 0) {
             // Đẩy nhẹ e1 một khoảng siêu nhỏ (vd: 0.3) sang phải hoặc ngẫu nhiên
             // Mục đích chỉ là để tạo ra dist > 0, sau đó vòng lặp vật lý sẽ tự lo phần còn lại
-            e1.getPosition().setX(e1.getPosition().getX() + 0.2);
-            e1.getPosition().setY(e1.getPosition().getY() + 0.2);
+            e1.getPosition().setX(e1.getPosition().getX() + 0.1);
+            e1.getPosition().setY(e1.getPosition().getY() + 0.1);
             
             // Cập nhật lại khoảng cách sau khi đã "lệch" ra
             dist = e1.getPosition().distanceTo(e2.getPosition()); 

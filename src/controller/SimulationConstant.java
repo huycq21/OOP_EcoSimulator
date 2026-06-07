@@ -25,8 +25,8 @@ public final class SimulationConstant {
 
     // ===== SPAWNER =====
 
-    public static final int MIN_GRASS = 0;
-    public static final int MIN_RABBIT = 0;
+    public static final int MIN_GRASS = 10;
+    public static final int MIN_RABBIT = 10;
 
     // ===== PLANT =====
 
@@ -36,4 +36,7 @@ public final class SimulationConstant {
     // ===== MAP =====
 
     public static final double EDGE_MARGIN = 80.0;
+
+    public static final int MAX_FLOCK_TICKS = 1200; // Đi đàn tối đa 20 giây
+    public static final int REST_TICKS = 360;      // Tách bầy đi dạo 6 giây
 }

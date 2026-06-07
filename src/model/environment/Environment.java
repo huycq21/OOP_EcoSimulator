@@ -67,6 +67,8 @@ public abstract class Environment {
         Rectangle mapBoundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
         currentQuadTree = new QuadTree(mapBoundary, 4);
         
+        List<Entity> entitiesToRemove = new ArrayList<>();
+        
         // Nhét thú vào cây để làm radar chung cho mọi class
         for (Entity e : entities) {
             if (e.isAlive()) {
@@ -74,31 +76,42 @@ public abstract class Environment {
             }
         }
 
-        List<Entity> entitiesToRemove = new ArrayList<>();
-
         for (Entity entity : entities) {
-            double previousX = entity.getPosition().getX();
-            double previousY = entity.getPosition().getY();
-
-            // 2. Cập nhật logic (Bây giờ bọn Gấu/Thợ săn gọi getInstance().getQuadTree() thoải mái)
+            // Hàm này bên trong đã tự gọi saveCurrentPosition() rồi mới di chuyển
             entity.update(); 
-
-            // 3. Chặn không cho ra khỏi map
-            keepWithinBounds(entity);
-            resolveWaterAccess(entity, previousX, previousY);
-            resolvePenAccess(entity, previousX, previousY);
-            resolveMapCollisions(entity, previousX, previousY); 
-            resolveWicketCollisions(entity, previousX, previousY);
 
             if (!entity.isAlive()) {
                 entitiesToRemove.add(entity);
             }
         }
         
-        // 4. Xử lý va chạm
+        // ==========================================
+        // NHỊP 2: THÚ TƯƠNG TÁC/ĐẨY NHAU VẬT LÝ
+        // ==========================================
+        // Lúc này các con vật đẩy nhau văng ra (có thể văng vào tường/sông)
         CollisionHandler.processCollisions(this); 
+
+        // ==========================================
+        // NHỊP 3: KIỂM TRA MAP VÀ ROLLBACK
+        // ==========================================
+        // Chốt sổ: Kiểm tra lại toàn bộ, đứa nào văng vào vùng cấm thì lôi đầu về vị trí cũ!
+        for (Entity entity : entities) {
+            if (!entity.isAlive()) continue;
+
+            // Lấy vị trí an toàn đã lưu từ Nhịp 1 bằng O(1), không cần Map/ID
+            double safeX = entity.getPreviousPosition().getX();
+            double safeY = entity.getPreviousPosition().getY();
+
+            keepWithinBounds(entity);
+            resolveWaterAccess(entity, safeX, safeY);
+            resolvePenAccess(entity, safeX, safeY);
+            resolveMapCollisions(entity, safeX, safeY); 
+            resolveWicketCollisions(entity, safeX, safeY);
+        }
         
-        // 5. Dọn dẹp xác chết
+        // ==========================================
+        // DỌN DẸP XÁC CHẾT
+        // ==========================================
         entities.removeAll(entitiesToRemove);
         entities.removeIf(entity -> !entity.isAlive());
 

@@ -28,6 +28,16 @@ public abstract class Animal extends Entity implements Ageable {
     private boolean carcassSpawned;
     private int hidingTicks;
     private boolean justLeftBush = false;
+
+    // Các biến dùng cho bộ não đi theo bầy
+    // Bộ đếm thời gian đi theo đàn
+    protected int flockingTimer = 0;
+    
+    // Bộ đếm thời gian tách bầy nghỉ ngơi
+    protected int restingTimer = 0;
+    
+    // Cờ trạng thái
+    protected boolean isRestingFromFlock = false;
     
     // 3. ĐÂY CHÍNH LÀ BỘ NÃO (Strategy Pattern)
     protected SurvivalStrategy brain; 
@@ -58,6 +68,7 @@ public abstract class Animal extends Entity implements Ageable {
 
     @Override
     public void update() {
+        this.saveCurrentPosition();
         if (!isAlive) return; 
 
         if (currentState == AnimalState.DEAD) {
@@ -286,6 +297,26 @@ public abstract class Animal extends Entity implements Ageable {
 
     public double getTerrainSpeedMultiplier() {
         return terrainSpeedMultiplier;
+    }
+    
+    public int getFlockingTimer() { 
+        return flockingTimer; 
+    }
+    public void setFlockingTimer(int flockingTimer) { 
+        this.flockingTimer = flockingTimer; 
+    }
+    public int getRestingTimer() { 
+        return restingTimer; 
+    }
+    public void setRestingTimer(int restingTimer) { 
+        this.restingTimer = restingTimer; 
+    }
+
+    public boolean isRestingFromFlock() { 
+        return isRestingFromFlock; 
+    }
+    public void setRestingFromFlock(boolean isRestingFromFlock) { 
+        this.isRestingFromFlock = isRestingFromFlock; 
     }
 }
 

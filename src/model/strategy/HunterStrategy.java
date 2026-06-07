@@ -40,31 +40,52 @@ public class HunterStrategy implements SurvivalStrategy {
         Entity target = findNearestPrey(hunter, radiusMultiplier);
 
         // --- XỬ LÝ DI CHUYỂN SĂN MỒI ---
+        // --- XỬ LÝ DI CHUYỂN SĂN MỒI ---
         if (target != null) {
             Animal prey = (Animal) target;
             Vector2D hunterPos = hunter.getPosition();
             Vector2D targetPos = prey.getPosition();
             double distance = hunterPos.distanceTo(targetPos);
             
+            // Tính khoảng cách vừa chạm da nhau
+            double attackRange = (hunter.getSize() + prey.getSize()) / 2.0 + 1.0; 
+
+            // ==========================================
+            // BƯỚC 1: XÁC ĐỊNH TỐC ĐỘ CỦA FRAME NÀY TRƯỚC
+            // ==========================================
             double currentMoveSpeed = hunter.getSpeed();
-            
-            // Lấy cự ly phát động tấn công (bung sức) của loài đi săn
             double strikeDistance = (hunter instanceof Carnivore) ? 
                                     ((Carnivore) hunter).getStrikeRadius() : 
                                     (hunter.getVisionRadius() * 0.3);
 
-            // NẾU MỒI BỎ CHẠY HOẶC ĐÃ VÀO TẦM BUNG SỨC -> RƯỢT ĐUỔI!
             if (prey.getCurrentState() == AnimalState.FLEEING || distance <= strikeDistance) {
                 hunter.setCurrentState(AnimalState.CHASING);
-                currentMoveSpeed = hunter.getSpeed() ; 
-            } 
-            // NẾU MỒI CHƯA BIẾT GÌ VÀ ĐANG Ở NGOÀI TẦM BUNG SỨC -> RÓN RÉN
-            else {
+                currentMoveSpeed = hunter.getSpeed(); 
+            } else {
                 hunter.setCurrentState(AnimalState.SNEAKING);
                 currentMoveSpeed = hunter.getSpeed() * 0.1; 
             }
 
-            // Áp dụng vector vận tốc di chuyển tới con mồi
+            // ==========================================
+            // BƯỚC 2: CƠ CHẾ MAGNET SNAP (Ý TƯỞNG CỦA BẠN)
+            // ==========================================
+            // Nếu khoảng cách hiện tại <= Tầm đánh + Quãng đường sẽ chạy
+            // Nghĩa là: BƯỚC NHẢY TIẾP THEO CHẮC CHẮN CHẠM HOẶC VƯỢT QUA CON MỒI!
+            if (distance <= attackRange + currentMoveSpeed) {
+                // TELEPORT: Dịch chuyển thẳng vào vị trí con mồi (Tạo hiệu ứng vồ mồi)
+                hunter.getPosition().setX(targetPos.getX());
+                hunter.getPosition().setY(targetPos.getY());
+                
+                // Khóa phanh, chuyển state để hàm CollisionHandler lo phần sát thương
+                hunter.getVelocity().setX(0);
+                hunter.getVelocity().setY(0);
+                hunter.setCurrentState(AnimalState.ATTACKING);
+                return; // KẾT THÚC HÀM TẠI ĐÂY
+            }
+
+            // ==========================================
+            // BƯỚC 3: CÒN XA -> ÁP DỤNG VECTOR ĐỂ CHẠY TỚI
+            // ==========================================
             Vector2D moveVector = new Vector2D(
                 targetPos.getX() - hunterPos.getX(), 
                 targetPos.getY() - hunterPos.getY()
@@ -75,7 +96,7 @@ public class HunterStrategy implements SurvivalStrategy {
             hunter.getVelocity().setY(moveVector.getY() * currentMoveSpeed);
             
         } else {
-            // Đói nhưng không thấy mồi -> tiếp tục đi dạo tìm kiếm hoặc nhường quyền cho não khác
+            // Đói nhưng không thấy mồi
             nextLogic.execute(hunter); 
         }
     }
@@ -134,7 +155,7 @@ public class HunterStrategy implements SurvivalStrategy {
         Herbivore prey = (Herbivore) entity; 
         
         // Nếu con mồi đang trốn và kẻ đi săn quá to -> Bỏ qua
-        if (prey.getCurrentState() == AnimalState.HIDING && !(hunter.getSize() > 5)) return false;
+        if (prey.getCurrentState() == AnimalState.HIDING && !(hunter.getSize() < 5)) return false;
 
         // Kiểm tra xem thú săn mồi có "tư cách" cắn con này không (Ví dụ Sói không cắn được Voi)
         if (hunter instanceof Carnivore) {

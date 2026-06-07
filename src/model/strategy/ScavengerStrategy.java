@@ -48,45 +48,56 @@ public class ScavengerStrategy implements SurvivalStrategy {
         Entity threat = findCompetitorNearCarcass(scavenger, carcass);
         
         if (threat != null) {
-            // Kiểm tra xem con vật có đang bị dồn vào đường cùng không
             boolean isDesperate = false;
             if (scavenger instanceof Carnivore) {
                 isDesperate = ((Carnivore) scavenger).isStarving(); 
-            } else {
-                // Fallback an toàn nếu không phải Carnivore
-                isDesperate = (energyPercentage < 0.25); 
             }
 
             if (isDesperate) {
-                // BƯỚC ĐƯỜNG CÙNG: Mặc kệ kẻ thù mạnh cỡ nào, lao vào cắn xé!
-                scavenger.setCurrentState(AnimalState.ATTACKING);
-                
-                // Bơm adrenaline, tốc độ lao vào đánh nhau cực nhanh (x1.2)
-                moveToward(scavenger, threat, scavenger.getSpeed() * 1.2); 
+                // ==========================================
+                // BƯỚC ĐƯỜNG CÙNG: LAO VÀO CẮN XÉ (CÓ PHANH)
+                // ==========================================
+                double distanceToThreat = scavenger.getPosition().distanceTo(threat.getPosition());
+                double attackRange = (scavenger.getSize() + threat.getSize()) / 2.0 + 1.0;
+
+                if (distanceToThreat <= attackRange) {
+                    // Áp sát -> Phanh gấp cắn kẻ thù!
+                    scavenger.getVelocity().setX(0);
+                    scavenger.getVelocity().setY(0);
+                    scavenger.setCurrentState(AnimalState.ATTACKING);
+                } else {
+                    // Chưa tới -> Bơm adrenaline lao tới
+                    scavenger.setCurrentState(AnimalState.CHASING); // Hoặc giữ ATTACKING tùy logic của bạn
+                    moveToward(scavenger, threat, scavenger.getSpeed() * 1.2); 
+                }
             } else {
-                // CÒN LÝ TRÍ: Vẫn đói nhưng chưa đến mức liều mạng, cúp đuôi bỏ chạy
+                // CÒN LÝ TRÍ: Cúp đuôi bỏ chạy
                 scavenger.setCurrentState(AnimalState.FLEEING);
                 moveAwayFrom(scavenger, threat, scavenger.getSpeed() ); 
             }
             return;
         }
 
-        // --- 5. AN TOÀN -> TIẾN VÀO ĂN ---
+        // --- 5. AN TOÀN -> TIẾN VÀO ĂN (CÓ PHANH VÀ CHUẨN KÍCH THƯỚC) ---
         double distanceToCarcass = scavenger.getPosition().distanceTo(carcass.getPosition());
-        if (distanceToCarcass <= scavenger.getSize() + carcass.getSize()) {
+        // Sửa lại công thức chia đôi cho đúng chuẩn vật lý của game
+        double eatRange = (scavenger.getSize() + carcass.getSize()) / 2.0 + 1.0;
+
+        if (distanceToCarcass <= eatRange) {
+            // Tới nơi -> Phanh lại ăn!
             scavenger.setCurrentState(AnimalState.EATING);
             scavenger.getVelocity().setX(0);
             scavenger.getVelocity().setY(0);
-            // Logic trừ thịt của xác và cộng năng lượng sẽ nằm ở hàm update() của con vật
         } else {
-            scavenger.setCurrentState(AnimalState.WANDERING); // Hoặc tạo state APPROACHING
-            moveToward(scavenger, carcass, scavenger.getSpeed() * 0.8); // Lững thững đi tới
+            // Còn xa -> Lững thững đi tới
+            scavenger.setCurrentState(AnimalState.WANDERING); 
+            moveToward(scavenger, carcass, scavenger.getSpeed() * 0.8); 
         }
     }
 
-    // Hàm quét tìm đối thủ cạnh tranh xung quanh cái xác
+    // --- CÁC HÀM HỖ TRỢ GIỮ NGUYÊN BÊN DƯỚI ---
     private Entity findCompetitorNearCarcass(Animal me, Entity carcass) {
-        double disputeRadius = 40.0; // Vùng tranh chấp quanh cái xác
+        double disputeRadius = 40.0; 
         Rectangle searchRange = new Rectangle(
             carcass.getPosition().getX(), carcass.getPosition().getY(), 
             disputeRadius * 2, disputeRadius * 2
@@ -98,8 +109,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         for (Entity e : nearby) {
             if (e instanceof Carnivore && e.isAlive() && e != me) {
                 Carnivore enemy = (Carnivore) e;
-                
-                // Nếu khí chất của kẻ thù lớn hơn mình -> Nó là mối đe dọa
                 if (enemy.getStrengthWeight() > myStrength) {
                     return enemy; 
                 }
@@ -122,8 +131,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         for (Entity e : nearbyEntities) {
             if (e instanceof Carcass) {
                 Carcass carcass = (Carcass) e;
-                
-                // Kiểm tra xem cái xác này có nằm trong thực đơn không
                 if (isCarcassInMenu(scavenger, carcass)) {
                     double dist = scavenger.getPosition().distanceTo(carcass.getPosition());
                     
@@ -136,23 +143,16 @@ public class ScavengerStrategy implements SurvivalStrategy {
         }
         return nearestCorpse;
     }
+    
     private boolean isCarcassInMenu(Animal scavenger, Carcass carcass) {
-        // 1. Chỉ Thú ăn thịt mới ăn xác
-        if (!(scavenger instanceof Carnivore)) {
-            return false;
-        }
+        if (!(scavenger instanceof Carnivore)) return false;
         
         Carnivore carnivore = (Carnivore) scavenger;
-        
-        // để trả về Class của con vật đã chết (được truyền vào lúc new Carcass)
         Class<?> meatType = carcass.getOriginalSpecies();
 
-        // 3. Quét danh sách thực đơn (preyTypes)
-        // carnivore.getPreyType() sẽ trả về List<Class<? extends Herbivore>>
         if (carnivore.getPreyType() != null && carnivore.getPreyType().contains(meatType)) {
             return true;
         }
-
         return false;
     }
 
