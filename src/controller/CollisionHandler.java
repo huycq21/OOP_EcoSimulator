@@ -11,6 +11,8 @@ import util.SoundManager;
 
 public class CollisionHandler {
 
+    private static long lastBushSound = 0;
+
     public static void processCollisions(Environment env) {
         List<Entity> entities = env.getEntities();
         List<Entity> newEntities = new ArrayList<>();
@@ -176,7 +178,12 @@ public class CollisionHandler {
             if (animal instanceof Rabbit && animal.getSize() <= hideable.getMaxAllowedSize()) {
                 hideable.hideEntity(animal);
                 System.out.println("RABBIT HIDING");
-                SoundManager.playSound("bush_rustle.wav");
+                long now = System.currentTimeMillis();
+
+                if (now - lastBushSound > 500) {
+                    SoundManager.playSound("bush_rustle.wav");
+                    lastBushSound = now;
+                }
                 animal.setCurrentState(AnimalState.HIDING);
                 animal.setHidingTicks(SimulationConstant.RABBIT_HIDE_DURATION); //may change later for universal
                 EventManager.animalHide(animal.getClass().getSimpleName());
