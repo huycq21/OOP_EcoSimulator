@@ -15,6 +15,8 @@ import util.SoundManager;
 
 public class CollisionHandler {
 
+    private static long lastBushSound = 0;
+    
     public static void processCollisions(Environment env) {
         List<Entity> entities = env.getEntities();
         List<Entity> newEntities = new ArrayList<>();
@@ -75,7 +77,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         // ==========================================
         
         // 1. Thú ăn thịt đụng Xác chết (Ưu tiên kiểm tra trước)
-        if (e1 instanceof Carnivore && e2 instanceof Carcass) {
+        else if (e1 instanceof Carnivore && e2 instanceof Carcass) {
             handleEatingCarcass((Carnivore) e1, (Carcass) e2);
         } else if (e2 instanceof Carnivore && e1 instanceof Carcass) {
             handleEatingCarcass((Carnivore) e2, (Carcass) e1);
@@ -224,7 +226,12 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
                 // (Tùng) Chống lỗi 1 con chiếm 2 slot
                 if (!hideable.getHiddenEntities().contains(animal)) {
                     hideable.hideEntity(animal);
-                    
+                    long now = System.currentTimeMillis();
+
+                    if (now - lastBushSound > 1000) {
+                        SoundManager.playSound("bush_rustle.wav");
+                        lastBushSound = now;
+                    }
                     // (Đồng nghiệp) Thêm âm thanh, sự kiện và thời gian nấp
                     System.out.println(animal.getClass().getSimpleName() + " HIDING");
                     SoundManager.playSound("bush_rustle.wav");
