@@ -21,12 +21,16 @@ public final class SimulationConstant {
     public static final int MAX_RABBIT = 24;
     public static final int REPRODUCTION_INTERVAL = 1800;
 
-    public static final int DEFAULT_MAX_AGE = 20000;
+    public static final int DEFAULT_MAX_AGE = 120000;
 
     // ===== SPAWNER =====
 
     public static final int MIN_GRASS = 90;
     public static final int MIN_RABBIT = 12;
+    public static final int MAX_DEER = 20;
+    public static final int MAX_BOAR = 15;
+    public static final int MAX_FOX = 10;
+    public static final int MAX_WOLF = 8;
 
     // ===== PLANT =====
 

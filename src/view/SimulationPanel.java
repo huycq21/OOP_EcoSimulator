@@ -4,6 +4,9 @@ import controller.SimulationTime;
 import model.Animal;
 import model.AnimalState;
 import model.Entity;
+import model.Vector2D;
+import model.apex.Bear;
+import model.apex.Eagle;
 import model.apex.Human;
 import model.apex.Lion;
 import model.apex.Tiger;
@@ -16,6 +19,8 @@ import model.carnivore.Wolf;
 import model.domestic.Chicken;
 import model.domestic.Cow;
 import model.domestic.Pig;
+import model.herbivore.Goat;
+import model.herbivore.Horse;
 import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
@@ -31,7 +36,9 @@ import model.plant.Plant;
 import model.environment.Bush;
 import model.plant.SmallTree;
 import model.environment.OldTree;
+import model.environment.Rock;
 import model.plant.TreePlant;
+import model.environment.Rock;
 
 import javax.swing.*;
 import java.awt.*;
@@ -45,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
+
 
 public class SimulationPanel extends JPanel {
     private List<Entity> entities;
@@ -198,6 +206,9 @@ public class SimulationPanel extends JPanel {
 
         drawBuildButton(g, "Tree", 280, panelHeight - 80,
                 buildMode.equals("TREE"));
+
+        drawBuildButton(g, "Rock", 410, panelHeight - 80,
+                buildMode.equals("ROCK"));
     }
 
     private void drawBuildButton(Graphics2D g,
@@ -301,10 +312,22 @@ public class SimulationPanel extends JPanel {
         } else if (e instanceof Deer) {
             drawn = drawEntitySprite(g, "deer", e, cx, cy, size * 2, size * 2);
             if (!drawn) drawDefault(g, cx, cy, size);
-        } else {
-            drawDefault(g, cx, cy, size);
+        }
+        
+        else if (e instanceof Elephant) {
+            g.setColor(Color.GRAY);
+            g.fillOval(
+                cx - size,
+                cy - size,
+                size * 2,
+                size * 2
+            );
         }
 
+        else {
+            drawDefault(g, cx, cy, size);
+        }
+        
         if (e instanceof Animal) {
             drawHealthBar(g, (Animal) e, cx, cy, size);
         }
@@ -353,6 +376,23 @@ public class SimulationPanel extends JPanel {
             p.addPoint(cx + size, cy + size);
 
             g.fillPolygon(p);
+            return;
+        }
+
+        if (e instanceof Rock) {
+
+            g.setColor(Color.LIGHT_GRAY);
+
+            Polygon p = new Polygon();
+
+            p.addPoint(cx, cy - size);
+            p.addPoint(cx + size, cy - size/2);
+            p.addPoint(cx + size, cy + size);
+            p.addPoint(cx - size, cy + size);
+            p.addPoint(cx - size, cy - size/2);
+
+            g.fillPolygon(p);
+
             return;
         }
 
@@ -932,6 +972,7 @@ public class SimulationPanel extends JPanel {
                 Rectangle plantBtn = new Rectangle(20, panelHeight - 80, 110, 50);
                 Rectangle bushBtn = new Rectangle(150, panelHeight - 80, 110, 50);
                 Rectangle treeBtn = new Rectangle(280, panelHeight - 80, 110, 50);
+                Rectangle rockBtn = new Rectangle(410, panelHeight - 80, 110, 50);
 
                 // CLICK BUTTON
                 if (plantBtn.contains(e.getPoint())) {
@@ -948,6 +989,12 @@ public class SimulationPanel extends JPanel {
 
                 if (treeBtn.contains(e.getPoint())) {
                     buildMode = "TREE";
+                    repaint();
+                    return;
+                }
+
+                if (rockBtn.contains(e.getPoint())) {
+                    buildMode = "ROCK";
                     repaint();
                     return;
                 }
@@ -997,6 +1044,19 @@ public class SimulationPanel extends JPanel {
 
                         env.queueEntity(tree);
                         System.out.println("Tree planted");
+                    }
+
+                    else if (buildMode.equals("ROCK")) {
+
+                        Rock rock = new Rock(
+                                new Vector2D(worldX, worldY)
+                        );
+
+                        rock.setRuntimePlaced(true);
+
+                        env.queueEntity(rock);
+
+                        System.out.println("Rock placed");
                     }
 
                 } catch (Exception ex) {

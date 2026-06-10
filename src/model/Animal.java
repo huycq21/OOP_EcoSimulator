@@ -20,6 +20,8 @@ public abstract class Animal extends Entity implements Ageable {
     protected double visionRadius;
     protected boolean canEnterWater;
     protected boolean requiresWater;
+    protected Gender gender;
+    protected boolean reproducedThisSpring;
     
     // 2. Trạng thái và Vật lý (Di chuyển)
     protected Vector2D velocity; 
@@ -33,6 +35,25 @@ public abstract class Animal extends Entity implements Ageable {
     protected SurvivalStrategy brain; 
 
     protected double terrainSpeedMultiplier = 1.0;
+
+    public boolean isReproductiveAge() {
+        return age >= maxAge * 0.2
+            && age <= maxAge * 0.8;
+    }
+
+    public boolean hasReproducedThisSpring() {
+        return reproducedThisSpring;
+    }
+
+    public boolean canMate() {
+        return isReproductiveAge()
+                && !reproducedThisSpring
+                && energy > maxEnergy * 0.5;
+    }
+
+    public void markReproduced() {
+        reproducedThisSpring = true;
+    }
 
     // Constructor
     public Animal(Vector2D position, double size, double maxHp, double maxEnergy, double speed, double visionRadius) {
@@ -54,6 +75,9 @@ public abstract class Animal extends Entity implements Ageable {
         this.currentState = AnimalState.WANDERING; 
         this.stateLockTicks = 0;
         this.carcassSpawned = false;
+
+        this.gender = Math.random() < 0.5 ? Gender.MALE : Gender.FEMALE;
+        this.reproducedThisSpring = false; 
     }
 
     @Override
@@ -272,6 +296,26 @@ public abstract class Animal extends Entity implements Ageable {
 
     public double getTerrainSpeedMultiplier() {
         return terrainSpeedMultiplier;
+    }
+
+    public boolean canMateWith(Animal other) {
+        return other != null
+            && getClass() == other.getClass()       // Cùng loài
+            && gender != other.gender               // Khác giới tính
+            && isReproductiveAge()                  // Bản thân đủ tuổi
+            && other.isReproductiveAge()            // Đối phương đủ tuổi
+            && !reproducedThisSpring                // Bản thân mùa này chưa đẻ
+            && !other.reproducedThisSpring          // Đối phương mùa này chưa đẻ
+            && energy > maxEnergy * 0.8             // Năng lượng bản thân > 80%
+            && other.energy > other.maxEnergy * 0.8; // Năng lượng đối phương > 80%
+    }
+
+    public boolean isFemale() {
+        return gender == Gender.FEMALE;
+    }
+
+    public boolean isMale() {
+        return gender == Gender.MALE;
     }
 }
 

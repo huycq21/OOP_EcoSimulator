@@ -276,13 +276,19 @@ public abstract class Environment {
 
     public Vector2D randomOpenPosition(Random random, double radius) {
         double margin = Math.max(60, radius * 2);
-        for (int i = 0; i < 80; i++) {
+        for (int i = 0; i < 200; i++) {
             double x = margin + random.nextDouble() * Math.max(1, width - margin * 2);
             double y = margin + random.nextDouble() * Math.max(1, height - margin * 2);
             Vector2D position = new Vector2D(x, y);
-            if (!isCircleBlocked(position, radius) && !isInWaterZone(position, radius)) {
-                return position;
-            }
+
+            if (isCircleBlocked(position, radius))
+                continue;
+            if (isInWaterZone(position, radius + 15))
+                continue;
+            if (isTooCloseToEntities(position, radius))
+                continue;
+
+            return position;
         }
 
         return new Vector2D(width / 2.0, height / 2.0);
@@ -319,6 +325,25 @@ public abstract class Environment {
         for (MapCollider pen : pens) {
             if (pen.containsCircle(position, radius)) return true;
         }
+        return false;
+    }
+
+    private boolean isTooCloseToEntities(
+            Vector2D position,
+            double radius) {
+
+        for (Entity e : entities) {
+
+            double minDistance =
+                    radius + e.getSize() + 20;
+
+            if (position.distanceTo(e.getPosition())
+                    < minDistance) {
+
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -369,7 +394,6 @@ public abstract class Environment {
     }
 
     public TerrainType getTerrainAt(Vector2D position) {
-
         if (isInWaterZone(position, 0)) {
             return TerrainType.WATER;
         }

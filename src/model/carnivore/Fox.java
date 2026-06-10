@@ -1,12 +1,14 @@
 package model.carnivore;
 
-import model.Vector2D;
 import model.strategy.HunterStrategy;
 import model.*;
 import model.herbivore.BlackGrouse;
 import model.herbivore.Rabbit;
+import model.Animal;
+import model.Entity;
+import model.Reproducible;
 
-public class Fox extends Carnivore {
+public class Fox extends Carnivore implements Reproducible{
     public Fox(Vector2D position) {
         // ... các thông số cũ ...
         // Bổ sung: 
@@ -27,5 +29,19 @@ public class Fox extends Carnivore {
     @Override
     public boolean isTooOld() {
         return age > maxAge;
+    }
+
+    @Override
+    public Entity reproduce(Animal partner) {
+
+        setEnergy(getEnergy() * 0.7);
+        partner.setEnergy(partner.getEnergy() * 0.7);
+
+        return new Fox(
+            new Vector2D(
+                getPosition().getX() + 15,
+                getPosition().getY() + 15
+            )
+        );
     }
 }
