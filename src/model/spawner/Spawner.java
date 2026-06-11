@@ -105,7 +105,7 @@ public class Spawner {
 
                     // Kiểm tra khoảng cách hình học 
                     double distance = a1.getPosition().distanceTo(a2.getPosition());
-                    if (distance > 50)
+                    if (distance > 500)
                         continue;
 
                     // Xác định ai là con cái, ai là con đực
@@ -113,10 +113,18 @@ public class Spawner {
                     Animal male = a1.isMale() ? a1 : a2;
 
                     // Sinh con bằng kỹ thuật đa hình
+                    System.out.println(
+                        "PAIR FOUND: "
+                        + female.getClass().getSimpleName()
+                    );
                     if (female instanceof Reproducible reproducible) {
 
                         // Gọi hàm sinh sản, truyền con đực làm partner
                         Entity baby = reproducible.reproduce(male);
+                        System.out.println(
+                            "BIRTH: "
+                            + baby.getClass().getSimpleName()
+                        );
 
                         // Đưa con non vào hàng đợi thế giới
                         env.queueEntity(baby);
@@ -135,7 +143,7 @@ public class Spawner {
                         EventManager.animalBorn(baby.getClass().getSimpleName());
 
                         // Kiểm tra điều kiện dừng chu kỳ quét để tránh bùng nổ dân số quá nhanh
-                        if (birthsThisCycle >= 2 || rabbitCount >= SimulationConstant.MAX_RABBIT) {
+                        if (birthsThisCycle >= 10 || rabbitCount >= SimulationConstant.MAX_RABBIT) {
                             brokeOut = true;
                             break;
                         }

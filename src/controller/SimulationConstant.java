@@ -19,9 +19,9 @@ public final class SimulationConstant {
 
     public static final int RABBIT_HIDE_DURATION = 300;
     public static final int MAX_RABBIT = 24;
-    public static final int REPRODUCTION_INTERVAL = 1800;
+    public static final int REPRODUCTION_INTERVAL = 600;
 
-    public static final int DEFAULT_MAX_AGE = 120000;
+    public static final int DEFAULT_MAX_AGE = 50000;
 
     // ===== SPAWNER =====
 

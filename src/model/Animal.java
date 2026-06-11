@@ -306,8 +306,8 @@ public abstract class Animal extends Entity implements Ageable {
             && other.isReproductiveAge()            // Đối phương đủ tuổi
             && !reproducedThisSpring                // Bản thân mùa này chưa đẻ
             && !other.reproducedThisSpring          // Đối phương mùa này chưa đẻ
-            && energy > maxEnergy * 0.8             // Năng lượng bản thân > 80%
-            && other.energy > other.maxEnergy * 0.8; // Năng lượng đối phương > 80%
+            && energy > maxEnergy * 0.6             // Năng lượng bản thân > 80%
+            && other.energy > other.maxEnergy * 0.6; // Năng lượng đối phương > 80%
     }
 
     public boolean isFemale() {
