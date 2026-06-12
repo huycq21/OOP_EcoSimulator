@@ -77,14 +77,13 @@ public abstract class Animal extends Entity implements Ageable {
             if (stateLockTicks > 0) {
                 stateLockTicks--;
             } else {
-                destroy();
+                destroy(); // Hoặc hàm dọn dẹp xác của bạn
             }
             return;
         }
 
-        // 1. Giảm thể lực theo thời gian
+        // 1. Giảm thể lực theo thời gian và tăng tuổi
         decreaseEnergy();
-        // Mỗi khung hình, tăng tuổi
         growOlder();
 
         // 2. Kiểm tra sinh tử
@@ -93,58 +92,29 @@ public abstract class Animal extends Entity implements Ageable {
             return; 
         }
 
-        // 3. UỶ QUYỀN SUY NGHĨ CHO BỘ NÃO
-        // Thú vị ở đây: Class Animal không cần biết nó đang chạy trốn hay đi dạo.
-        // Nó chỉ gọi cái "não" ra và bảo: "Mày tính toán hướng đi cho tao đi!"
+        // ==========================================
+        // 3. KIỂM TRA ĐỊA HÌNH TRƯỚC KHI SUY NGHĨ
+        // ==========================================
+        // Phải biết mình đang đứng ở đâu để chốt tốc độ trước
+        TerrainType terrain = Environment.getInstance().getTerrainAt(position, getSize());
+        this.terrainSpeedMultiplier = terrain.getSpeedMultiplier();
+
+
+        // ==========================================
+        // 4. UỶ QUYỀN SUY NGHĨ CHO BỘ NÃO
+        // ==========================================
+        // Lúc này các Strategy bên trong gọi getSpeed() sẽ nhận được tốc độ đã bị trừ do bùn/nước
         if (stateLockTicks > 0) {
             stateLockTicks--;
         } else if (this.brain != null) {
             this.brain.execute(this); 
         }
-        // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
-        // Vận tốc này vừa được cái "não" ở bước 3 tính toán xong
-        // if (currentState == AnimalState.HIDING) {
 
-        //     hidingTicks--;
 
-        //     velocity.setX(0);
-        //     velocity.setY(0);
-
-        //     if (hidingTicks <= 0) {
-        //         EventManager.animalLeaveBush(getClass().getSimpleName());
-        //         currentState = AnimalState.WANDERING;
-        //         justLeftBush = true;
-
-        //         double angle = Math.random() * Math.PI * 2;
-
-        //         position.setX(
-        //             position.getX() + Math.cos(angle) * 50
-        //         );
-
-        //         position.setY(
-        //             position.getY() + Math.sin(angle) * 50
-        //         );
-        //     }
-
-        // } else if (stateLockTicks > 0) {
-
-        //     stateLockTicks--;
-
-        // } else
-        if (this.brain != null) {
-
-            this.brain.execute(this);
-
-        }
-        // 4. Thực thi di chuyển (Cộng vector vận tốc vào tọa độ)
-        // Vận tốc này vừa được cái "não" ở bước 3 tính toán xong
-        TerrainType terrain =
-                Environment.getInstance()
-                        .getTerrainAt(position);
-
-        terrainSpeedMultiplier =
-                terrain.getSpeedMultiplier();
-                
+        // ==========================================
+        // 5. THỰC THI DI CHUYỂN
+        // ==========================================
+        // Vận tốc này vừa được cái "não" ở bước 4 tính toán xong
         position.add(velocity);
     }
 
