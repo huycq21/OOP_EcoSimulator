@@ -24,12 +24,12 @@ public class CollisionHandler {
         QuadTree qTree = env.getQuadTree();
 
         // Fix Bán kính tìm kiếm: Phải đủ rộng để bắt được con to nhất game (Ví dụ Voi size 15)
-        double maxEntitySize = 15.0; 
+        double maxEntityRadius = 9.0; 
 
         for (Entity e1 : entities) {
             if (!e1.isAlive()) continue;
 
-            double searchRadius = e1.getSize() / 2.0 + maxEntitySize; 
+            double searchRadius = CollisionProfile.bodyRadius(e1) + maxEntityRadius;
             
             Rectangle searchRange = new Rectangle(
                     e1.getPosition().getX(), 
@@ -44,7 +44,7 @@ public class CollisionHandler {
                 if (e1 != e2 && e2.isAlive() && e1.getId() < e2.getId()) {
                     
                     double distance = e1.getPosition().distanceTo(e2.getPosition());
-                    double collisionRadius = (e1.getSize() + e2.getSize()) / 2.0;
+                    double collisionRadius = CollisionProfile.bodyRadius(e1) + CollisionProfile.bodyRadius(e2);
 
                     if (distance < collisionRadius) {
                         resolveCollision(e1, e2, newEntities, env);
@@ -253,7 +253,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         // NẾU KHÔNG THỂ CHUI VÀO (Do quá to, bụi đầy, hoặc CHỈ ĐANG ĐI DẠO NGANG QUA)
         // -> Chuyển sang logic đẩy dạt ra ngoài (trượt quanh mép cây)
         double dist = animal.getPosition().distanceTo(obstacle.getPosition());
-        double minCollisionDist = (animal.getSize() + obstacle.getSize()) / 2.0;
+        double minCollisionDist = CollisionProfile.bodyRadius(animal) + CollisionProfile.bodyRadius(obstacle);
 
         if (dist < minCollisionDist && dist > 0) {
             double overlap = minCollisionDist - dist;
@@ -345,7 +345,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
     // Chống đè lên nhau
     private static void resolveOverlap(Entity e1, Entity e2) {
         double dist = e1.getPosition().distanceTo(e2.getPosition());
-        double minCollisionDist = (e1.getSize() + e2.getSize()) / 2.0;
+        double minCollisionDist = CollisionProfile.bodyRadius(e1) + CollisionProfile.bodyRadius(e2);
 
         // XỬ LÝ LỖI TRÙNG KHÍT (Khoảng cách = 0)
         if (dist == 0) {

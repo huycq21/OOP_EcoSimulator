@@ -27,6 +27,12 @@ public class Spawner {
         spawnTestEntities("wolf", 10);  
         spawnTestEntities("rabbit", 10); 
         spawnTestEntities("deer", 10); 
+        spawnTestEntities("goat", 6);
+        spawnTestEntities("horse", 4);
+        spawnTestEntities("cheetah", 3);
+        spawnTestEntities("lion", 2);
+        spawnTestEntities("bear", 1);
+        spawnTestEntities("human", 1);
         spawnTestEntities("grass", 10);
     }
 
@@ -124,7 +130,7 @@ public class Spawner {
     public void spawnTestEntities(String entityType, int amount) {
         for (int i = 0; i < amount; i++) {
             // Lấy tọa độ ngẫu nhiên KHÔNG dính vật cản
-            Vector2D pos = env.randomOpenPosition(random, 8); 
+            Vector2D pos = env.randomOpenPosition(random, spawnRadiusFor(entityType)); 
 
             switch (entityType.toLowerCase()) {
                 case "wolf":
@@ -147,6 +153,31 @@ public class Spawner {
                     env.queueEntity(new Rabbit(pos));
                     EventManager.animalBorn("Rabbit");
                     break;
+                case "goat":
+                    env.queueEntity(new model.herbivore.Goat(pos));
+                    EventManager.animalBorn("Goat");
+                    break;
+                case "horse":
+                    env.queueEntity(new model.herbivore.Horse(pos));
+                    EventManager.animalBorn("Horse");
+                    break;
+                case "cheetah":
+                    env.queueEntity(new model.carnivore.Cheetah(pos));
+                    EventManager.animalBorn("Cheetah");
+                    break;
+                case "lion":
+                    env.queueEntity(new model.apex.Lion(pos));
+                    EventManager.animalBorn("Lion");
+                    break;
+                case "bear":
+                    env.queueEntity(new model.apex.Bear(pos));
+                    EventManager.animalBorn("Bear");
+                    break;
+                case "human":
+                case "farmer":
+                    env.queueEntity(new model.apex.Human(pos));
+                    EventManager.animalBorn("Human");
+                    break;
                 case "grass": // ĐÃ THÊM CASE CHO CỎ
                     env.queueEntity(new Grass(pos));
                     EventManager.plantSpawned("Grass");
@@ -157,4 +188,24 @@ public class Spawner {
         }
         System.out.println("DEV TEST: Đã spawn " + amount + " " + entityType);
     } 
+
+    private double spawnRadiusFor(String entityType) {
+        switch (entityType.toLowerCase()) {
+            case "goat":
+                return 4.5;
+            case "horse":
+                return 5.8;
+            case "cheetah":
+                return 5.2;
+            case "lion":
+                return 8.0;
+            case "bear":
+                return 9.0;
+            case "human":
+            case "farmer":
+                return 3.8;
+            default:
+                return 8.0;
+        }
+    }
 }

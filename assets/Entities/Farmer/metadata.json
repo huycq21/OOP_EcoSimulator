@@ -1,0 +1,36 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "3d57e837-9417-435f-92e2-077bf4004183",
+        "name": "Farmer",
+        "prompt": "Farmer",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-06-09T18:00:31.767482+00:00"
+      },
+      "folder": "Farmer",
+      "frames": {
+        "rotations": {
+          "south": "Farmer/rotations/south.png",
+          "south-east": "Farmer/rotations/south-east.png",
+          "east": "Farmer/rotations/east.png",
+          "north-east": "Farmer/rotations/north-east.png",
+          "north": "Farmer/rotations/north.png",
+          "north-west": "Farmer/rotations/north-west.png",
+          "west": "Farmer/rotations/west.png",
+          "south-west": "Farmer/rotations/south-west.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-09T18:09:03.087550"
+}

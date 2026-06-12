@@ -1,0 +1,71 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "a3b51741-085d-4805-8336-6da611266d85",
+        "name": "Cheetah",
+        "prompt": "Cheetah",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "Lion",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-06-09T17:59:24.379118+00:00"
+      },
+      "folder": "Cheetah",
+      "frames": {
+        "rotations": {
+          "south": "Cheetah/rotations/south.png",
+          "south-east": "Cheetah/rotations/south-east.png",
+          "east": "Cheetah/rotations/east.png",
+          "north-east": "Cheetah/rotations/north-east.png",
+          "north": "Cheetah/rotations/north.png",
+          "north-west": "Cheetah/rotations/north-west.png",
+          "west": "Cheetah/rotations/west.png",
+          "south-west": "Cheetah/rotations/south-west.png"
+        },
+        "animations": {
+          "Walk": {
+            "east": [
+              "Cheetah/animations/Walk/east/frame_000.png",
+              "Cheetah/animations/Walk/east/frame_001.png",
+              "Cheetah/animations/Walk/east/frame_002.png",
+              "Cheetah/animations/Walk/east/frame_003.png",
+              "Cheetah/animations/Walk/east/frame_004.png",
+              "Cheetah/animations/Walk/east/frame_005.png"
+            ],
+            "south": [
+              "Cheetah/animations/Walk/south/frame_000.png",
+              "Cheetah/animations/Walk/south/frame_001.png",
+              "Cheetah/animations/Walk/south/frame_002.png",
+              "Cheetah/animations/Walk/south/frame_003.png",
+              "Cheetah/animations/Walk/south/frame_004.png",
+              "Cheetah/animations/Walk/south/frame_005.png"
+            ],
+            "west": [
+              "Cheetah/animations/Walk/west/frame_000.png",
+              "Cheetah/animations/Walk/west/frame_001.png",
+              "Cheetah/animations/Walk/west/frame_002.png",
+              "Cheetah/animations/Walk/west/frame_003.png",
+              "Cheetah/animations/Walk/west/frame_004.png",
+              "Cheetah/animations/Walk/west/frame_005.png"
+            ],
+            "north": [
+              "Cheetah/animations/Walk/north/frame_000.png",
+              "Cheetah/animations/Walk/north/frame_001.png",
+              "Cheetah/animations/Walk/north/frame_002.png",
+              "Cheetah/animations/Walk/north/frame_003.png",
+              "Cheetah/animations/Walk/north/frame_004.png",
+              "Cheetah/animations/Walk/north/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-09T18:11:41.002463"
+}

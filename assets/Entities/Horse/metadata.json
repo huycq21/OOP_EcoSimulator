@@ -1,0 +1,71 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "0fa63961-12b8-493d-a2d5-f762e1cd20d4",
+        "name": "Horse",
+        "prompt": "Horse",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "Horse",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-06-09T17:49:02.924192+00:00"
+      },
+      "folder": "Horse",
+      "frames": {
+        "rotations": {
+          "south": "Horse/rotations/south.png",
+          "south-east": "Horse/rotations/south-east.png",
+          "east": "Horse/rotations/east.png",
+          "north-east": "Horse/rotations/north-east.png",
+          "north": "Horse/rotations/north.png",
+          "north-west": "Horse/rotations/north-west.png",
+          "west": "Horse/rotations/west.png",
+          "south-west": "Horse/rotations/south-west.png"
+        },
+        "animations": {
+          "Walk": {
+            "east": [
+              "Horse/animations/Walk/east/frame_000.png",
+              "Horse/animations/Walk/east/frame_001.png",
+              "Horse/animations/Walk/east/frame_002.png",
+              "Horse/animations/Walk/east/frame_003.png",
+              "Horse/animations/Walk/east/frame_004.png",
+              "Horse/animations/Walk/east/frame_005.png"
+            ],
+            "north": [
+              "Horse/animations/Walk/north/frame_000.png",
+              "Horse/animations/Walk/north/frame_001.png",
+              "Horse/animations/Walk/north/frame_002.png",
+              "Horse/animations/Walk/north/frame_003.png",
+              "Horse/animations/Walk/north/frame_004.png",
+              "Horse/animations/Walk/north/frame_005.png"
+            ],
+            "south": [
+              "Horse/animations/Walk/south/frame_000.png",
+              "Horse/animations/Walk/south/frame_001.png",
+              "Horse/animations/Walk/south/frame_002.png",
+              "Horse/animations/Walk/south/frame_003.png",
+              "Horse/animations/Walk/south/frame_004.png",
+              "Horse/animations/Walk/south/frame_005.png"
+            ],
+            "west": [
+              "Horse/animations/Walk/west/frame_000.png",
+              "Horse/animations/Walk/west/frame_001.png",
+              "Horse/animations/Walk/west/frame_002.png",
+              "Horse/animations/Walk/west/frame_003.png",
+              "Horse/animations/Walk/west/frame_004.png",
+              "Horse/animations/Walk/west/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-09T17:59:36.282620"
+}

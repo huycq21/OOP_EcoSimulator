@@ -3,3 +3,6 @@ bin/
 
 # Bỏ qua các file .class riêng lẻ (nếu có)
 *.class
+
+# Bỏ qua file hệ thống macOS
+.DS_Store
