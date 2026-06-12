@@ -51,11 +51,11 @@ public class Jungle extends Environment {
             addEntity(new BlackGrouse(randomPosition()));
         }
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 12; i++) {
             addEntity(new Deer(randomPosition()));
         }
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 10; i++) {
             addEntity(new Boar(randomPosition()));
         }
 
@@ -69,7 +69,7 @@ public class Jungle extends Environment {
             addEntity(new Wolf(randomPosition()));
         }
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 6; i++) {
             addEntity(new Fox(randomPosition()));
         }
     }

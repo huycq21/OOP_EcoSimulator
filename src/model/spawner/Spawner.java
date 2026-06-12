@@ -3,10 +3,19 @@ package model.spawner;
 import model.Animal;
 import model.Entity;
 import model.Vector2D;
+import model.carnivore.Carnivore;
+import model.carnivore.Fox;
+import model.carnivore.Wolf;
 import model.environment.Environment;
+import model.herbivore.BlackGrouse;
+import model.herbivore.Boar;
+import model.herbivore.Deer;
+import model.herbivore.Herbivore;
 import model.herbivore.Rabbit;
 import model.plant.Grass;
 import model.Reproducible;
+import model.herbivore.Herbivore;
+import model.carnivore.Carnivore;
 
 import java.util.List;
 import java.util.Random;
@@ -29,7 +38,8 @@ public class Spawner {
     public void update() {
         reproductionTimer++;
         int grassCount = 0;
-        int rabbitCount = 0;
+        int herbivoreCount = 0;
+        int carnivoreCount = 0;
 
         for (Entity e : env.getEntities()) {
 
@@ -37,8 +47,12 @@ public class Spawner {
                 grassCount++;
             }
 
-            if (e instanceof Rabbit) {
-                rabbitCount++;
+            if (e instanceof Herbivore) {
+                herbivoreCount++;
+            }
+
+            if (e instanceof Carnivore) {
+                carnivoreCount++;
             }
         }
 
@@ -52,19 +66,21 @@ public class Spawner {
             spawnGrass(targetGrass - grassCount);
         }
 
-        if (rabbitCount < SimulationConstant.MIN_RABBIT) {
-            spawnRabbit(SimulationConstant.MIN_RABBIT - rabbitCount);
+        if (herbivoreCount < SimulationConstant.MIN_HERBIVORE) {
+            spawnRandomHerbivore(
+                SimulationConstant.MIN_HERBIVORE - herbivoreCount
+            );
+        }
+
+        if (carnivoreCount < SimulationConstant.MIN_CARNIVORE) {
+            spawnRandomCarnivore(
+                SimulationConstant.MIN_CARNIVORE - carnivoreCount
+            );
         }
 
         if (reproductionTimer >= SimulationConstant.REPRODUCTION_INTERVAL) {
 
             reproductionTimer = 0;
-
-            model.environment.Season season = env.getWeather().getCurrentSeason();
-            if (season != model.environment.Season.SPRING) {
-                return; 
-            }
-
             int birthsThisCycle = 0;
 
             List<Entity> entities = env.getEntities();
@@ -105,7 +121,7 @@ public class Spawner {
 
                     // Kiểm tra khoảng cách hình học 
                     double distance = a1.getPosition().distanceTo(a2.getPosition());
-                    if (distance > 500)
+                    if (distance > 400)
                         continue;
 
                     // Xác định ai là con cái, ai là con đực
@@ -128,22 +144,12 @@ public class Spawner {
 
                         // Đưa con non vào hàng đợi thế giới
                         env.queueEntity(baby);
-
-                        // Tránh đẻ vô hạn: Đánh dấu chặn đẻ ngay lập tức trong mùa xuân này
-                        female.markReproduced();
-                        male.markReproduced();
-
                         birthsThisCycle++;
-                        
-                        // Cập nhật số lượng thỏ cục bộ nếu con non sinh ra là thỏ
-                        if (baby instanceof Rabbit) {
-                            rabbitCount++;
-                        }
 
                         EventManager.animalBorn(baby.getClass().getSimpleName());
 
                         // Kiểm tra điều kiện dừng chu kỳ quét để tránh bùng nổ dân số quá nhanh
-                        if (birthsThisCycle >= 10 || rabbitCount >= SimulationConstant.MAX_RABBIT) {
+                        if (birthsThisCycle >= 10) {
                             brokeOut = true;
                             break;
                         }
@@ -165,15 +171,40 @@ public class Spawner {
         EventManager.plantSpawned("Grass");
     }
 
-    private void spawnRabbit(int amount) {
+    private void spawnRandomHerbivore(int amount) {
 
         for (int i = 0; i < amount; i++) {
 
             Vector2D pos =
-                    env.randomOpenPosition(random, 8);
+                env.randomOpenPosition(random, 8);
 
-            env.queueEntity(new Rabbit(pos));
+            int type = random.nextInt(4);
+
+            switch (type) {
+
+                case 0 -> env.queueEntity(new Rabbit(pos));
+
+                case 1 -> env.queueEntity(new Deer(pos));
+
+                case 2 -> env.queueEntity(new Boar(pos));
+
+                case 3 -> env.queueEntity(new BlackGrouse(pos));
+            }
         }
-        EventManager.animalBorn("Rabbit");
+    }
+
+    private void spawnRandomCarnivore(int amount) {
+
+        for (int i = 0; i < amount; i++) {
+
+            Vector2D pos =
+                env.randomOpenPosition(random, 8);
+
+            if (random.nextBoolean()) {
+                env.queueEntity(new Fox(pos));
+            } else {
+                env.queueEntity(new Wolf(pos));
+            }
+        }
     }
 } 

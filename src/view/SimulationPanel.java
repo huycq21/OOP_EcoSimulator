@@ -72,7 +72,11 @@ public class SimulationPanel extends JPanel {
     private double cameraFocusY;
     private final ForestTileMap forestTileMap;
     private boolean basicMode = false;
-    private String buildMode = "FOOD_PLANT";
+    private String buildMode = "GRASS";
+    private BufferedImage grassSprite;
+    private BufferedImage bushSprite;
+    private BufferedImage treeSprite;
+    private BufferedImage rockSprite;
     
 
     public SimulationPanel() {
@@ -92,6 +96,7 @@ public class SimulationPanel extends JPanel {
         installBuildControls();
         loadSprites();
         loadPlantSprites();
+        loadBuildSprites();
     }
 
     public void setWorldSize(double width, double height) {
@@ -247,27 +252,71 @@ public class SimulationPanel extends JPanel {
         int size = Math.max(12, (int) (e.getSize() * 4 * renderScale));
         boolean drawn = false;
 
-         if (e instanceof Grass) {
+        if (e instanceof Grass) {
 
-            g.setColor(Color.GREEN);
-            g.fillOval(cx - 4, cy - 4, 8, 8);
+            if (grassSprite != null) {
+                g.drawImage(
+                    grassSprite,
+                    cx - 12,
+                    cy - 12,
+                    24,
+                    24,
+                    null
+                );
+            }
+
             return;
         }
 
         if (e instanceof Bush) {
 
-            g.setColor(Color.BLUE);
-            g.fillOval(cx - 10, cy - 10, 20, 20);
+            if (bushSprite != null) {
+                g.drawImage(
+                    bushSprite,
+                    cx - 24,
+                    cy - 24,
+                    48,
+                    48,
+                    null
+                );
+            }
+
             return;
         }
 
         if (e instanceof OldTree) {
 
-            g.setColor(Color.RED);
-            g.fillOval(cx - 12, cy - 12, 24, 24);
+            if (treeSprite != null) {
+                g.drawImage(
+                    treeSprite,
+                    cx - 40,
+                    cy - 60,
+                    80,
+                    80,
+                    null
+                );
+            }
+
             return;
         }
 
+        if (e instanceof Rock) {
+
+            if (rockSprite != null) {
+
+                g.drawImage(
+                    rockSprite,
+                    cx - 28,
+                    cy - 28,
+                    56,
+                    56,
+                    null
+                );
+
+            }
+
+            return;
+        }
 
         if (!(e instanceof Animal)) return;
 
@@ -342,16 +391,10 @@ public class SimulationPanel extends JPanel {
         int size = 10;
 
         // ========= PLANTS =========
-
         if (e instanceof Grass) {
-            g.setColor(new Color(0, 180, 0));
 
-            Polygon p = new Polygon();
-            p.addPoint(cx, cy - size);
-            p.addPoint(cx - size, cy + size);
-            p.addPoint(cx + size, cy + size);
-
-            g.fillPolygon(p);
+            g.setColor(Color.GREEN);
+            g.fillOval(cx - 4, cy - 4, 8, 8);
             return;
         }
 
@@ -462,30 +505,16 @@ public class SimulationPanel extends JPanel {
         if (e instanceof Bush) {
 
             g.setColor(Color.BLUE);
-
-            g.fillRoundRect(
-                    cx - size,
-                    cy - size,
-                    size * 2,
-                    size * 2,
-                    6,
-                    6
-            );
+            g.fillOval(cx - 10, cy - 10, 20, 20);
             return;
         }
 
-        // ========= TREE =========
+        // ========= OLD TREE =========
 
         if (e instanceof OldTree) {
 
-            g.setColor(new Color(120, 70, 20));
-
-            g.fillRect(
-                    cx - size,
-                    cy - size,
-                    size * 2,
-                    size * 2
-            );
+            g.setColor(Color.RED);
+            g.fillOval(cx - 12, cy - 12, 24, 24);
             return;
         }
 
@@ -1229,6 +1258,31 @@ public class SimulationPanel extends JPanel {
                     frameWidth,
                     frameHeight
             );
+        }
+    }
+
+    private void loadBuildSprites() {
+
+        BufferedImage plants =
+            loadImage("assets/Environment/Forest/Plants.png");
+
+        BufferedImage objects =
+            loadImage("assets/Environment/Forest/Objects.png");
+
+        if (plants != null) {
+            grassSprite =
+                objects.getSubimage(16, 464, 48, 48);
+
+            bushSprite =
+                objects.getSubimage(448, 80, 48, 48);
+
+            treeSprite =
+                objects.getSubimage(0, 0, 80, 80);
+        }
+
+        if (objects != null) {
+            rockSprite =
+                objects.getSubimage(400, 176, 48, 48);
         }
     }
 }

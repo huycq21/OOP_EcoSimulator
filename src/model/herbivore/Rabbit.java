@@ -25,11 +25,11 @@ public class Rabbit extends Herbivore implements Reproducible {
     public Entity reproduce(Animal partner) {
 
         this.setEnergy(
-                this.getEnergy() * 0.7
+                this.getEnergy() * 0.5
         );
 
         partner.setEnergy(
-                partner.getEnergy() * 0.7
+                partner.getEnergy() * 0.5
         );
 
         return new Rabbit(

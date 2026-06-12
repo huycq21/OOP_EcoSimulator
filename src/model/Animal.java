@@ -21,7 +21,6 @@ public abstract class Animal extends Entity implements Ageable {
     protected boolean canEnterWater;
     protected boolean requiresWater;
     protected Gender gender;
-    protected boolean reproducedThisSpring;
     
     // 2. Trạng thái và Vật lý (Di chuyển)
     protected Vector2D velocity; 
@@ -37,22 +36,13 @@ public abstract class Animal extends Entity implements Ageable {
     protected double terrainSpeedMultiplier = 1.0;
 
     public boolean isReproductiveAge() {
-        return age >= maxAge * 0.2
+        return age >= maxAge * 0.08
             && age <= maxAge * 0.8;
-    }
-
-    public boolean hasReproducedThisSpring() {
-        return reproducedThisSpring;
     }
 
     public boolean canMate() {
         return isReproductiveAge()
-                && !reproducedThisSpring
                 && energy > maxEnergy * 0.5;
-    }
-
-    public void markReproduced() {
-        reproducedThisSpring = true;
     }
 
     // Constructor
@@ -77,7 +67,6 @@ public abstract class Animal extends Entity implements Ageable {
         this.carcassSpawned = false;
 
         this.gender = Math.random() < 0.5 ? Gender.MALE : Gender.FEMALE;
-        this.reproducedThisSpring = false; 
     }
 
     @Override
@@ -304,10 +293,8 @@ public abstract class Animal extends Entity implements Ageable {
             && gender != other.gender               // Khác giới tính
             && isReproductiveAge()                  // Bản thân đủ tuổi
             && other.isReproductiveAge()            // Đối phương đủ tuổi
-            && !reproducedThisSpring                // Bản thân mùa này chưa đẻ
-            && !other.reproducedThisSpring          // Đối phương mùa này chưa đẻ
-            && energy > maxEnergy * 0.6             // Năng lượng bản thân > 80%
-            && other.energy > other.maxEnergy * 0.6; // Năng lượng đối phương > 80%
+            && energy > maxEnergy * 0.5             // Năng lượng bản thân > 80%
+            && other.energy > other.maxEnergy * 0.5; // Năng lượng đối phương > 80%
     }
 
     public boolean isFemale() {

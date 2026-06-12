@@ -19,7 +19,6 @@ public abstract class Herbivore extends Animal {
     public void setPredatorDetectionRadius(double predatorDetectionRadius) {
         this.predatorDetectionRadius = predatorDetectionRadius;
     }
-
     // Tạm thời chưa thêm logic gì phức tạp, 
     // sau này ta có thể thêm các hàm đặc thù của loài ăn cỏ như eatPlant(Plant p) vào đây.
 }

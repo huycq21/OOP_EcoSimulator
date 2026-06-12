@@ -4,6 +4,7 @@ import model.Animal;
 import model.Vector2D;
 import model.*;
 import model.herbivore.Herbivore;
+import model.AnimalType;
 
 import java.util.ArrayList;
 import java.util.List;
