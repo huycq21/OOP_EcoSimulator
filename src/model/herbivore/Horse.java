@@ -15,7 +15,8 @@ public class Horse extends Herbivore {
         super(position, 5.0, 80, 150, 5.5, 120.0);
         // Trong constructor của Horse:
         SurvivalStrategy passive = new PassiveStrategy();
-        SurvivalStrategy foraging = new ForagingStrategy(passive);
+        SurvivalStrategy flocking = new FlockingStrategy(passive);
+        SurvivalStrategy foraging = new ForagingStrategy(flocking);
         SurvivalStrategy scared = new ScaredStrategy(foraging); 
         this.setBrain(scared);
     }

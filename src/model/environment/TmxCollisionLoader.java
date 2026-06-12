@@ -8,17 +8,25 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.Vector2D;
 
 public class TmxCollisionLoader {
     private static final String COLLISION_LAYER = "collision";
     private static final String MAP_BOUNDS_LAYER = "map_bounds";
-    private static final String WATER_ZONE_LAYER = "water_zone";
-    private static final String COOP_LAYER = "coop";
-    private static final String COWSHED_LAYER = "cowshed";
-    private static final String PIGSTY_LAYER = "pigsty";
     private static final String WICKET_LAYER = "wicket";
+
+    // BỘ TỪ ĐIỂN DỊCH TÊN LAYER CŨ SANG TERRAIN TYPE MỚI
+    private static final Map<String, TerrainType> LEGACY_TERRAIN_MAP = new HashMap<>();
+    static {
+        LEGACY_TERRAIN_MAP.put("water_zone", TerrainType.WATER);
+        // Gộp toàn bộ các loại chuồng cũ thành vùng PEN chung
+        LEGACY_TERRAIN_MAP.put("coop", TerrainType.PEN);
+        LEGACY_TERRAIN_MAP.put("cowshed", TerrainType.PEN);
+        LEGACY_TERRAIN_MAP.put("pigsty", TerrainType.PEN);
+    }
 
     public static void loadInto(Environment environment, String tmxPath) {
         try {
@@ -32,8 +40,8 @@ public class TmxCollisionLoader {
 
             NodeList mapChildren = map.getChildNodes();
             int blockerCount = 0;
-            int waterZoneCount = 0;
-            int penZoneCount = 0;
+            int terrainCount = 0;
+            
             for (int i = 0; i < mapChildren.getLength(); i++) {
                 Node node = mapChildren.item(i);
                 if (!(node instanceof Element) || !"objectgroup".equals(node.getNodeName())) continue;
@@ -41,6 +49,7 @@ public class TmxCollisionLoader {
                 Element objectGroup = (Element) node;
                 String layerName = objectGroup.getAttribute("name").trim().toLowerCase();
                 NodeList objects = objectGroup.getChildNodes();
+                
                 for (int j = 0; j < objects.getLength(); j++) {
                     Node objectNode = objects.item(j);
                     if (!(objectNode instanceof Element) || !"object".equals(objectNode.getNodeName())) continue;
@@ -57,19 +66,30 @@ public class TmxCollisionLoader {
                     } else if (WICKET_LAYER.equals(layerName)) {
                         environment.addWicketCollider(collider);
                         blockerCount++;
-                    } else if (WATER_ZONE_LAYER.equals(layerName)) {
-                        environment.addWaterZone(collider);
-                        waterZoneCount++;
-                    } else if (isAnimalPenLayer(layerName)) {
-                        environment.addAnimalPen(layerName, collider);
-                        penZoneCount++;
+                    } else {
+                        // 1. Kiểm tra xem tên layer có nằm trong bộ từ điển cũ không
+                        TerrainType mappedType = LEGACY_TERRAIN_MAP.get(layerName);
+                        if (mappedType != null) {
+                            environment.addTerrainZone(mappedType, collider);
+                            terrainCount++;
+                        } 
+                        // 2. Chấp nhận hệ thống tên mới linh hoạt (Ví dụ: terrain_mud, terrain_ice)
+                        else if (layerName.startsWith("terrain_")) {
+                            try {
+                                String typeStr = layerName.substring(8).toUpperCase();
+                                TerrainType type = TerrainType.valueOf(typeStr);
+                                environment.addTerrainZone(type, collider);
+                                terrainCount++;
+                            } catch (IllegalArgumentException ignored) {
+                                System.err.println("Warning: Invalid flexible terrain layer - " + layerName);
+                            }
+                        }
                     }
                 }
             }
 
             System.out.println("Loaded TMX collision: " + blockerCount
-                    + " blockers, " + waterZoneCount + " water zones, "
-                    + penZoneCount + " animal pens from " + tmxPath);
+                    + " blockers, " + terrainCount + " terrain zones from " + tmxPath);
         } catch (Exception e) {
             System.err.println("Cannot load TMX collision: " + tmxPath);
             e.printStackTrace();
@@ -178,12 +198,6 @@ public class TmxCollisionLoader {
 
     private static boolean hasChild(Element parent, String name) {
         return firstChild(parent, name) != null;
-    }
-
-    private static boolean isAnimalPenLayer(String layerName) {
-        return COOP_LAYER.equals(layerName)
-                || COWSHED_LAYER.equals(layerName)
-                || PIGSTY_LAYER.equals(layerName);
     }
 
     private static int readInt(Element element, String attribute) {

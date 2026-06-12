@@ -3,9 +3,9 @@ package model.domestic;
 import model.Animal;
 import model.Vector2D;
 import model.strategy.PassiveStrategy;
+import model.herbivore.*;
 
-public abstract class DomesticAnimal extends Animal {
-    private final String penLayerName;
+public abstract class DomesticAnimal extends Herbivore {
 
     public DomesticAnimal(
             Vector2D position,
@@ -13,15 +13,9 @@ public abstract class DomesticAnimal extends Animal {
             double maxHp,
             double maxEnergy,
             double speed,
-            double visionRadius,
-            String penLayerName
-    ) {
+            double visionRadius
+    ) 
+    {
         super(position, size, maxHp, maxEnergy, speed, visionRadius);
-        this.penLayerName = penLayerName;
-        this.setBrain(new PassiveStrategy());
-    }
-
-    public String getPenLayerName() {
-        return penLayerName;
     }
 }

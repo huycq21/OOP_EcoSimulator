@@ -33,13 +33,10 @@ public class Bear extends ApexEntity {
         this.addPreyType(Fox.class);
 
         // --- 2. LẮP NÃO BOSS ---
-        SurvivalStrategy passive = new PassiveStrategy();
-        SurvivalStrategy hunter = new HunterStrategy(passive);
-        
-        // Gấu rất ưu tiên ăn xác (Scavenger). Vì mạnh 150.0 nên nó sẽ lao thẳng vào cướp xác 
-        // của bất cứ đứa nào đang ăn, ép kẻ đó phải nhường lại. KHÔNG CẦN NÃO SỢ HÃI!
-        SurvivalStrategy scavenger = new ScavengerStrategy(hunter); 
-        
+        SurvivalStrategy passive = new PassiveStrategy();               // Đi dạo
+        SurvivalStrategy hunter = new HunterStrategy(passive);          // Săn mồi
+        SurvivalStrategy scared = new ScavengerStrategy(hunter);     // Ăn xác
+        SurvivalStrategy scavenger = new ScaredStrategy(scared);        // Bỏ chạy 
         this.setBrain(scavenger);
     }
 

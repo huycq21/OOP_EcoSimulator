@@ -23,23 +23,20 @@ public class Wolf extends Carnivore {
         this.addPreyType(model.domestic.Pig.class);
 
         // --- 2. LẮP RÁP BỘ NÃO (5 TẦNG) ---
-        SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
-        
         // Đói thì chuyển sang chế độ đi săn
         
         // TẬP TÍNH BẦY ĐÀN (Bọc ngoài Đi săn)
         // Tìm đồng loại hú hét đi chung. Mỗi đồng bọn buff 30% sức mạnh (0.3), Tối đa x1.9 sức mạnh.
         // Sói đi 3 con: 80.0 * 1.6 = 128.0 (Đủ sức dọa lợn rừng và linh cẩu)
         // rảnh thì đi cùng nhau
-
-        SurvivalStrategy packLogic = new PackFlockingStrategy(passive, 0.30, 2);
-        SurvivalStrategy hunter = new HunterStrategy(packLogic); 
+        SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
+        SurvivalStrategy flocking = new FlockingStrategy(passive);
+        SurvivalStrategy hunter = new HunterStrategy(flocking); 
         // Rảnh thì đi cùng nhau
         SurvivalStrategy scared = new ScaredStrategy(hunter);
-        
         // NHẶT XÁC ĐẶT RA NGOÀI CÙNG!
         SurvivalStrategy scavenger = new ScavengerStrategy(scared);
-        
-        this.setBrain(scavenger);
+        SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
+        this.setBrain(packflock);
     }
 }

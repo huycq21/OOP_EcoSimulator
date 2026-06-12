@@ -1,23 +1,29 @@
 package model.strategy;
 
 import model.Animal;
+import model.Entity;
 import model.carnivore.Carnivore;
+import model.environment.Environment;
+import model.environment.Rectangle;
+
+import java.util.ArrayList;
 import java.util.List;
 
-public class PackFlockingStrategy extends FlockingStrategy {
+public class PackFlockingStrategy implements SurvivalStrategy {
     private final double buffPerAlly; // Mỗi đồng bọn tăng bao nhiêu % sức mạnh
     private final double maxBuff;     // Giới hạn buff tối đa (tránh việc 100 con tụ lại sức mạnh vô cực)
+    private final SurvivalStrategy nextLogic;
 
     // Constructor cho phép truyền tham số linh hoạt cho từng loài
     public PackFlockingStrategy(SurvivalStrategy customLogic, double buffPerAlly, double maxBuff) {
-        super(customLogic);
+        this.nextLogic = customLogic;
         this.buffPerAlly = buffPerAlly;
         this.maxBuff = maxBuff;
     }
 
     @Override
     public void execute(Animal animal) {
-        List<Animal> allies = findNearbyAllies(animal);
+        List<Animal> allies = FlockingStrategy.findNearbyAllies(animal);
 
         // 2. Tính toán sức mạnh bầy đàn
         // Ví dụ: Có 3 đồng bọn, mỗi con buff 0.2 (20%). Tổng buff = 1.0 + 0.6 = 1.6
@@ -28,6 +34,6 @@ public class PackFlockingStrategy extends FlockingStrategy {
             ((Carnivore) animal).setPackMultiplier(currentBuff);
         }
 
-        super.execute(animal);
+        nextLogic.execute(animal);
     }
 }

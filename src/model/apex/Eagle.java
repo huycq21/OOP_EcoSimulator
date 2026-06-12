@@ -15,7 +15,7 @@ public class Eagle extends ApexEntity {
     private double baseDamage;
 
     public Eagle(Vector2D position) {
-        super(position, 3.0, 60.0, 200.0, 12.0, 600.0, 70.0, 80.0, 50, 200);
+        super(position, 3.0, 60.0, 200.0, 8.0, 600.0, 70.0, 80.0, 50, 200);
         
         this.baseSpeed = this.getSpeed();
         this.baseDamage = this.getAttackDamage();

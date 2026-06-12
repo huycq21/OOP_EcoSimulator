@@ -88,6 +88,10 @@ public class SimulationPanel extends JPanel {
             boolean mapLoaded = (forestTileMap != null && forestTileMap.isLoaded());
             this.worldWidth = mapLoaded ? forestTileMap.getPixelWidth() : env.getWidth();
             this.worldHeight = mapLoaded ? forestTileMap.getPixelHeight() : env.getHeight();
+
+            // Cập nhật lại kích thước vật lý cho Environment để khớp với file ảnh TMX
+            this.env.setWidth(this.worldWidth);
+            this.env.setHeight(this.worldHeight);
         }
         
         this.renderScale = 1.0;

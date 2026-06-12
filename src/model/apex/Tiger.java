@@ -34,12 +34,10 @@ public class Tiger extends ApexEntity {
         this.addPreyType(Hyena.class); // Hổ rất ghét Linh cẩu, thấy là vả!
 
         // --- 2. LẮP NÃO CHÚA TỂ ---
-        SurvivalStrategy passive = new PassiveStrategy();
-        SurvivalStrategy hunter = new HunterStrategy(passive);
-        
-        // Hổ đi lẻ, không cần bầy đàn. Ưu tiên ăn xác nếu có.
-        // Mức đe dọa 180.0 nên Hổ không ngán ai, bỏ luôn ScaredStrategy!
-        SurvivalStrategy scavenger = new ScavengerStrategy(hunter);
+        SurvivalStrategy passive = new PassiveStrategy();               // Đi dạo
+        SurvivalStrategy hunter = new HunterStrategy(passive);          // Săn mồi
+        SurvivalStrategy scared = new ScavengerStrategy(hunter);     // Ăn xác
+        SurvivalStrategy scavenger = new ScaredStrategy(scared);        // Bỏ chạy khi gặp thú lớn (Hổ, Gấu, Sói...)
         
         this.setBrain(scavenger);
     }

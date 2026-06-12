@@ -8,6 +8,7 @@ import model.strategy.SurvivalStrategy;
 
 public class Rabbit extends Herbivore {
 
+    
     // Thỏ có các chỉ số mặc định: Kích thước 3.0, Máu 50, Năng lượng 100, Tốc độ 5.0, Tầm nhìn 50.0
     public Rabbit(Vector2D position) {
         super(position, 3.0, 50, 100, 5.0, 100.0);

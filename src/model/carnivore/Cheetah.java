@@ -20,12 +20,13 @@ public class Cheetah extends Carnivore {
         this.addPreyType(BlackGrouse.class);
 
         // --- LẮP NÃO CHUẨN SINH THÁI ---
-        SurvivalStrategy passive = new PassiveStrategy();               // Đi dạo
-        SurvivalStrategy hunter = new HunterStrategy(passive);          // Săn mồi
-        SurvivalStrategy scared = new ScavengerStrategy(hunter);     // Ăn xác
-        SurvivalStrategy scavenger = new ScaredStrategy(scared);        // Bỏ chạy khi gặp thú lớn (Hổ, Gấu, Sói...)
-        
-        this.setBrain(scavenger);
+        SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
+        SurvivalStrategy flocking = new FlockingStrategy(passive);
+        SurvivalStrategy hunter = new HunterStrategy(flocking); 
+        SurvivalStrategy scared = new ScaredStrategy(hunter);
+        SurvivalStrategy scavenger = new ScavengerStrategy(scared);
+        SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
+        this.setBrain(packflock);
     }
 
     @Override

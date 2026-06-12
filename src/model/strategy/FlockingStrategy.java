@@ -117,7 +117,7 @@ public class FlockingStrategy implements SurvivalStrategy {
     }
 
     // Đổi kiểu trả về thành List<Animal> để lấy nguyên bầy
-    protected List<Animal> findNearbyAllies(Animal animal) {
+    public static List<Animal> findNearbyAllies(Animal animal) {
         List<Animal> allies = new ArrayList<>();
         double vision = animal.getVisionRadius();
 

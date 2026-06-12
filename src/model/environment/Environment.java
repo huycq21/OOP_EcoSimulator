@@ -21,14 +21,27 @@ public abstract class Environment {
     protected List<Entity> entities;
     protected List<MapCollider> mapColliders;
     protected List<MapCollider> wicketColliders;
-    protected List<MapCollider> waterZones;
-    protected Map<String, List<MapCollider>> animalPens;
+    
+    // ĐÃ QUY HOẠCH TẤT CẢ VỀ ĐÂY (Nước, Bùn, Đá, Chuồng...)
+    protected Map<TerrainType, List<MapCollider>> terrainZones = new HashMap<>();
+    
     protected MapCollider mapBounds;
     protected Weather weather;
     protected double width;
     protected double height;
+
     private WeatherType lastWeather;
     private Clip rainClip;
+
+    public Environment(double width, double height) {
+        this.width = width;
+        this.height = height;
+        this.entities = new ArrayList<>();
+        this.mapColliders = new ArrayList<>();
+        this.wicketColliders = new ArrayList<>();
+        this.weather = new Weather();
+        this.lastWeather = weather.getCurrentWeather();
+    }
 
     // --- VÒNG LẶP CỐT LÕI (GAME LOOP) ---
     public void update() {
@@ -36,40 +49,23 @@ public abstract class Environment {
         WeatherType currentWeather = weather.getCurrentWeather();
 
         if (currentWeather != lastWeather) {
-
-            boolean wasRaining =
-                    lastWeather == WeatherType.RAINY;
-
-            boolean isRaining =
-                    currentWeather == WeatherType.RAINY;
+            boolean wasRaining = lastWeather == WeatherType.RAINY;
+            boolean isRaining = currentWeather == WeatherType.RAINY;
 
             if (!wasRaining && isRaining) {
-
-                rainClip =
-                        SoundManager.playLoop("rain.wav");
-
+                rainClip = SoundManager.playLoop("rain.wav");
             } else if (wasRaining && !isRaining) {
-
                 SoundManager.stopSound(rainClip);
                 rainClip = null;
             }
-
             lastWeather = currentWeather;
-
-            System.out.println(
-                "Weather changed from "
-                + lastWeather
-                + " to "
-                + currentWeather
-            );
         }
-        // 1. [QUAN TRỌNG NHẤT] ĐẬP CÂY CŨ, XÂY CÂY MỚI Ở ĐẦU MỖI KHUNG HÌNH!
+
         Rectangle mapBoundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
         currentQuadTree = new QuadTree(mapBoundary, 4);
         
         List<Entity> entitiesToRemove = new ArrayList<>();
         
-        // Nhét thú vào cây để làm radar chung cho mọi class
         for (Entity e : entities) {
             if (e.isAlive()) {
                 currentQuadTree.insert(e);
@@ -77,41 +73,26 @@ public abstract class Environment {
         }
 
         for (Entity entity : entities) {
-            // Hàm này bên trong đã tự gọi saveCurrentPosition() rồi mới di chuyển
             entity.update(); 
-
             if (!entity.isAlive()) {
                 entitiesToRemove.add(entity);
             }
         }
         
-        // ==========================================
-        // NHỊP 2: THÚ TƯƠNG TÁC/ĐẨY NHAU VẬT LÝ
-        // ==========================================
-        // Lúc này các con vật đẩy nhau văng ra (có thể văng vào tường/sông)
         CollisionHandler.processCollisions(this); 
 
-        // ==========================================
-        // NHỊP 3: KIỂM TRA MAP VÀ ROLLBACK
-        // ==========================================
-        // Chốt sổ: Kiểm tra lại toàn bộ, đứa nào văng vào vùng cấm thì lôi đầu về vị trí cũ!
         for (Entity entity : entities) {
             if (!entity.isAlive()) continue;
 
-            // Lấy vị trí an toàn đã lưu từ Nhịp 1 bằng O(1), không cần Map/ID
             double safeX = entity.getPreviousPosition().getX();
             double safeY = entity.getPreviousPosition().getY();
 
             keepWithinBounds(entity);
-            resolveWaterAccess(entity, safeX, safeY);
-            resolvePenAccess(entity, safeX, safeY);
-            resolveMapCollisions(entity, safeX, safeY); 
-            resolveWicketCollisions(entity, safeX, safeY);
+            resolveTerrainAccess(entity, safeX, safeY); // Gộp xử lý chặn nước tại đây
+            resolveMapCollisions(entity); 
+            resolveWicketCollisions(entity);
         }
         
-        // ==========================================
-        // DỌN DẸP XÁC CHẾT
-        // ==========================================
         entities.removeAll(entitiesToRemove);
         entities.removeIf(entity -> !entity.isAlive());
 
@@ -119,7 +100,6 @@ public abstract class Environment {
         pendingEntities.clear();
     }
 
-    // --- HÀM HỖ TRỢ VẬT LÝ ---
     protected void keepWithinBounds(Entity entity) {
         double x = entity.getPosition().getX();
         double y = entity.getPosition().getY();
@@ -138,37 +118,30 @@ public abstract class Environment {
         }
     }
 
-// Đổi tham số đầu vào
-    protected void resolveMapCollisions(Entity entity, double previousX, double previousY) {
-    if (!(entity instanceof Animal)) return;
+    protected void resolveMapCollisions(Entity entity) {
+        if (!(entity instanceof Animal)) return;
 
-    double radius = getCollisionRadius(entity);
-    boolean hitMap = false;
+        double radius = getCollisionRadius(entity);
+        boolean hitObstacle = false;
 
-    if (mapBounds != null) {
-        hitMap = mapBounds.clampCircleInside(entity.getPosition(), radius);
-    }
+        if (mapBounds != null) {
+            mapBounds.clampCircleInside(entity.getPosition(), radius);
+        }
 
-    for (MapCollider collider : mapColliders) {
-        if (collider.resolveCircleCollision(entity.getPosition(), radius)) {
-            hitMap = true;
+        for (MapCollider collider : mapColliders) {
+            if (collider.resolveCircleCollision(entity.getPosition(), radius)) {
+                hitObstacle = true;
+            }
+        }
+
+        if (hitObstacle) {
+            Animal animal = (Animal) entity;
+            animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
+            animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
         }
     }
 
-    if (hitMap) {
-        // 1. KÉO CON VẬT TRỞ LẠI VỊ TRÍ AN TOÀN BÊN NGOÀI
-        entity.getPosition().setX(previousX);
-        entity.getPosition().setY(previousY);
-
-        // 2. SAU ĐÓ MỚI ĐẢO VẬN TỐC
-        Animal animal = (Animal) entity;
-        animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
-        animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
-    }
-    }
-
-    // LÀM TƯƠNG TỰ VỚI resolveWicketCollisions
-    protected void resolveWicketCollisions(Entity entity, double previousX, double previousY) {
+    protected void resolveWicketCollisions(Entity entity) {
         if (!(entity instanceof Animal) || entity instanceof DomesticAnimal) return;
 
         double radius = getCollisionRadius(entity);
@@ -181,43 +154,28 @@ public abstract class Environment {
         }
 
         if (hitWicket) {
-            // 1. ROLLBACK VỊ TRÍ
-            entity.getPosition().setX(previousX);
-            entity.getPosition().setY(previousY);
-
-            // 2. ĐẢO VẬN TỐC
             Animal animal = (Animal) entity;
             animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
             animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
         }
     }
 
-    protected void resolveWaterAccess(Entity entity, double previousX, double previousY) {
-        if (waterZones.isEmpty() || !(entity instanceof Animal)) return;
+    // XỬ LÝ CHUNG CHO CÁC LOẠI ĐỊA HÌNH CÓ TÍNH CHẤT CHẶN (Ví dụ: Nước)
+    protected void resolveTerrainAccess(Entity entity, double previousX, double previousY) {
+        if (!(entity instanceof Animal)) return;
 
         Animal animal = (Animal) entity;
-        boolean inWater = isInWaterZone(entity.getPosition(), getCollisionRadius(entity));
+        TerrainType currentTerrain = getTerrainAt(entity.getPosition(), getCollisionRadius(entity));
 
+        boolean inWater = (currentTerrain == TerrainType.WATER);
+
+        // Logic dội ngược nếu sai môi trường sống
         if ((!animal.canEnterWater() && inWater) || (animal.requiresWater() && !inWater)) {
             entity.getPosition().setX(previousX);
             entity.getPosition().setY(previousY);
             animal.getVelocity().setX(animal.getVelocity().getX() * -0.35);
             animal.getVelocity().setY(animal.getVelocity().getY() * -0.35);
         }
-    }
-
-    protected void resolvePenAccess(Entity entity, double previousX, double previousY) {
-        if (!(entity instanceof DomesticAnimal)) return;
-
-        DomesticAnimal domesticAnimal = (DomesticAnimal) entity;
-        if (isInAnimalPen(domesticAnimal.getPenLayerName(), entity.getPosition(), getCollisionRadius(entity))) {
-            return;
-        }
-
-        entity.getPosition().setX(previousX);
-        entity.getPosition().setY(previousY);
-        domesticAnimal.getVelocity().setX(domesticAnimal.getVelocity().getX() * -0.35);
-        domesticAnimal.getVelocity().setY(domesticAnimal.getVelocity().getY() * -0.35);
     }
 
     public boolean isCircleBlocked(Vector2D position, double radius) {
@@ -241,44 +199,34 @@ public abstract class Environment {
         return false;
     }
 
-    public boolean isInWaterZone(Vector2D position, double radius) {
-        for (MapCollider waterZone : waterZones) {
-            if (waterZone.containsCircle(position, radius)) return true;
-        }
-        return false;
-    }
-
-    public Vector2D randomWaterPosition(Random random, double radius) {
-        if (waterZones.isEmpty()) return null;
-
-        for (int i = 0; i < 120; i++) {
-            MapCollider waterZone = chooseWaterZoneByArea(random);
-            Vector2D position = waterZone.randomPointInside(random, radius);
-            if (isInWaterZone(position, radius) && !isCircleBlocked(position, radius)) {
+    public Vector2D randomOpenPosition(Random random, double radius) {
+        double margin = Math.max(60, radius * 2);
+        for (int i = 0; i < 150; i++) { 
+            double x = margin + random.nextDouble() * Math.max(1, width - margin * 2);
+            double y = margin + random.nextDouble() * Math.max(1, height - margin * 2);
+            Vector2D position = new Vector2D(x, y);
+            // Sửa điều kiện check nước thành flexible
+            if (!isCircleBlocked(position, radius) && getTerrainAt(position, radius) != TerrainType.WATER) {
                 return position;
             }
         }
-
-        return null;
+        System.err.println("WARNING: Không tìm thấy vị trí trống!");
+        return new Vector2D(width / 2.0, height / 2.0);
     }
 
-    public Vector2D randomPenPosition(String penLayerName, Random random, double radius) {
-        List<MapCollider> pens = animalPens.get(penLayerName);
-        if (pens == null || pens.isEmpty()) return null;
+    // HÀM SPAWN THÚ LINH HOẠT THEO ĐỊA HÌNH TÙY Ý
+    public Vector2D randomTerrainPosition(TerrainType type, Random random, double radius) {
+        List<MapCollider> zones = terrainZones.get(type);
+        if (zones == null || zones.isEmpty()) return null;
 
         for (int i = 0; i < 120; i++) {
-            MapCollider pen = chooseColliderByArea(pens, random);
-            Vector2D position = pen.randomPointInside(random, radius);
-            if (isInAnimalPen(penLayerName, position, radius) && !isCircleBlocked(position, radius, false)) {
+            MapCollider zone = chooseColliderByArea(zones, random);
+            Vector2D position = zone.randomPointInside(random, radius);
+            if (getTerrainAt(position, radius) == type && !isCircleBlocked(position, radius)) {
                 return position;
             }
         }
-
         return null;
-    }
-
-    private MapCollider chooseWaterZoneByArea(Random random) {
-        return chooseColliderByArea(waterZones, random);
     }
 
     private MapCollider chooseColliderByArea(List<MapCollider> colliders, Random random) {
@@ -289,28 +237,35 @@ public abstract class Environment {
 
         double selectedArea = random.nextDouble() * Math.max(1.0, totalArea);
         double currentArea = 0;
-        for (MapCollider waterZone : colliders) {
-            currentArea += waterZone.getArea();
+        for (MapCollider zone : colliders) {
+            currentArea += zone.getArea();
             if (selectedArea <= currentArea) {
-                return waterZone;
+                return zone;
             }
         }
-
         return colliders.get(colliders.size() - 1);
     }
 
-    public Vector2D randomOpenPosition(Random random, double radius) {
-        double margin = Math.max(60, radius * 2);
-        for (int i = 0; i < 80; i++) {
-            double x = margin + random.nextDouble() * Math.max(1, width - margin * 2);
-            double y = margin + random.nextDouble() * Math.max(1, height - margin * 2);
-            Vector2D position = new Vector2D(x, y);
-            if (!isCircleBlocked(position, radius) && !isInWaterZone(position, radius)) {
-                return position;
+    public void addTerrainZone(TerrainType type, MapCollider zone) {
+        zone.setTerrainType(type);
+        terrainZones.computeIfAbsent(type, k -> new ArrayList<>()).add(zone);
+    }
+
+    // Overload cho độ chính xác cao (có bán kính)
+    public TerrainType getTerrainAt(Vector2D position, double radius) {
+        for (Map.Entry<TerrainType, List<MapCollider>> entry : terrainZones.entrySet()) {
+            for (MapCollider zone : entry.getValue()) {
+                if (zone.containsCircle(position, radius)) {
+                    return entry.getKey();
+                }
             }
         }
+        return TerrainType.NORMAL_DIRT; 
+    }
 
-        return new Vector2D(width / 2.0, height / 2.0);
+    // Overload mặc định (chỉ điểm chạm)
+    public TerrainType getTerrainAt(Vector2D position) {
+        return getTerrainAt(position, 0);
     }
 
     private double getCollisionRadius(Entity entity) {
@@ -318,35 +273,14 @@ public abstract class Environment {
     }
 
     public void addMapCollider(MapCollider collider) {
-        mapColliders.add(collider);
+       mapColliders.add(collider);
     }
-
     public void addWicketCollider(MapCollider collider) {
         wicketColliders.add(collider);
     }
-
     public void setMapBounds(MapCollider mapBounds) {
         this.mapBounds = mapBounds;
     }
-
-    public void addWaterZone(MapCollider waterZone) {
-        waterZones.add(waterZone);
-    }
-
-    public void addAnimalPen(String penLayerName, MapCollider penZone) {
-        animalPens.computeIfAbsent(penLayerName, key -> new ArrayList<>()).add(penZone);
-    }
-
-    private boolean isInAnimalPen(String penLayerName, Vector2D position, double radius) {
-        List<MapCollider> pens = animalPens.get(penLayerName);
-        if (pens == null) return false;
-
-        for (MapCollider pen : pens) {
-            if (pen.containsCircle(position, radius)) return true;
-        }
-        return false;
-    }
-
     public void addEntity(Entity entity) {
         pendingEntities.add(entity);
     }
@@ -362,49 +296,29 @@ public abstract class Environment {
     public double getHeight() {
         return height;
     }
-
     public QuadTree getQuadTree() {
         return currentQuadTree;
     }
     public void setQuadTree(QuadTree qTree) {
         this.currentQuadTree = qTree;
     }
-    public Environment(double width, double height) {
-        this.width = width;
+    public Weather getWeather() {
+        return weather;
+    }
+    public void setHeight(double height) {
         this.height = height;
-        this.entities = new ArrayList<>();
-        this.mapColliders = new ArrayList<>();
-        this.wicketColliders = new ArrayList<>();
-        this.waterZones = new ArrayList<>();
-        this.animalPens = new HashMap<>();
-        this.weather = new Weather();
-        this.lastWeather = weather.getCurrentWeather();
+    }
+    public void setWidth(double width) {
+        this.width = width;
     }
 
     public static void setActiveEnvironment(Environment env) {
         activeEnvironment = env;
     }
-
     public static Environment getInstance() {
         return activeEnvironment;
     }
-
     public synchronized void queueEntity(Entity entity) {
         pendingEntities.add(entity);
     }
-
-    public TerrainType getTerrainAt(Vector2D position) {
-
-        if (isInWaterZone(position, 0)) {
-            return TerrainType.WATER;
-        }
-
-        return TerrainType.FOREST;
-    }
-
-    public Weather getWeather() {
-        return weather;
-    }
 }
-
-

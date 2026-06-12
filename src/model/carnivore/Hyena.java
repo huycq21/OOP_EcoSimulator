@@ -21,12 +21,11 @@ public class Hyena extends Carnivore {
         
         // --- 2. LẮP RÁP BỘ NÃO 5 TẦNG ---
         SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
-        SurvivalStrategy packLogic = new PackFlockingStrategy(passive, 0.30, 2);
-        SurvivalStrategy hunter = new HunterStrategy(packLogic); 
+        SurvivalStrategy flocking = new FlockingStrategy(passive);
+        SurvivalStrategy hunter = new HunterStrategy(flocking); 
         SurvivalStrategy scared = new ScaredStrategy(hunter);
-        // NHẶT XÁC ĐẶT RA NGOÀI CÙNG!
         SurvivalStrategy scavenger = new ScavengerStrategy(scared);
-        
-        this.setBrain(scavenger);
+        SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
+        this.setBrain(packflock);
     }
 }

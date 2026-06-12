@@ -3,7 +3,7 @@ package controller;
 import model.environment.Environment;
 import model.environment.map.*;
 import view.SimulationPanel;
-import model.spawner.Spawner; // Giữ lại import Spawner của đồng nghiệp
+import model.spawner.Spawner; 
 import model.Entity;
 
 import javax.swing.SwingUtilities;
@@ -13,22 +13,19 @@ import java.util.List;
 public class SimulationEngine {
     private SimulationPanel panel;
     private Environment env; 
-    private Spawner spawner; // Thêm biến Spawner của đồng nghiệp
+    private Spawner spawner; 
 
-    // SỬA CONSTRUCTOR: Vẫn nhận Environment từ Main (theo ý bạn)
+    // SỬA CONSTRUCTOR: Nhận trực tiếp Environment từ Main
     public SimulationEngine(SimulationPanel panel, Environment env) {
         this.panel = panel;
         
-        // 1. Nhận trực tiếp môi trường từ ngoài thay vì khởi tạo cứng Jungle
+        // 1. Nhận trực tiếp môi trường từ ngoài
         this.env = env; 
-        
-        // 2. Cập nhật lại kích thước cho panel khớp với môi trường
-        this.panel.setWorldSize(this.env.getWidth(), this.env.getHeight());
         
         // 3. Kích hoạt Singleton
         Environment.setActiveEnvironment(this.env); 
 
-        // 4. Khởi tạo Spawner (Tính năng mới của đồng nghiệp)
+        // 4. Khởi tạo Spawner 
         this.spawner = new Spawner(this.env);
     }
 
@@ -38,30 +35,36 @@ public class SimulationEngine {
             double updateAccumulator = 0.0;
             while (true) {
                 // ====================================================
-                // CẬP NHẬT LOGIC GAME
+                // 1. CẬP NHẬT LOGIC GAME (VẬT LÝ, AI)
                 // ====================================================
                 updateAccumulator += SimulationTime.getTimeScale();
                 int updatesThisFrame = Math.min(20, (int) updateAccumulator);
                 for (int i = 0; i < updatesThisFrame; i++) {
                     env.update();
-                    spawner.update(); // QUAN TRỌNG: Gọi update của Spawner để nó hoạt động
+                    spawner.update(); 
                 }
                 updateAccumulator -= updatesThisFrame;
 
                 // ====================================================
-                // VẼ LÊN MÀN HÌNH
+                // 2. VẼ LÊN MÀN HÌNH (ĐÃ FIX LỖI TRÀN RAM)
                 // ====================================================
                 List<Entity> renderSnapshot = new ArrayList<>(env.getEntities());
-                SwingUtilities.invokeLater(() -> {
-                    panel.setEntities(renderSnapshot);
-                    panel.repaint(); 
-                });
+                
+                try {
+                    // Dùng invokeAndWait: Ép vòng lặp game phải CHỜ giao diện vẽ xong
+                    // Không cho phép ném thêm việc nếu Card đồ họa/CPU chưa xử lý kịp
+                    SwingUtilities.invokeAndWait(() -> {
+                        panel.setEntities(renderSnapshot);
+                        panel.repaint(); 
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 // ====================================================
-                // NGỦ ĐỂ GIỮ NHỊP FPS
+                // 3. NGỦ ĐỂ GIỮ NHỊP FPS
                 // ====================================================
                 try {
-                    // Dùng hằng số chung của đồng nghiệp thay vì fix cứng 16
                     Thread.sleep(SimulationConstant.FRAME_DELAY_MS); 
                 } catch (InterruptedException e) {
                     e.printStackTrace();

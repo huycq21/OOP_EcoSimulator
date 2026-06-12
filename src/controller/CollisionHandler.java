@@ -103,7 +103,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         }
 
         // --- CHỐNG ĐÈ LÊN NHAU TẤT CẢ CÁC LOÀI ĐỘNG VẬT ---
-        else if (e1 instanceof Animal && e2 instanceof Animal) {
+        if (e1 instanceof Animal && e2 instanceof Animal) {
             resolveOverlap(e1, e2);
         }
     }

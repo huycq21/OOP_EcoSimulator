@@ -3,6 +3,13 @@ package model.apex;
 import model.Vector2D;
 import model.environment.Environment;
 import model.environment.Rectangle;
+import model.strategy.FlockingStrategy;
+import model.strategy.HunterStrategy;
+import model.strategy.PackFlockingStrategy;
+import model.strategy.PassiveStrategy;
+import model.strategy.ScaredStrategy;
+import model.strategy.ScavengerStrategy;
+import model.strategy.SurvivalStrategy;
 import model.Entity;
 import model.Animal;
 import model.carnivore.Carnivore;
@@ -27,7 +34,13 @@ public class Human extends ApexEntity {
         );
         // Tầm bắn của súng
         this.gunRange = 50.0;
-        
+        SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
+        SurvivalStrategy flocking = new FlockingStrategy(passive);
+        SurvivalStrategy hunter = new HunterStrategy(flocking); 
+        SurvivalStrategy scared = new ScaredStrategy(hunter);
+        SurvivalStrategy scavenger = new ScavengerStrategy(scared);
+        SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
+        this.setBrain(packflock);
     }
 
     @Override

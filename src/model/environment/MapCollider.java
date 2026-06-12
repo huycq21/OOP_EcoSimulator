@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Random;
 
 public class MapCollider {
+    private TerrainType terrainType = TerrainType.NORMAL_DIRT;
+
     public enum Shape {
         RECTANGLE,
         ELLIPSE,
@@ -78,27 +80,123 @@ public class MapCollider {
     }
 
     public boolean clampCircleInside(Vector2D center, double radius) {
-        if (shape != Shape.RECTANGLE) return false;
-
         double oldX = center.getX();
         double oldY = center.getY();
-        double minX = x + radius;
-        double maxX = x + width - radius;
-        double minY = y + radius;
-        double maxY = y + height - radius;
 
-        if (minX > maxX) {
-            center.setX(x + width / 2.0);
-        } else {
-            center.setX(clamp(oldX, minX, maxX));
+        // ==========================================
+        // TRƯỜNG HỢP 1: BIÊN HÌNH CHỮ NHẬT
+        // ==========================================
+        if (shape == Shape.RECTANGLE) {
+            double minX = x + radius;
+            double maxX = x + width - radius;
+            double minY = y + radius;
+            double maxY = y + height - radius;
+
+            if (minX > maxX) {
+                center.setX(x + width / 2.0);
+            } else {
+                center.setX(clamp(oldX, minX, maxX));
+            }
+
+            if (minY > maxY) {
+                center.setY(y + height / 2.0);
+            } else {
+                center.setY(clamp(oldY, minY, maxY));
+            }
+
+            return Math.abs(center.getX() - oldX) > EPSILON || Math.abs(center.getY() - oldY) > EPSILON;
         }
 
-        if (minY > maxY) {
-            center.setY(y + height / 2.0);
-        } else {
-            center.setY(clamp(oldY, minY, maxY));
+        // ==========================================
+        // TRƯỜNG HỢP 2: BIÊN HÌNH ELIP
+        // ==========================================
+        if (shape == Shape.ELLIPSE) {
+            double rx = width / 2.0;
+            double ry = height / 2.0;
+            double cx = x + rx;
+            double cy = y + ry;
+
+            double dx = center.getX() - cx;
+            double dy = center.getY() - cy;
+
+            if (Math.abs(dx) < EPSILON && Math.abs(dy) < EPSILON) {
+                return false;
+            }
+
+            // Giới hạn bán kính an toàn bên trong lòng Elip
+            double limitRx = Math.max(EPSILON, rx - radius);
+            double limitRy = Math.max(EPSILON, ry - radius);
+
+            // Công thức chuẩn hóa vị trí elip
+            double normalized = (dx * dx) / (limitRx * limitRx) + (dy * dy) / (limitRy * limitRy);
+            
+            // Nếu thực thể vượt quá vùng lòng an toàn của Elip -> Ép co lại vào trong
+            if (normalized > 1.0) {
+                double scale = 1.0 / Math.sqrt(normalized);
+                center.setX(cx + dx * scale);
+                center.setY(cy + dy * scale);
+                return true;
+            }
+            return false;
         }
 
+        // ==========================================
+        // TRƯỜNG HỢP 3: BIÊN HÌNH ĐA GIÁC (Ví dụ: Đảo, thung lũng)
+        // ==========================================
+        if (shape == Shape.POLYGON) {
+            if (polygonPath == null || polygonPoints.size() < 2) return false;
+
+            // Kiểm tra xem tâm hiện tại đang ở TRONG hay ở NGOÀI đa giác ranh giới
+            boolean isCenterInside = polygonPath.contains(oldX, oldY);
+
+            Vector2D closest = null;
+            double bestDistanceSquared = Double.MAX_VALUE;
+
+            // Bước 1: Tìm điểm trên cạnh đa giác gần với tâm con vật nhất
+            for (int i = 0; i < polygonPoints.size(); i++) {
+                Vector2D a = polygonPoints.get(i);
+                Vector2D b = polygonPoints.get((i + 1) % polygonPoints.size());
+                Vector2D candidate = closestPointOnSegment(center, a, b);
+                double dx = center.getX() - candidate.getX();
+                double dy = center.getY() - candidate.getY();
+                double distanceSquared = dx * dx + dy * dy;
+                if (distanceSquared < bestDistanceSquared) {
+                    bestDistanceSquared = distanceSquared;
+                    closest = candidate;
+                }
+            }
+
+            if (closest == null) return false;
+
+            // Vector hướng từ điểm sát vách (closest) tới tâm con vật (center)
+            double dx = center.getX() - closest.getX();
+            double dy = center.getY() - closest.getY();
+            double distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < EPSILON) {
+                // Nếu tâm nằm trúng vách ngăn, không có hướng Vector, tạm thời không xử lý đẩy
+                return false;
+            }
+
+            if (isCenterInside) {
+                // TÂM Ở TRONG MAP: Nhưng phần viền (radius) lỡ lẹm ra ngoài vách đá (distance < radius)
+                if (distance < radius) {
+                    // dx/distance là Vector chỉ hướng từ vách đi VÀO TRONG lòng map.
+                    // Ta nhấc con vật từ điểm vách, đẩy sâu vào trong lòng đúng bằng khoảng cách 'radius'
+                    center.setX(closest.getX() + (dx / distance) * radius);
+                    center.setY(closest.getY() + (dy / distance) * radius);
+                    return true;
+                }
+            } else {
+                // TÂM Ở NGOÀI MAP: Con vật bị văng hẳn ra ngoài không gian trống (ví dụ do lực đẩy quá mạnh)
+                // Lúc này Vector (dx, dy) đang hướng ra ngoài map. Ta dùng dấu TRỪ (-) để đảo hướng chạy VÀO TRONG
+                center.setX(closest.getX() - (dx / distance) * radius);
+                center.setY(closest.getY() - (dy / distance) * radius);
+                return true;
+            }
+        }
+
+        // Trả về true nếu tọa độ thực sự bị thay đổi (có sửa sai va chạm)
         return Math.abs(center.getX() - oldX) > EPSILON || Math.abs(center.getY() - oldY) > EPSILON;
     }
 
@@ -150,12 +248,13 @@ public class MapCollider {
     }
 
     private boolean resolvePolygonCollision(Vector2D center, double radius) {
-        if (polygonPath == null || !polygonPath.contains(center.getX(), center.getY())) return false;
-        if (polygonPoints.size() < 2) return false;
+        if (polygonPath == null || polygonPoints.size() < 2) return false;
 
+        boolean isCenterInside = polygonPath.contains(center.getX(), center.getY());
         Vector2D closest = null;
         double bestDistanceSquared = Double.MAX_VALUE;
 
+        // Tìm điểm gần nhất trên các cạnh của đa giác
         for (int i = 0; i < polygonPoints.size(); i++) {
             Vector2D a = polygonPoints.get(i);
             Vector2D b = polygonPoints.get((i + 1) % polygonPoints.size());
@@ -171,17 +270,30 @@ public class MapCollider {
 
         if (closest == null) return false;
 
+        // BỘ LỌC CHUẨN: Tâm ở ngoài và khoảng cách > bán kính -> Chưa chạm
+        if (!isCenterInside && bestDistanceSquared >= radius * radius) {
+            return false;
+        }
+
+        double distance = Math.sqrt(bestDistanceSquared);
         double dx = center.getX() - closest.getX();
         double dy = center.getY() - closest.getY();
-        double distance = Math.sqrt(dx * dx + dy * dy);
+
         if (distance < EPSILON) {
-            center.setX(closest.getX());
             center.setY(closest.getY() - radius);
             return true;
         }
 
-        center.setX(closest.getX() - (dx / distance) * radius);
-        center.setY(closest.getY() - (dy / distance) * radius);
+        if (isCenterInside) {
+            // TÂM Ở TRONG: Kéo ra ngoài mép
+            center.setX(closest.getX() - (dx / distance) * radius);
+            center.setY(closest.getY() - (dy / distance) * radius);
+        } else {
+            // TÂM Ở NGOÀI BỊ LẸM VÀO: Đẩy dội ngược lại
+            double pushDistance = radius - distance;
+            center.setX(center.getX() + (dx / distance) * pushDistance);
+            center.setY(center.getY() + (dy / distance) * pushDistance);
+        }
         return true;
     }
 
@@ -279,5 +391,13 @@ public class MapCollider {
 
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+        public void setTerrainType(TerrainType type) {
+    this.terrainType = type;
+    }
+    
+    public TerrainType getTerrainType() {
+        return this.terrainType;
     }
 }

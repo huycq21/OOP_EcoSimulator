@@ -36,12 +36,11 @@ public class Lion extends ApexEntity {
         this.addPreyType(Hyena.class);
 
         // --- 2. LẮP NÃO BẦY ĐÀN (PRIDE) ---
-        SurvivalStrategy passive = new PassiveStrategy();
-        SurvivalStrategy hunter = new HunterStrategy(passive);
-        
-        // Sư tử đi theo bầy để buff sức mạnh (Tối đa x2.0)
-        SurvivalStrategy packLogic = new PackFlockingStrategy(hunter, 0.30, 2.0);
-        SurvivalStrategy scavenger = new ScavengerStrategy(packLogic);
+        SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
+        SurvivalStrategy packLogic = new PackFlockingStrategy(passive, 0.30, 2);
+        SurvivalStrategy hunter = new HunterStrategy(packLogic); 
+        SurvivalStrategy scared = new ScaredStrategy(hunter);
+        SurvivalStrategy scavenger = new ScavengerStrategy(scared);
         
         this.setBrain(scavenger);
     }
