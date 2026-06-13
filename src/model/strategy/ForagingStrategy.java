@@ -54,10 +54,6 @@ public class ForagingStrategy implements SurvivalStrategy {
         nextLogic.execute(herbivore);
     }
 
-    /**
-     * Thuật toán tìm kiếm Thực vật (Plant) gần nhất sử dụng không gian QuadTree 
-     * Kết hợp cơ chế quét đa tầng bán kính linh hoạt
-     */
     private Entity findPlantInRadius(Animal herbivore, double radius) {
         Entity nearest = null;
         double minDistance = radius;
@@ -86,9 +82,6 @@ public class ForagingStrategy implements SurvivalStrategy {
         return nearest;
     }
 
-    /**
-     * Điều hướng con vật hướng thẳng tới tọa độ của mục tiêu (Thức ăn)
-     */
     private void moveToward(Animal animal, Entity target, double speed) {
         Vector2D direction = new Vector2D(
             target.getPosition().getX() - animal.getPosition().getX(), 
@@ -97,9 +90,6 @@ public class ForagingStrategy implements SurvivalStrategy {
         applyVelocity(animal, direction, speed);
     }
 
-    /**
-     * Chuẩn hóa Vector hướng toán học và áp đặt vận tốc di chuyển thực tế cho thực thể
-     */
     private void applyVelocity(Animal animal, Vector2D direction, double speed) {
         direction.normalize(); // Biến đổi Vector về độ dài đơn vị = 1
         

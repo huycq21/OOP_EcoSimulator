@@ -58,9 +58,6 @@ public class PassiveStrategy implements SurvivalStrategy {
         animal.setWanderTimer(animal.getWanderTimer() - 1);
     }
 
-    /**
-     * Bốc thăm ngẫu nhiên hành vi tiếp theo cho từng cá thể động vật độc lập
-     */
     private void chooseNewWanderState(Animal animal) {
         if (random.nextDouble() < 0.25) {
             // 25% cơ hội quyết định dừng chân đứng nghỉ ngơi (từ 30 đến 119 ticks)
@@ -77,9 +74,6 @@ public class PassiveStrategy implements SurvivalStrategy {
         }
     }
 
-    /**
-     * Ngăn chặn động vật đi lọt ra ngoài rìa bản đồ mô phỏng
-     */
     private void steerAwayFromMapEdges(Animal animal) {
         Environment env = Environment.getInstance();
         if (env == null) return;

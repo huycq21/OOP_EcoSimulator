@@ -85,9 +85,6 @@ public class FlockingStrategy implements SurvivalStrategy {
         }
     }
 
-    /**
-     * LỰC 1: SEPARATION - Tránh va chạm, giữ khoảng cách an toàn với các cá thể quá gần
-     */
     private Vector2D calculateSeparation(Animal animal, List<Animal> allies) {
         Vector2D steer = new Vector2D(0, 0);
         int count = 0;
@@ -115,9 +112,6 @@ public class FlockingStrategy implements SurvivalStrategy {
         return steer;
     }
 
-    /**
-     * LỰC 2: ALIGNMENT - Đồng hướng, hướng vận tốc theo vận tốc trung bình của cả bầy
-     */
     private Vector2D calculateAlignment(List<Animal> allies) {
         Vector2D avgVelocity = new Vector2D(0, 0);
 
@@ -132,9 +126,6 @@ public class FlockingStrategy implements SurvivalStrategy {
         return avgVelocity;
     }
 
-    /**
-     * LỰC 3: COHESION - Tụ tập, tạo lực hướng tâm di chuyển về vị trí trung tâm của bầy
-     */
     private Vector2D calculateCohesion(Animal animal, List<Animal> allies) {
         double centerX = 0;
         double centerY = 0;
@@ -156,9 +147,6 @@ public class FlockingStrategy implements SurvivalStrategy {
         return direction;
     }
 
-    /**
-     * Quét tìm đồng loại trong tầm nhìn bằng cấu trúc QuadTree (Tối ưu từ bản mới)
-     */
     protected List<Animal> findNearbyAllies(Animal animal) {
         List<Animal> allies = new ArrayList<>();
         double vision = animal.getVisionRadius();

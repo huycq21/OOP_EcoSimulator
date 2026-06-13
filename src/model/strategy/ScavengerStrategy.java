@@ -101,9 +101,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         }
     }
 
-    /**
-     * Dò tìm xem xung quanh thực thể có kẻ săn mồi nguy hiểm nào không (Lớp phòng vệ tầm gần)
-     */
     private Entity findImmediatePredator(Animal animal) {
         Entity nearest = null;
         double minDistance = animal.getVisionRadius() * 0.8; // Phạm vi cảnh giác an toàn
@@ -130,9 +127,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         return nearest;
     }
 
-    /**
-     * Quét không gian xung quanh cái xác xem có đối thủ nào có chỉ số Sức mạnh (Strength) to hơn đang đứng chiếm giữ không
-     */
     private Entity findCompetitorNearCarcass(Animal me, Entity carcass) {
         double disputeRadius = 40.0; // Bán kính tranh chấp quanh cái xác
         Rectangle searchRange = new Rectangle(
@@ -155,9 +149,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         return null;
     }
 
-    /**
-     * Quét QuadTree tìm kiếm xác chết hợp lệ gần nhất thuộc thực đơn cho phép
-     */
     private Entity findNearestCorpse(Animal scavenger, double radius) {
         Entity nearestCorpse = null;
         double minDistance = radius;
@@ -186,9 +177,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         return nearestCorpse;
     }
     
-    /**
-     * Kiểm tra tính hợp lệ của món ăn dựa trên thuộc tính cấu hình PreyType của loài
-     */
     private boolean isCarcassInMenu(Animal scavenger, Carcass carcass) {
         if (!(scavenger instanceof Carnivore)) return false;
         
@@ -198,9 +186,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         return carnivore.getPreyType() != null && carnivore.getPreyType().contains(meatType);
     }
 
-    /**
-     * Toán học toán tử Vector di chuyển tiếp cận mục tiêu
-     */
     private void moveToward(Animal animal, Entity target, double speed) {
         Vector2D dir = new Vector2D(
             target.getPosition().getX() - animal.getPosition().getX(), 
@@ -211,9 +196,6 @@ public class ScavengerStrategy implements SurvivalStrategy {
         animal.getVelocity().setY(dir.getY() * speed);
     }
 
-    /**
-     * Toán học toán tử Vector di chuyển trốn chạy khỏi mục tiêu nguy hiểm
-     */
     private void moveAwayFrom(Animal animal, Entity threat, double speed) {
         Vector2D dir = new Vector2D(
             animal.getPosition().getX() - threat.getPosition().getX(), 

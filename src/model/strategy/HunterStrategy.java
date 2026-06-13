@@ -95,9 +95,6 @@ public class HunterStrategy implements SurvivalStrategy {
         }
     }
 
-    /**
-     * Thuật toán quét tìm mục tiêu sống sử dụng QuadTree tối ưu không gian
-     */
     private Entity findNearestPrey(Animal hunter, double radiusMultiplier) {
         Entity nearestPrey = null;
         
@@ -139,9 +136,6 @@ public class HunterStrategy implements SurvivalStrategy {
         return nearestPrey;
     }
     
-    /**
-     * Kiểm tra tư cách săn mồi dựa trên logic phân cấp sinh thái
-     */
     private boolean isValidPrey(Animal hunter, Entity entity) {
         // Mục tiêu phải là thú ăn cỏ (Herbivore) và phải còn sống
         if (!entity.isAlive() || !(entity instanceof Herbivore)) return false;
@@ -158,9 +152,6 @@ public class HunterStrategy implements SurvivalStrategy {
         return true;
     }
 
-    /**
-     * Lấy bán kính quét mồi đặc trưng của thực thể
-     */
     private double getPreyDetectionRadius(Animal hunter) {
         if (hunter instanceof Carnivore) {
             return ((Carnivore) hunter).getPreyDetectionRadius();

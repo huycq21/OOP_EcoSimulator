@@ -76,7 +76,7 @@ public class Jungle extends Environment {
     }
 
     private void spawnPlantsAndCover() {
-        for (int i = 0; i < 64; i++) {
+        for (int i = 0; i < 48; i++) {
             addEntity(new Grass(randomPosition()));
         }
 

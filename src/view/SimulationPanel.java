@@ -58,7 +58,6 @@ import javax.imageio.ImageIO;
 
 public class SimulationPanel extends JPanel {
     private List<Entity> entities;
-    private final Map<String, BufferedImage> sprites;
     private final Map<String, EntitySpriteSet> entitySprites;
     private final Map<String, PlantSpriteSet> plantSprites;
     private JPanel timelinePanel;
@@ -87,8 +86,7 @@ public class SimulationPanel extends JPanel {
 
     // Constructor có Environment (từ file mới)
     public SimulationPanel(Environment env) {
-        this.env = env;
-        this.sprites = new HashMap<>();
+        this.env = env;        
         this.entitySprites = new HashMap<>();
         this.plantSprites = new HashMap<>();
 
@@ -118,7 +116,6 @@ public class SimulationPanel extends JPanel {
 
     // Constructor không có Environment (từ file cũ, giữ để tương thích)
     public SimulationPanel() {
-        this.sprites = new HashMap<>();
         this.entitySprites = new HashMap<>();
         this.plantSprites = new HashMap<>();
         this.forestTileMap = new ForestTileMap("assets/Environment/Forest/Forest.tmx");
@@ -177,7 +174,7 @@ public class SimulationPanel extends JPanel {
             if (e instanceof Animal) drawEntity(g2, e);
         }
 
-        drawBuildUI(g2);
+        BuildUIRenderer.draw(g2, getHeight(), buildMode);
         drawInfoPanel(g2);
         g2.dispose();
     }
@@ -185,6 +182,7 @@ public class SimulationPanel extends JPanel {
     // ===================== INFO PANEL (từ file mới - đầy đủ hơn) =====================
 
     private void drawInfoPanel(Graphics2D g) {
+        g.setFont(new Font("Arial", Font.BOLD, 16));
         if (entities == null) return;
 
         int rabbit = 0, deer = 0, boar = 0, fox = 0, wolf = 0;
@@ -226,25 +224,6 @@ public class SimulationPanel extends JPanel {
         g.drawString("Human : "   + human,   20, 235);
         g.drawString("Grass : "   + grass,   20, 255);
         g.drawString("Weather : " + weather, 20, 285);
-    }
-
-    // ===================== BUILD UI (file cũ có Rock) =====================
-
-    private void drawBuildUI(Graphics2D g) {
-        int panelHeight = getHeight();
-        drawBuildButton(g, "Plant", 20,  panelHeight - 80, buildMode.equals("FOOD_PLANT"));
-        drawBuildButton(g, "Bush",  150, panelHeight - 80, buildMode.equals("BUSH"));
-        drawBuildButton(g, "Tree",  280, panelHeight - 80, buildMode.equals("TREE"));
-        drawBuildButton(g, "Rock",  410, panelHeight - 80, buildMode.equals("ROCK"));
-    }
-
-    private void drawBuildButton(Graphics2D g, String text, int x, int y, boolean active) {
-        g.setColor(active ? new Color(90, 180, 90) : new Color(40, 40, 40, 220));
-        g.fillRoundRect(x, y, 110, 50, 18, 18);
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 16));
-        FontMetrics fm = g.getFontMetrics();
-        g.drawString(text, x + (110 - fm.stringWidth(text)) / 2, y + 31);
     }
 
     // ===================== DRAW ENTITY =====================
@@ -426,8 +405,8 @@ public class SimulationPanel extends JPanel {
         loadFishSpriteSet("fish_two",   "Fish2_animation.png");
         loadFishSpriteSet("fish_three", "Fish3_animation.png");
         loadFishSpriteSet("fish_four",  "Fish4_animation.png");
-        loadSprite("rabbit", "assets/Entities/Rabbit.png");
-        loadSprite("wolf",   "assets/Entities/Wolf.png");
+        SpriteManager.loadSprite("rabbit", "assets/Entities/Rabbit.png");
+        SpriteManager.loadSprite("wolf",   "assets/Entities/Wolf.png");
     }
 
     private void loadPlantSprites() {
@@ -499,13 +478,6 @@ public class SimulationPanel extends JPanel {
             return null;
         }
         return img.getSubimage(x, y, w, h);
-    }
-
-    private void loadSprite(String key, String path) {
-        File file = new File(path);
-        if (!file.exists()) return;
-        try { sprites.put(key, ImageIO.read(file)); }
-        catch (IOException e) { System.err.println("Cannot load sprite: " + path); }
     }
 
     private void loadEntitySpriteSet(String key, String assetName) {
@@ -626,7 +598,7 @@ public class SimulationPanel extends JPanel {
     // ===================== DRAW HELPERS =====================
 
     private boolean drawSprite(Graphics2D g, String key, int cx, int cy, int w, int h) {
-        BufferedImage image = sprites.get(key);
+        BufferedImage image = SpriteManager.get(key);
         if (image == null) return false;
         g.drawImage(image, cx - w / 2, cy - h / 2, w, h, null);
         return true;

@@ -1,7 +1,6 @@
 package model.apex;
 
 import model.Vector2D;
-import model.carnivore.Carnivore;
 import model.environment.Environment;
 import model.environment.Rectangle;
 import model.strategy.HunterStrategy;

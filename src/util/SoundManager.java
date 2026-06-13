@@ -15,7 +15,7 @@ public class SoundManager {
 
     private static final ConcurrentHashMap<String, Long> soundCooldowns = new ConcurrentHashMap<>();
 
-    private static final long DEFAULT_COOLDOWN_MS = 1000;
+    private static final long DEFAULT_COOLDOWN_MS = 3000;
 
     public static void playSound(String fileName) {
         long now = System.currentTimeMillis();

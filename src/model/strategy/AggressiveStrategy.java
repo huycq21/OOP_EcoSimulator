@@ -58,9 +58,6 @@ public class AggressiveStrategy implements SurvivalStrategy {
         nextLogic.execute(animal);
     }
 
-    /**
-     * Tìm kiếm kẻ thù (Thú ăn thịt) gần nhất sử dụng QuadTree để tối ưu hiệu năng
-     */
     private Entity findNearestThreat(Animal animal) {
         Entity nearest = null;
         double vision = animal.getVisionRadius();
@@ -86,9 +83,6 @@ public class AggressiveStrategy implements SurvivalStrategy {
         return nearest;
     }
 
-    /**
-     * Tìm kiếm nguồn thức ăn (Cỏ) gần nhất, áp dụng QuadTree để đồng bộ thuật toán tối ưu của bản mới
-     */
     private Entity findNearestFood(Animal animal) {
         Entity nearest = null;
         // Bản cũ cho phép ngửi/nhìn thấy thức ăn xa hơn một chút (x1.5 tầm nhìn)
@@ -114,9 +108,6 @@ public class AggressiveStrategy implements SurvivalStrategy {
         return nearest;
     }
 
-    /**
-     * Điều hướng vận tốc của động vật hướng thẳng tới mục tiêu (Vector Toán học từ bản cũ)
-     */
     private void moveToward(Animal animal, Entity target, double speed) {
         Vector2D direction = new Vector2D(
             target.getPosition().getX() - animal.getPosition().getX(),

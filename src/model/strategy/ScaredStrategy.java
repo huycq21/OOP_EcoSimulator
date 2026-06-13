@@ -96,10 +96,6 @@ public class ScaredStrategy implements SurvivalStrategy {
         prey.getVelocity().setY(fleeDir.getY() * sprintSpeed);
     }
     
-    /**
-     * Dò quét tìm kiếm kẻ thù thực sự trong không gian QuadTree 
-     * Tích hợp cơ chế lọc chuỗi thức ăn canAttack() và cơ chế chống rình rập (SNEAKING)
-     */
     private Entity findActualThreat(Animal prey) {
         Entity nearestThreat = null;
         double baseDetection = getDetectionRadius(prey);
@@ -159,9 +155,6 @@ public class ScaredStrategy implements SurvivalStrategy {
         return nearestThreat;
     }
 
-    /**
-     * Thuật toán quét QuadTree tìm kiếm bụi rậm (Hideable) còn chỗ trống gần nhất
-     */
     private Entity findNearestValidBush(Animal prey) {
         if (prey.getSize() >= 5.0) { 
             return null; // Thực thể lớn không thể trốn bụi rậm
@@ -196,9 +189,6 @@ public class ScaredStrategy implements SurvivalStrategy {
         return nearestBush;
     }
 
-    /**
-     * Lấy bán kính cảnh giác an toàn của con mồi
-     */
     private double getDetectionRadius(Animal prey) {
         if (prey instanceof Herbivore) {
             return ((Herbivore) prey).getVisionRadius();
