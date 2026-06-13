@@ -52,6 +52,11 @@ public class Spawner {
         spawnEntities("berry",1);
         spawnEntities("treeplant", 1);
         spawnEntities("mushroom", 1);
+
+        spawnEntities("fishone", 5);
+        spawnEntities("FishTwo", 5);
+        spawnEntities("fishthree", 5);
+        spawnEntities("fishfour", 5);
         
     }
 
@@ -152,7 +157,7 @@ public class Spawner {
             }
         }
     }
-    
+
     public void spawnEntities(String entityType, int amount) {
         for (int i = 0; i < amount; i++) {
             Vector2D pos = null;
