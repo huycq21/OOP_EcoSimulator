@@ -45,7 +45,7 @@ public class Main {
         // lát nữa SimulationPanel đọc file TMX sẽ tự động cập nhật lại cho to ra.
         Environment mainMap = new Jungle(screenWidth, screenHeight);
 
-        JFrame frame = new JFrame("Mô phỏng Hệ sinh thái - Nhóm 12");
+        JFrame frame = new JFrame("Mô phỏng Hệ sinh thái");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // Set size cửa sổ
         frame.setSize(screenWidth, screenHeight);
