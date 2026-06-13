@@ -1,14 +1,15 @@
 package view;
 
 import java.awt.*;
+import view.BuildMode;
 
 public final class BuildUIRenderer {
     private BuildUIRenderer() {}
-    public static void draw(Graphics2D g, int panelHeight, String buildMode) {
-        drawBuildButton(g, "Plant", 20, panelHeight - 80, buildMode.equals("FOOD_PLANT"));
-        drawBuildButton(g, "Bush", 150, panelHeight - 80, buildMode.equals("BUSH"));
-        drawBuildButton(g, "Tree", 280, panelHeight - 80, buildMode.equals("TREE"));
-        drawBuildButton(g, "Rock", 410, panelHeight - 80, buildMode.equals("ROCK"));
+    public static void draw(Graphics2D g, int panelHeight, BuildMode buildMode) {
+        drawBuildButton(g, "Plant", 20, panelHeight - 80, buildMode == BuildMode.FOOD_PLANT);
+        drawBuildButton(g, "Bush", 150, panelHeight - 80, buildMode == BuildMode.BUSH);
+        drawBuildButton(g, "Tree", 280, panelHeight - 80, buildMode == BuildMode.TREE);
+        drawBuildButton(g, "Rock", 410, panelHeight - 80, buildMode == BuildMode.ROCK);
     }
 
     private static void drawBuildButton(Graphics2D g, String text, int x, int y, boolean active) {
