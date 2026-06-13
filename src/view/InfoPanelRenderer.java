@@ -19,7 +19,7 @@ public final class InfoPanelRenderer {
         Color oldColor = g.getColor();
         g.setFont(new Font("Arial", Font.BOLD, 16));
 
-        // TỰ ĐỘNG đếm mọi thực thể đang sống
+        // Dùng HashMap để tự động phân loại và đếm mọi thực thể sống
         Map<String, Integer> population = new HashMap<>();
         for (Entity e : entities) {
             if (e.isAlive()) {
@@ -29,12 +29,17 @@ public final class InfoPanelRenderer {
         }
 
         String weather = "UNKNOWN";
-        if (Environment.getInstance() != null && Environment.getInstance().getWeather() != null) {
-            weather = Environment.getInstance().getWeather().getCurrentWeather().toString();
+        String season = "UNKNOWN"; // Khai báo thêm biến season
+
+        if (Environment.getInstance() != null) {
+            if (Environment.getInstance().getWeather() != null) {
+                weather = Environment.getInstance().getWeather().getCurrentWeather().toString();
+            }
+            season = Environment.getInstance().getWeather().getCurrentSeason().toString();
         }
 
-        // Khung UI tự co giãn
-        int panelHeight = 45 + (population.size() * 20);
+        // Khung UI tự co giãn theo số lượng loài + thêm 20 pixel để chứa dòng Season
+        int panelHeight = 45 + (population.size() * 20) + 20;
 
         g.setColor(new Color(0, 0, 0, 180));
         g.fillRoundRect(10, 10, 190, panelHeight, 10, 10);
@@ -46,7 +51,9 @@ public final class InfoPanelRenderer {
             textY += 20;
         }
 
-        g.drawString("Weather : " + weather, 20, textY + 10);
+        // Vẽ Weather và Season ở 2 dòng cuối cùng
+        g.drawString("Weather : " + weather, 20, textY);
+        g.drawString("Season : " + season, 20, textY + 20);
 
         g.setFont(oldFont);
         g.setColor(oldColor);
