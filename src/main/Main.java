@@ -1,29 +1,30 @@
 package main;
 import view.SimulationPanel;
 import controller.SimulationEngine;
-import util.SoundManager;
-import javax.sound.sampled.Clip;
+import model.environment.Environment;
+import model.environment.map.Jungle;
 
 import javax.swing.JFrame;
 
 public class Main {
     public static void main(String[] args) {
-        // 1. Tạo "Khung gỗ" (Cửa sổ)
-        JFrame frame = new JFrame("Mô phỏng Hệ sinh thái");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
+         // Kích thước thế giới logic. SimulationPanel sẽ load hình Forest.tmx cho Jungle.
+         double mapWidth = 1800.0;
+         double mapHeight = 1600.0;
 
-        // 2. Tạo "Tấm bạt" (View)
-        SimulationPanel panel = new SimulationPanel();
-        frame.add(panel); // Gắn bạt vào khung
+         Environment mainMap = new Jungle(mapWidth, mapHeight);
 
-        // 3. Hiển thị cửa sổ trước khi chạy logic
-        frame.setVisible(true);
+         JFrame frame = new JFrame("Mô phỏng Hệ sinh thái - Forest");
+         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+         frame.setSize(1000, 700);
 
-        // 4. Tạo "Bộ não" (Controller) và truyền View vào cho nó điều khiển
-        SimulationEngine engine = new SimulationEngine(panel);
+         SimulationPanel panel = new SimulationPanel(mainMap);
+         frame.add(panel);
         
-        // 5. Bấm nút bắt đầu
-        engine.start();
+         frame.setLocationRelativeTo(null); 
+         frame.setVisible(true);
+
+         SimulationEngine engine = new SimulationEngine(panel);
+         engine.start();
     }
 }

@@ -1,25 +1,63 @@
 package model.carnivore;
 
 import model.Vector2D;
-import model.strategy.HunterStrategy;
-import model.*;
+import model.AnimalState;
+import model.strategy.*;
+import model.herbivore.*;
 
 public class Cheetah extends Carnivore {
 
+    private double baseSpeed = 8.5;
+    private double sprintSpeed = 16.0; 
+    private boolean isSprinting = false;
+
     public Cheetah(Vector2D position) {
-        // Thứ tự super: position, size, maxHp, maxEnergy, speed, visionRadius, strengthWeight, attackDamage, attackCooldown
-        super(position, 4.5, 80, 80, 8.5, 90.0, 60.0, 45.0, 30);
-        //cắn nhanh dame nằm giữa sói và cáo
-        this.setBrain(new HunterStrategy());
+        super(position, 4.5, 80, 100, 8.5, 90.0, 60.0, 45.0, 30);
+        
+        this.addPreyType(Rabbit.class);
+        this.addPreyType(Deer.class);
+        this.addPreyType(Goat.class);        // Dê
+        this.addPreyType(BlackGrouse.class);
+
+        // --- LẮP NÃO CHUẨN SINH THÁI ---
+        SurvivalStrategy passive = new PassiveStrategy();               // Đi dạo
+        SurvivalStrategy hunter = new HunterStrategy(passive);          // Săn mồi
+        SurvivalStrategy scared = new ScavengerStrategy(hunter);     // Ăn xác
+        SurvivalStrategy scavenger = new ScaredStrategy(scared);        // Bỏ chạy khi gặp thú lớn (Hổ, Gấu, Sói...)
+        
+        this.setBrain(scavenger);
     }
 
     @Override
-    public void growOlder() {
-        age++;
-    }
+    public void update() {
+        super.update(); 
 
-    @Override
-    public boolean isTooOld() {
-        return age > maxAge;
+        if (!isAlive()) return;
+
+        boolean isChasing = (this.getCurrentState() == AnimalState.CHASING);
+
+        if (isChasing && this.getEnergy() > 25.0) {
+            
+            if (!isSprinting) {
+                isSprinting = true;
+                this.setSpeed(sprintSpeed); 
+            }
+            
+            // CÂN BẰNG LẠI THỂ LỰC:
+            // Game chạy 60 FPS. Trừ 0.25 mỗi frame = 1 giây mất 15 năng lượng.
+            // Báo có 100 năng lượng -> Sẽ bứt tốc được khoảng 6.5 giây trước khi kiệt sức!
+            this.setEnergy(this.getEnergy() - 0.25); 
+            
+        } else {
+            if (isSprinting) {
+                isSprinting = false;
+            }
+            
+            if (this.getEnergy() < 10.0) {
+                this.setSpeed(baseSpeed * 0.4); 
+            } else {
+                this.setSpeed(baseSpeed); 
+            }
+        }
     }
 }

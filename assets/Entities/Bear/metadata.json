@@ -1,0 +1,71 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "e344f2e6-0c6f-476c-be3e-5462c868b9b4",
+        "name": "Bear",
+        "prompt": "Bear",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "Bear",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-06-09T17:27:53.118903+00:00"
+      },
+      "folder": "Bear",
+      "frames": {
+        "rotations": {
+          "south": "Bear/rotations/south.png",
+          "south-east": "Bear/rotations/south-east.png",
+          "east": "Bear/rotations/east.png",
+          "north-east": "Bear/rotations/north-east.png",
+          "north": "Bear/rotations/north.png",
+          "north-west": "Bear/rotations/north-west.png",
+          "west": "Bear/rotations/west.png",
+          "south-west": "Bear/rotations/south-west.png"
+        },
+        "animations": {
+          "Walk": {
+            "north": [
+              "Bear/animations/Walk/north/frame_000.png",
+              "Bear/animations/Walk/north/frame_001.png",
+              "Bear/animations/Walk/north/frame_002.png",
+              "Bear/animations/Walk/north/frame_003.png",
+              "Bear/animations/Walk/north/frame_004.png",
+              "Bear/animations/Walk/north/frame_005.png"
+            ],
+            "west": [
+              "Bear/animations/Walk/west/frame_000.png",
+              "Bear/animations/Walk/west/frame_001.png",
+              "Bear/animations/Walk/west/frame_002.png",
+              "Bear/animations/Walk/west/frame_003.png",
+              "Bear/animations/Walk/west/frame_004.png",
+              "Bear/animations/Walk/west/frame_005.png"
+            ],
+            "east": [
+              "Bear/animations/Walk/east/frame_000.png",
+              "Bear/animations/Walk/east/frame_001.png",
+              "Bear/animations/Walk/east/frame_002.png",
+              "Bear/animations/Walk/east/frame_003.png",
+              "Bear/animations/Walk/east/frame_004.png",
+              "Bear/animations/Walk/east/frame_005.png"
+            ],
+            "south": [
+              "Bear/animations/Walk/south/frame_000.png",
+              "Bear/animations/Walk/south/frame_001.png",
+              "Bear/animations/Walk/south/frame_002.png",
+              "Bear/animations/Walk/south/frame_003.png",
+              "Bear/animations/Walk/south/frame_004.png",
+              "Bear/animations/Walk/south/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-09T17:42:36.648430"
+}

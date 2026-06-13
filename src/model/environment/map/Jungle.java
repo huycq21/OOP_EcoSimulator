@@ -18,10 +18,10 @@ import model.herbivore.Deer;
 import model.herbivore.Elephant;
 import model.herbivore.Rabbit;
 import model.plant.Grass;
-import model.environment.Bush;
 import model.environment.Environment;
 import model.environment.TmxCollisionLoader;
 import model.environment.TmxPlantLoader;
+import model.environment.obstacle.Bush;
 
 import java.util.Random;
 

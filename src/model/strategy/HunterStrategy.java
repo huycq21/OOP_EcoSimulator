@@ -2,137 +2,165 @@ package model.strategy;
 
 import model.Animal;
 import model.AnimalState;
-import model.Carcass;
 import model.Entity;
 import model.Vector2D;
-import model.carnivore.Carnivore;
 import model.herbivore.Herbivore;
-import model.environment.Environment; // Cần import cái này để lấy danh sách sinh vật
+import model.carnivore.Carnivore;
+import model.carnivore.Fox;
+import model.environment.Environment;
+import model.environment.Rectangle;
 import java.util.List;
 
 public class HunterStrategy implements SurvivalStrategy {
-    // Tái sử dụng lại logic đi dạo nếu không có con mồi nào ở gần
-    private PassiveStrategy wanderLogic;
+    private final SurvivalStrategy nextLogic;
 
     public HunterStrategy() {
-        this.wanderLogic = new PassiveStrategy();
+        this.nextLogic = new PassiveStrategy();
+    }
+
+    public HunterStrategy(SurvivalStrategy customLogic) {
+        this.nextLogic = customLogic;
     }
 
     @Override
     public void execute(Animal hunter) {
-        boolean hungry = hunter.getEnergy() < hunter.getMaxEnergy() * 0.65;
-        Entity target = hungry ? findNearestPrey(hunter) : findVeryClosePrey(hunter);
-        if (target == null && hungry) {
-            target = findNearestCarcass(hunter);
+        // --- 1. TÍNH TOÁN MỨC ĐỘ ĐÓI ĐỂ KÍCH HOẠT BẢN NĂNG ---
+        double energyPercentage = hunter.getEnergy() / hunter.getMaxEnergy();
+
+        // TRẠNG THÁI NO: Năng lượng > 80%, không cần sát sinh, nhường quyền cho AI tầng dưới đi dạo/đi đàn
+        if (energyPercentage > 0.80) {
+            nextLogic.execute(hunter);
+            return;
         }
 
+        // TRẠNG THÁI KHÁT MÁU (BẢN MỚI): Năng lượng nguy kịch < 30%, tăng 50% tầm phát hiện mồi (x1.5)
+        double radiusMultiplier = (energyPercentage < 0.30) ? 1.5 : 1.0;
+
+        // Tiến hành dò tìm con mồi sống gần nhất thông qua hệ thống QuadTree
+        Entity target = findNearestPrey(hunter, radiusMultiplier);
+
+        // --- 2. XỬ LÝ DI CHUYỂN TIẾP CẬN VÀ VỒ MỒI ---
         if (target != null) {
-            // Đã thấy mồi! Đổi nhãn trạng thái thành ĐANG SĂN MỒI
-            hunter.setCurrentState(AnimalState.CHASING);
-
-            // 2. Toán học Vector: Tính toán hướng lao tới con mồi
+            Animal prey = (Animal) target;
             Vector2D hunterPos = hunter.getPosition();
-            Vector2D targetPos = target.getPosition();
+            Vector2D targetPos = prey.getPosition();
+            double distance = hunterPos.distanceTo(targetPos);
+            
+            // Tính khoảng cách vừa chạm bề mặt vật lý của nhau (Dựa trên kích thước thực thể)
+            double attackRange = (hunter.getSize() + prey.getSize()) / 2.0 + 1.0; 
 
-            // Lấy tọa độ Đích trừ tọa độ Nguồn sẽ ra Vector hướng
-            double dx = targetPos.getX() - hunterPos.getX();
-            double dy = targetPos.getY() - hunterPos.getY();
+            // BƯỚC A: XÁC ĐỊNH TRẠNG THÁI VÀ TỐC ĐỘ DI CHUYỂN TRONG TICK NÀY
+            double currentMoveSpeed = hunter.getSpeed();
+            double strikeDistance = (hunter instanceof Carnivore) ? 
+                                    ((Carnivore) hunter).getStrikeRadius() : 
+                                    (hunter.getVisionRadius() * 0.3);
 
-            Vector2D chaseVector = new Vector2D(dx, dy);
+            // Nếu con mồi đã phát hiện và bỏ chạy, hoặc kẻ săn mồi đã lọt vào tầm vồ (strikeDistance)
+            if (prey.getCurrentState() == AnimalState.FLEEING || distance <= strikeDistance) {
+                hunter.setCurrentState(AnimalState.CHASING);
+                currentMoveSpeed = hunter.getSpeed(); // Bung 100% tốc độ để rượt đuổi
+            } else {
+                hunter.setCurrentState(AnimalState.SNEAKING);
+                currentMoveSpeed = hunter.getSpeed() * 0.1; // Đi rình rập, ẩn mình bằng 10% tốc độ
+            }
 
-            // Chuẩn hóa vector (rút ngắn độ dài vector về 1) 
-            // để đảm bảo con vật không dịch chuyển tức thời đến chỗ con mồi
-            chaseVector.normalize();
+            // BƯỚC B: CƠ CHẾ VỒ MỒI CHÍNH XÁC (MAGNET SNAP)
+            // Nếu bước nhảy tiếp theo chắc chắn chạm hoặc vượt quá vị trí con mồi
+            if (distance <= attackRange + currentMoveSpeed) {
+                // Teleport nhẹ: Đưa kẻ săn mồi áp sát khít vào tọa độ mục tiêu
+                hunter.getPosition().setX(targetPos.getX());
+                hunter.getPosition().setY(targetPos.getY());
+                
+                // Khóa phanh vận tốc, chuyển trạng thái để CollisionHandler xử lý trừ máu/sát thương
+                hunter.getVelocity().setX(0);
+                hunter.getVelocity().setY(0);
+                hunter.setCurrentState(AnimalState.ATTACKING);
+                return; 
+            }
 
-            // Nhân vector hướng (độ dài 1) với tốc độ của kẻ đi săn
-            // Đi săn thì chạy bằng 100% tốc độ tối đa (speed)
-            chaseVector.setX(chaseVector.getX() * hunter.getSpeed());
-            chaseVector.setY(chaseVector.getY() * hunter.getSpeed());
-
-            // 3. Cập nhật vận tốc mới để lớp Animal mang đi di chuyển
-            hunter.getVelocity().setX(chaseVector.getX());
-            hunter.getVelocity().setY(chaseVector.getY());
-
+            // BƯỚC C: TOÁN HỌC VECTOR - DI CHUYỂN TIẾP CẬN KHI Ở XA (TỪ BẢN CŨ)
+            Vector2D moveVector = new Vector2D(
+                targetPos.getX() - hunterPos.getX(), 
+                targetPos.getY() - hunterPos.getY()
+            );
+            moveVector.normalize(); // Chuẩn hóa Vector về độ dài đơn vị = 1
+            
+            // Áp đặt vận tốc di chuyển thực tế theo hướng mục tiêu
+            hunter.getVelocity().setX(moveVector.getX() * currentMoveSpeed);
+            hunter.getVelocity().setY(moveVector.getY() * currentMoveSpeed);
+            
         } else {
-            // 4. Nếu không thấy ai, gọi bộ não đi dạo ra chạy hộ!
-            wanderLogic.execute(hunter);
+            // Đái/Đói nhưng hoàn toàn không quét được con mồi nào trong tầm radar
+            nextLogic.execute(hunter); 
         }
     }
 
-    // --- HÀM HỖ TRỢ: DÒ RADAR TÌM CON MỒI ---
-    private Entity findNearestPrey(Animal hunter) {
-        Entity nearest = null;
-        double minDistance = getPreyDetectionRadius(hunter);
+    /**
+     * Thuật toán quét tìm mục tiêu sống sử dụng QuadTree tối ưu không gian
+     */
+    private Entity findNearestPrey(Animal hunter, double radiusMultiplier) {
+        Entity nearestPrey = null;
+        
+        double baseRadius = getPreyDetectionRadius(hunter);
+        double activeVision = baseRadius * radiusMultiplier; // Nhân hệ số khát máu nếu có
+        double minDistance = activeVision;
 
-        // Lấy danh sách tất cả sinh vật trên bản đồ. 
-        // LƯU Ý: Chỗ này yêu cầu class Environment của bạn phải có pattern Singleton (getInstance())
-        // Hoặc sau này bạn sẽ thay bằng cấu trúc QuadTree mà ta đã bàn!
-        List<Entity> allEntities = Environment.getInstance().getEntities();
+        // Thiết lập hộp không gian tìm kiếm
+        Rectangle searchRange = new Rectangle(
+            hunter.getPosition().getX(), 
+            hunter.getPosition().getY(), 
+            activeVision * 2, activeVision * 2
+        );
 
-        for (Entity e : allEntities) {
-            // Nếu thực thể đó là Thú ăn cỏ VÀ đang sống VÀ không phải đang trốn
-            if (isValidPrey(hunter, e)) {
+        List<Entity> nearbyEntities = Environment.getInstance().getQuadTree().query(searchRange, null);
+
+        for (Entity e : nearbyEntities) {
+            // Kiểm tra các điều kiện lọc cơ bản (Sự tương khắc chuỗi thức ăn, trạng thái ẩn nấp)
+            if (!isValidPrey(hunter, e)) continue;
+            
+            if (e instanceof Animal && e.isAlive() && e.getClass() != hunter.getClass()) {
+                Animal preyCandidate = (Animal) e;
                 
-                // Tính khoảng cách
-                double dist = hunter.getPosition().distanceTo(e.getPosition());
-                
-                // Nếu nằm trong tầm nhìn và gần hơn mục tiêu trước đó
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearest = e;
+                boolean isHiding = (preyCandidate.getCurrentState() == AnimalState.HIDING);
+                // Đặc quyền của Cáo (Fox): Mũi cực thính, đánh hơi được cả mồi đang ẩn nấp trong bụi rậm
+                boolean canSeePrey = !isHiding || (hunter instanceof Fox);
+
+                if (canSeePrey) {
+                    double dist = hunter.getPosition().distanceTo(preyCandidate.getPosition());
+                    
+                    // Cập nhật mục tiêu sống tối ưu nhất ở gần radar nhất
+                    if (dist <= activeVision && dist < minDistance) {
+                        minDistance = dist;
+                        nearestPrey = preyCandidate;
+                    }
                 }
             }
         }
-        return nearest;
+        return nearestPrey;
     }
-
-    private Entity findVeryClosePrey(Animal hunter) {
-        Entity nearest = null;
-        double minDistance = getPreyDetectionRadius(hunter) * 0.35;
-        List<Entity> allEntities = Environment.getInstance().getEntities();
-
-        for (Entity e : allEntities) {
-            if (isValidPrey(hunter, e)) {
-                double dist = hunter.getPosition().distanceTo(e.getPosition());
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearest = e;
-                }
-            }
-        }
-        return nearest;
-    }
-
+    
+    /**
+     * Kiểm tra tư cách săn mồi dựa trên logic phân cấp sinh thái
+     */
     private boolean isValidPrey(Animal hunter, Entity entity) {
-        if (!(entity instanceof Herbivore) || !entity.isAlive()) return false;
+        // Mục tiêu phải là thú ăn cỏ (Herbivore) và phải còn sống
+        if (!entity.isAlive() || !(entity instanceof Herbivore)) return false;
 
-        Herbivore prey = (Herbivore) entity;
-        if (prey.getCurrentState() == AnimalState.HIDING) return false;
+        Herbivore prey = (Herbivore) entity; 
+        
+        // Cơ chế bụi rậm: Nếu mồi đang ẩn nấp mà kẻ đi săn có kích thước quá lớn (Size >= 5 như Sói, Gấu) -> Mắt mờ không nhìn thấy
+        if (prey.getCurrentState() == AnimalState.HIDING && !(hunter.getSize() < 5)) return false;
 
+        // Kiểm tra đa hình thông qua danh sách thực đơn canAttack() cấu hình riêng ở từng loài Carnivore
         if (hunter instanceof Carnivore) {
             return ((Carnivore) hunter).canAttack(prey);
         }
-
         return true;
     }
 
-    private Entity findNearestCarcass(Animal hunter) {
-        Entity nearest = null;
-        double minDistance = getPreyDetectionRadius(hunter) * 1.5;
-        List<Entity> allEntities = Environment.getInstance().getEntities();
-
-        for (Entity e : allEntities) {
-            if (e instanceof Carcass && e.isAlive()) {
-                double dist = hunter.getPosition().distanceTo(e.getPosition());
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearest = e;
-                }
-            }
-        }
-        return nearest;
-    }
-
+    /**
+     * Lấy bán kính quét mồi đặc trưng của thực thể
+     */
     private double getPreyDetectionRadius(Animal hunter) {
         if (hunter instanceof Carnivore) {
             return ((Carnivore) hunter).getPreyDetectionRadius();

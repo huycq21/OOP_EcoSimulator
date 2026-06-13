@@ -1,0 +1,71 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "4cdf4861-e1c7-4b3e-98ca-23fba5d960f0",
+        "name": "Lion",
+        "prompt": "Lion",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "Lion",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-06-09T17:48:36.910076+00:00"
+      },
+      "folder": "Lion",
+      "frames": {
+        "rotations": {
+          "south": "Lion/rotations/south.png",
+          "south-east": "Lion/rotations/south-east.png",
+          "east": "Lion/rotations/east.png",
+          "north-east": "Lion/rotations/north-east.png",
+          "north": "Lion/rotations/north.png",
+          "north-west": "Lion/rotations/north-west.png",
+          "west": "Lion/rotations/west.png",
+          "south-west": "Lion/rotations/south-west.png"
+        },
+        "animations": {
+          "Walk": {
+            "south": [
+              "Lion/animations/Walk/south/frame_000.png",
+              "Lion/animations/Walk/south/frame_001.png",
+              "Lion/animations/Walk/south/frame_002.png",
+              "Lion/animations/Walk/south/frame_003.png",
+              "Lion/animations/Walk/south/frame_004.png",
+              "Lion/animations/Walk/south/frame_005.png"
+            ],
+            "east": [
+              "Lion/animations/Walk/east/frame_000.png",
+              "Lion/animations/Walk/east/frame_001.png",
+              "Lion/animations/Walk/east/frame_002.png",
+              "Lion/animations/Walk/east/frame_003.png",
+              "Lion/animations/Walk/east/frame_004.png",
+              "Lion/animations/Walk/east/frame_005.png"
+            ],
+            "north": [
+              "Lion/animations/Walk/north/frame_000.png",
+              "Lion/animations/Walk/north/frame_001.png",
+              "Lion/animations/Walk/north/frame_002.png",
+              "Lion/animations/Walk/north/frame_003.png",
+              "Lion/animations/Walk/north/frame_004.png",
+              "Lion/animations/Walk/north/frame_005.png"
+            ],
+            "west": [
+              "Lion/animations/Walk/west/frame_000.png",
+              "Lion/animations/Walk/west/frame_001.png",
+              "Lion/animations/Walk/west/frame_002.png",
+              "Lion/animations/Walk/west/frame_003.png",
+              "Lion/animations/Walk/west/frame_004.png",
+              "Lion/animations/Walk/west/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-09T17:56:16.755426"
+}

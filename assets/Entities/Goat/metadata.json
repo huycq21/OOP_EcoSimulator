@@ -1,0 +1,71 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "2e91e5dc-cb82-48e8-a87e-5fdfc33a0d35",
+        "name": "Goat",
+        "prompt": "Goat",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "Horse",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-06-09T18:11:29.464977+00:00"
+      },
+      "folder": "Goat",
+      "frames": {
+        "rotations": {
+          "south": "Goat/rotations/south.png",
+          "south-east": "Goat/rotations/south-east.png",
+          "east": "Goat/rotations/east.png",
+          "north-east": "Goat/rotations/north-east.png",
+          "north": "Goat/rotations/north.png",
+          "north-west": "Goat/rotations/north-west.png",
+          "west": "Goat/rotations/west.png",
+          "south-west": "Goat/rotations/south-west.png"
+        },
+        "animations": {
+          "Walk": {
+            "south": [
+              "Goat/animations/Walk/south/frame_000.png",
+              "Goat/animations/Walk/south/frame_001.png",
+              "Goat/animations/Walk/south/frame_002.png",
+              "Goat/animations/Walk/south/frame_003.png",
+              "Goat/animations/Walk/south/frame_004.png",
+              "Goat/animations/Walk/south/frame_005.png"
+            ],
+            "west": [
+              "Goat/animations/Walk/west/frame_000.png",
+              "Goat/animations/Walk/west/frame_001.png",
+              "Goat/animations/Walk/west/frame_002.png",
+              "Goat/animations/Walk/west/frame_003.png",
+              "Goat/animations/Walk/west/frame_004.png",
+              "Goat/animations/Walk/west/frame_005.png"
+            ],
+            "north": [
+              "Goat/animations/Walk/north/frame_000.png",
+              "Goat/animations/Walk/north/frame_001.png",
+              "Goat/animations/Walk/north/frame_002.png",
+              "Goat/animations/Walk/north/frame_003.png",
+              "Goat/animations/Walk/north/frame_004.png",
+              "Goat/animations/Walk/north/frame_005.png"
+            ],
+            "east": [
+              "Goat/animations/Walk/east/frame_000.png",
+              "Goat/animations/Walk/east/frame_001.png",
+              "Goat/animations/Walk/east/frame_002.png",
+              "Goat/animations/Walk/east/frame_003.png",
+              "Goat/animations/Walk/east/frame_004.png",
+              "Goat/animations/Walk/east/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-09T18:16:15.337230"
+}

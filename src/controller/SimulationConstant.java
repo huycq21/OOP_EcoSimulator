@@ -18,6 +18,7 @@ public final class SimulationConstant {
     public static final int ATTACK_STATE_DURATION = 18;
 
     public static final int RABBIT_HIDE_DURATION = 300;
+    public static final int MIN_RABBIT = 8;
     public static final int MAX_RABBIT = 24;
     public static final int REPRODUCTION_INTERVAL = 600;
 
@@ -37,4 +38,7 @@ public final class SimulationConstant {
     // ===== MAP =====
 
     public static final double EDGE_MARGIN = 80.0;
+
+    public static final int MAX_FLOCK_TICKS = 500;
+    public static final int REST_TICKS = 150;
 }

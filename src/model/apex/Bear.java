@@ -3,76 +3,83 @@ package model.apex;
 import model.Vector2D;
 import model.environment.Environment;
 import model.environment.Rectangle;
+import model.strategy.*;
 import model.Entity;
+import model.Animal;
+import model.domestic.*;
+import model.herbivore.*;
+import model.carnivore.*;
 
 import java.util.List;
-
-import model.Animal;
 
 public class Bear extends ApexEntity {
 
     private double aoeRadius;
 
     public Bear(Vector2D position) {
-        // Cân bằng dựa trên Sói (Wolf): HP 100, Speed 5.5, Dmg 60, Threat 80
-        super(
-            position,
-            12.0,        // size: To hơn gấp đôi Sói
-            400.0,       // maxHp: Cần tới 7 nhát cắn của Sói mới gục ngã
-            500.0,       // maxEnergy: Dự trữ năng lượng khổng lồ
-            3.0,         // speed: Chậm hơn Sói (5.5). Sói có thể Hit & Run!
-            80.0,        // visionRadius: Tầm nhìn rộng
-            150.0,       // strengthWeight: Mức độ đe dọa áp đảo hoàn toàn Sói
-            100.0,       // attackDamage: Vả đúng 1 phát là Sói (100 HP) "đăng xuất"!
-            90            // attackCooldown: Đánh chậm hơn Sói (90 tick vs 60 tick)
-        );
+        // Cân bằng hoàn hảo: Trâu, Đam to, AOE bự, nhưng Chậm.
+        super(position, 12.0, 400.0, 500.0, 3.0, 230.0, 150.0, 100.0, 90, 300);
         
         // Tầm vả AOE vươn ra gấp 1.5 lần cơ thể
         this.aoeRadius = this.getSize() * 1.5; 
+
+        // --- 1. LÊN THỰC ĐƠN (GẤU ĂN TẠP) ---
+        this.addPreyType(Deer.class);
+        this.addPreyType(Boar.class);
+        this.addPreyType(Goat.class);
+        this.addPreyType(Cow.class);
+        this.addPreyType(Pig.class);
+        this.addPreyType(Wolf.class); // Gấu vả chết sói để cướp xác!
+        this.addPreyType(Fox.class);
+
+        // --- 2. LẮP NÃO BOSS ---
+        SurvivalStrategy passive = new PassiveStrategy();
+        SurvivalStrategy hunter = new HunterStrategy(passive);
         
-        // Bạn có thể setBrain(new ApexStrategy()) ở đây nếu muốn!
+        // Gấu rất ưu tiên ăn xác (Scavenger). Vì mạnh 150.0 nên nó sẽ lao thẳng vào cướp xác 
+        // của bất cứ đứa nào đang ăn, ép kẻ đó phải nhường lại. KHÔNG CẦN NÃO SỢ HÃI!
+        SurvivalStrategy scavenger = new ScavengerStrategy(hunter); 
+        
+        this.setBrain(scavenger);
     }
 
     @Override
     public void performSpecialAbility(Environment env) {
-        // Nếu đã chết hoặc đang chờ hồi chiêu thì không làm gì cả
-        if (!isAlive() || currentCooldownTimer > 0) return;
+        // SỬA LỖI 1: Dùng biến hồi chiêu ĐẶC BIỆT của ApexEntity
+        if (!isAlive() || currentSpAttack > 0) return;
 
         boolean hitSomeone = false;
 
-        // 1. TẠO VÙNG TÌM KIẾM CHO QUAD TREE
-        // Tâm là vị trí con Gấu, chiều rộng/dài chính là bán kính AOE
+        // SỬA LỖI 2: Rộng/Cao của hình chữ nhật phải bằng ĐƯỜNG KÍNH (Bán kính x 2)
         Rectangle aoeRange = new Rectangle(
             this.getPosition().getX(), 
             this.getPosition().getY(), 
-            this.aoeRadius, 
-            this.aoeRadius
+            this.aoeRadius * 2, 
+            this.aoeRadius * 2
         );
 
-        // 2. GỌI QUAD TREE LỌC THỰC THỂ (SIÊU NHANH)
-        // Lưu ý: Class Environment của bạn cần có hàm getQuadTree() để lấy cây của frame hiện tại
         List<Entity> nearbyEntities = env.getQuadTree().query(aoeRange, null);
 
-        // 3. XÉT VA CHẠM TRONG SỐ NHỮNG KẺ ĐEN ĐỦI ĐỨNG GẦN GẤU
+        // 3. XÉT VA CHẠM (Cú tát "AOE phán xét")
         for (Entity entity : nearbyEntities) {
-            // Không tự vả mặt mình, và chỉ vả động vật
-            if (entity != this && entity.isAlive() && entity instanceof Animal) {
+            // Không tự vả mình, không vả gấu khác (tuỳ bạn), và chỉ vả Động vật
+            if (entity != this && entity.isAlive() && entity instanceof Animal && entity.getClass() != this.getClass()) {
                 
                 Animal prey = (Animal) entity;
                 double distance = this.getPosition().distanceTo(prey.getPosition());
 
-                // QuadTree trả về hình chữ nhật, đòn đánh là hình tròn nên ta chốt lại bằng distance
                 if (distance <= this.aoeRadius) {
                     prey.setHp(prey.getHp() - this.attackDamage);
                     hitSomeone = true;
-                    System.out.println("Gấu vả AOE trúng " + prey.getClass().getSimpleName() + " (-" + this.attackDamage + " HP)!");
+                    System.out.println("Gấu gầm thét vả AOE trúng " + prey.getClass().getSimpleName() + " (-" + this.attackDamage + " HP)!");
                 }
             }
         }
 
-        // Chỉ tính là đã xài chiêu nếu thực sự vả trúng ai đó
+        // Chỉ đưa chiêu vào Cooldown nếu thực sự có vả trúng mục tiêu (tránh lãng phí chiêu)
         if (hitSomeone) {
-            this.currentCooldownTimer = this.attackCooldown;
+            this.currentSpAttack = this.spAttackCooldown; // Reset CD chiêu cuối
+            this.currentCooldownTimer = this.attackCooldown; // Vả AOE xong cũng phải nghỉ tay một chút mới cắn thường được!
         }
     }
 }
