@@ -1,7 +1,9 @@
 package model.carnivore;
 
 import model.Vector2D;
+import model.domestic.Pig;
 import model.AnimalState;
+import model.Entity;
 import model.strategy.*;
 import model.herbivore.*;
 
@@ -58,5 +60,9 @@ public class Cheetah extends Carnivore {
                 this.setSpeed(baseSpeed); 
             }
         }
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Cheetah(position); 
     }
 }

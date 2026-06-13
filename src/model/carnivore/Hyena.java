@@ -1,6 +1,8 @@
 package model.carnivore;
 
+import model.Entity;
 import model.Vector2D;
+import model.domestic.Pig;
 import model.strategy.*;
 import model.herbivore.Deer;
 import model.herbivore.Boar;
@@ -27,5 +29,9 @@ public class Hyena extends Carnivore {
         SurvivalStrategy scavenger = new ScavengerStrategy(scared);
         SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
         this.setBrain(packflock);
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Hyena(position); 
     }
 }

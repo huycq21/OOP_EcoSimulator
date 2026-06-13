@@ -46,6 +46,7 @@ public abstract class Environment {
 
     // --- VÒNG LẶP CỐT LÕI (GAME LOOP) ---
     public void update() {
+        // --- XỬ LÝ THỜI TIẾT VÀ ÂM THANH ---
         weather.update();
         WeatherType currentWeather = weather.getCurrentWeather();
 
@@ -60,31 +61,47 @@ public abstract class Environment {
                 rainClip = null;
             }
             lastWeather = currentWeather;
+            System.out.println("Weather changed from " + lastWeather + " to " + currentWeather);
         }
 
+        // ==========================================
+        // NHỊP 1: ĐẬP CÂY CŨ, XÂY CÂY MỚI & DI CHUYỂN
+        // ==========================================
         Rectangle mapBoundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
         currentQuadTree = new QuadTree(mapBoundary, 4);
         
         List<Entity> entitiesToRemove = new ArrayList<>();
         
+        // Đưa các thực thể còn sống vào QuadTree làm radar định vị
         for (Entity e : entities) {
             if (e.isAlive()) {
                 currentQuadTree.insert(e);
             }
         }
 
+        // Thực thi cập nhật trạng thái di chuyển (Hàm update() bên trong thực thể đã tự lưu safe position)
         for (Entity entity : entities) {
             entity.update(); 
+
             if (!entity.isAlive()) {
                 entitiesToRemove.add(entity);
             }
         }
         
+        // ==========================================
+        // NHỊP 2: THÚ TƯƠNG TÁC / ĐẨY NHAU VẬT LÝ
+        // ==========================================
+        // Giải quyết va chạm sinh học (Săn mồi, ăn cỏ) và đẩy chồng lấn vật lý
         CollisionHandler.processCollisions(this); 
 
+        // ==========================================
+        // NHỊP 3: KIỂM TRA ĐỊA HÌNH MAP VÀ ROLLBACK
+        // ==========================================
+        // Đứa nào sau khi xô xát bị văng vào vùng cấm (tường, sông cấm, chuồng khác) sẽ bị lôi về vị trí an toàn
         for (Entity entity : entities) {
             if (!entity.isAlive()) continue;
 
+            // Truy xuất vị trí an toàn O(1) từ Nhịp 1
             double safeX = entity.getPreviousPosition().getX();
             double safeY = entity.getPreviousPosition().getY();
 
@@ -101,6 +118,7 @@ public abstract class Environment {
         pendingEntities.clear();
     }
 
+    // --- HÀM HỖ TRỢ VẬT LÝ ĐỊA HÌNH ---
     protected void keepWithinBounds(Entity entity) {
         double x = entity.getPosition().getX();
         double y = entity.getPosition().getY();
@@ -155,6 +173,7 @@ public abstract class Environment {
         }
 
         if (hitWicket) {
+            // 2. Phản lực dội nhẹ
             Animal animal = (Animal) entity;
             animal.getVelocity().setX(animal.getVelocity().getX() * -0.25);
             animal.getVelocity().setY(animal.getVelocity().getY() * -0.25);
@@ -267,6 +286,16 @@ public abstract class Environment {
     // Overload mặc định (chỉ điểm chạm)
     public TerrainType getTerrainAt(Vector2D position) {
         return getTerrainAt(position, 0);
+    }
+
+    private boolean isTooCloseToEntities(Vector2D position, double radius) {
+        for (Entity e : entities) {
+            double minDistance = radius + e.getSize() + 20;
+            if (position.distanceTo(e.getPosition()) < minDistance) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private double getCollisionRadius(Entity entity) {

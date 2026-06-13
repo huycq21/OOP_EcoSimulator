@@ -1,5 +1,6 @@
 package model.herbivore;
 
+import model.Entity;
 import model.Vector2D;
 import model.strategy.ForagingStrategy;
 import model.strategy.PassiveStrategy;
@@ -13,5 +14,9 @@ public class BlackGrouse extends Herbivore {
         SurvivalStrategy foraging = new ForagingStrategy(passive);
         SurvivalStrategy scared = new ScaredStrategy(foraging); 
         this.setBrain(scared);
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new BlackGrouse(position); 
     }
 }

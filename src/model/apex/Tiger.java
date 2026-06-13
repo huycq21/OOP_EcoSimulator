@@ -88,4 +88,8 @@ public class Tiger extends ApexEntity {
             this.currentCooldownTimer = this.attackCooldown; 
         }
     }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Tiger(position); 
+    }
 }

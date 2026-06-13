@@ -86,4 +86,9 @@ public class Lion extends ApexEntity {
             this.currentCooldownTimer = this.attackCooldown;
         }
     }
+    
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Lion(position); 
+    }
 }

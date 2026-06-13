@@ -11,7 +11,7 @@ import model.environment.Rectangle;
 import java.util.List;
 
 public class ScavengerStrategy implements SurvivalStrategy {
-    private SurvivalStrategy nextLogic; // Thường sẽ là HunterStrategy
+    private final SurvivalStrategy nextLogic; // Chuỗi AI tầng dưới (Ví dụ: HunterStrategy)
 
     public ScavengerStrategy(SurvivalStrategy nextLogic) {
         this.nextLogic = nextLogic;

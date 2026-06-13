@@ -1,6 +1,8 @@
 package model.domestic;
 
+import model.Entity;
 import model.Vector2D;
+import model.herbivore.Horse;
 import model.strategy.*;
 
 public class Pig extends DomesticAnimal {
@@ -10,5 +12,9 @@ public class Pig extends DomesticAnimal {
         SurvivalStrategy foraging = new ForagingStrategy(passive);
         SurvivalStrategy scared = new ScaredStrategy(foraging); 
         this.setBrain(scared);
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Pig(position); 
     }
 }

@@ -1,5 +1,6 @@
 package model.herbivore;
 
+import model.Entity;
 import model.Vector2D;
 import model.strategy.*;
 
@@ -17,5 +18,9 @@ public class Elephant extends Herbivore {
         SurvivalStrategy scared = new ScaredStrategy(foraging); 
 
         this.setBrain(scared);
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Elephant(position); 
     }
 }

@@ -3,6 +3,7 @@ package model.apex;
 import model.Vector2D;
 import model.strategy.*;
 import model.AnimalState;
+import model.Entity;
 import model.herbivore.*;
 import model.carnivore.*;
 import model.domestic.*;
@@ -82,5 +83,9 @@ public class Eagle extends ApexEntity {
     public void performSpecialAbility(model.environment.Environment env) {
         // Kỹ năng của Đại bàng là Nội tại (Passive Trigger) dựa trên State CHASING.
         // Không cần làm gì ở đây cả!
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Eagle(position); 
     }
 }

@@ -91,4 +91,8 @@ public class Human extends ApexEntity {
             this.currentSpAttack = this.spAttackCooldown;
         }
     }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Human(position); 
+    }
 }

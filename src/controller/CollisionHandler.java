@@ -148,29 +148,27 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
             return;
         } else if(food.getSize() > SimulationConstant.CATCH_SIZE && herbivore.getSize() > SimulationConstant.CATCH_SIZE) { //Nếu là cây non thì ăn luôn
                 double energyGot = food.getEnergyValue();
-                herbivore.setHp(herbivore.getHp() + energyGot * 0.5); // Cỏ có thể hồi máu, nấm độc thì trừ máu (x0.5 để cân bằng)
+                herbivore.setHp(herbivore.getHp() + energyGot * 0.5); 
                 herbivore.setEnergy(herbivore.getEnergy() + energyGot);
                 food.getEaten();
             return;
         }
 
+        // Thực vật thông thường (Cỏ, Bụi Berry, Nấm)
         double energyGot = food.getEnergyValue();
+        if (energyGot == 0) return; // Quả đã bị vặt hết, không ăn được nữa
 
-        // Nếu năng lượng bằng 0 (ví dụ bụi Berry vừa bị vặt hết quả), thì không làm gì cả
-        if (energyGot == 0) return;
-
-        // Cộng (hoặc trừ) năng lượng cho con vật
-        herbivore.setHp(herbivore.getHp() + energyGot * 0.5); // Cỏ có thể hồi máu, nấm độc thì trừ máu (x0.5 để cân bằng)
+        // Cộng năng lượng và hồi máu
+        herbivore.setHp(herbivore.getHp() + energyGot * 0.5); 
         herbivore.setEnergy(herbivore.getEnergy() + energyGot);
 
-        // Nấm độc (Mushroom) có energyValue bị âm. Vừa bị trừ năng lượng, vừa trừ máu luôn cho chân thực!
+        // Nấm độc (Mushroom) có energyValue bị âm -> Trừ năng lượng và phạt thêm 20 máu
         if (food instanceof Mushroom) {
-            herbivore.setHp(herbivore.getHp() - 20); // Trừ thẳng 20 máu
+            herbivore.setHp(herbivore.getHp() - 20); 
             System.out.println(herbivore.getClass().getSimpleName() + " ăn trúng nấm độc! Bị trừ máu.");
         }
 
-        // Gọi hàm để cây biết nó vừa bị cắn (Cỏ thì chết, Berry thì mất trạng thái có quả)
-        food.getEaten();
+        food.getEaten(); // Thông báo thực vật đã bị ăn để cập nhật trạng thái/biến mất
     }
 
     // Xử lý ăn Xác chết (Áp dụng cho cả Carnivore thường và Apex)
@@ -181,7 +179,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         carnivore.setCurrentState(AnimalState.EATING);
     }
 
-    // Xử lý đụng tường / chui bụi rậm
+    // Xử lý đụng tường / chui bụi rậm trốn thoát (Sử dụng giải pháp đẩy trượt quanh mép của bản mới)
     private static void handleObstacleCollision(Animal animal, Obstacle obstacle) {
         // Voi càn quét mọi thứ, không bị cản
         if (animal instanceof Elephant) return; 

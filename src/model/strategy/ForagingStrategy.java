@@ -11,7 +11,7 @@ import model.plant.Plant;
 import java.util.List;
 
 public class ForagingStrategy implements SurvivalStrategy {
-    private SurvivalStrategy nextLogic;
+    private final SurvivalStrategy nextLogic;
 
     public ForagingStrategy() {
         this.nextLogic = new PassiveStrategy();
@@ -53,16 +53,21 @@ public class ForagingStrategy implements SurvivalStrategy {
         Entity nearest = null;
         double minDistance = radius;
 
+        // Tạo vùng quét hình chữ nhật bao quanh thực thể dựa theo bán kính radar tầm nhìn/khứu giác
         Rectangle searchRange = new Rectangle(
             herbivore.getPosition().getX(), herbivore.getPosition().getY(), 
             radius * 2, radius * 2
         );
 
+        // Truy vấn nhanh các thực thể nằm trong vùng thông qua QuadTree
         List<Entity> nearbyEntities = Environment.getInstance().getQuadTree().query(searchRange, null);
 
         for (Entity entity : nearbyEntities) {
+            // Kiểm tra: Thuộc lớp cây cối (Plant), cây còn sống/chưa bị ăn hết
             if (entity instanceof Plant && entity.isAlive()) {
                 double distance = herbivore.getPosition().distanceTo(entity.getPosition());
+                
+                // Cập nhật thực thể thực vật gần nhất
                 if (distance < minDistance) {
                     minDistance = distance;
                     nearest = entity;
@@ -72,6 +77,9 @@ public class ForagingStrategy implements SurvivalStrategy {
         return nearest;
     }
 
+    /**
+     * Điều hướng con vật hướng thẳng tới tọa độ của mục tiêu (Thức ăn)
+     */
     private void moveToward(Animal animal, Entity target, double speed) {
         Vector2D direction = new Vector2D(
             target.getPosition().getX() - animal.getPosition().getX(), 
@@ -80,8 +88,12 @@ public class ForagingStrategy implements SurvivalStrategy {
         applyVelocity(animal, direction, speed);
     }
 
+    /**
+     * Chuẩn hóa Vector hướng toán học và áp đặt vận tốc di chuyển thực tế cho thực thể
+     */
     private void applyVelocity(Animal animal, Vector2D direction, double speed) {
-        direction.normalize();
+        direction.normalize(); // Biến đổi Vector về độ dài đơn vị = 1
+        
         animal.getVelocity().setX(direction.getX() * speed);
         animal.getVelocity().setY(direction.getY() * speed);
     }

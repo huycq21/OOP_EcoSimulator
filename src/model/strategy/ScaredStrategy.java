@@ -1,7 +1,6 @@
 package model.strategy;
 
 import java.util.List;
-
 import model.Animal;
 import model.AnimalState;
 import model.Entity;

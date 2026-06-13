@@ -118,14 +118,15 @@ public class HunterStrategy implements SurvivalStrategy {
         List<Entity> nearbyEntities = Environment.getInstance().getQuadTree().query(searchRange, null);
 
         for (Entity e : nearbyEntities) {
+            // Kiểm tra các điều kiện lọc cơ bản (Sự tương khắc chuỗi thức ăn, trạng thái ẩn nấp)
             if (!isValidPrey(hunter, e)) continue;
             
             if (e instanceof Animal && e.isAlive() && e.getClass() != hunter.getClass()) {
                 Animal preyCandidate = (Animal) e;
                 
                 boolean isHiding = (preyCandidate.getCurrentState() == AnimalState.HIDING);
-                // Đặc quyền của Cáo (Fox): Mũi thính, đánh hơi được cả mồi đang nấp trong bụi
-                boolean canSeePrey = !isHiding || (hunter instanceof Fox);
+                // Đặc quyền của Cáo (Fox): Dáng bé, chui được vào bụi
+                boolean canSeePrey = !isHiding || (hunter.getSize() < controller.SimulationConstant.CATCH_SIZE);
 
                 if (canSeePrey) {
                     boolean isPreyValid = false;
@@ -164,6 +165,9 @@ public class HunterStrategy implements SurvivalStrategy {
         return true;
     }
 
+    /**
+     * Lấy bán kính quét mồi đặc trưng của thực thể
+     */
     private double getPreyDetectionRadius(Animal hunter) {
         if (hunter instanceof Carnivore) {
             return ((Carnivore) hunter).getPreyDetectionRadius();

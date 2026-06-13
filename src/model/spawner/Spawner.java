@@ -1,5 +1,6 @@
 package model.spawner;
 
+import model.Animal;
 import model.Entity;
 import model.Vector2D;
 import model.environment.Environment;
@@ -8,6 +9,7 @@ import model.plant.*;
 import model.Reproducible;
 import model.apex.*;
 
+import java.util.List;
 import java.util.Random;
 
 import controller.EventManager;
@@ -53,21 +55,17 @@ public class Spawner {
         
     }
 
-public void update() {
+    public void update() {
         reproductionTimer++;
 
         // ==========================================
-        // 1. TỰ ĐỘNG ĐẾM SỐ LƯỢNG MỌI LOÀI ĐANG CÓ
+        // 1. TỰ ĐỘNG ĐẾM SỐ LƯỢNG MỌI LOÀI ĐANG CÓ (Tối ưu bằng Map)
         // ==========================================
         java.util.Map<String, Integer> population = new java.util.HashMap<>();
         
         for (Entity e : env.getEntities()) {
             if (!e.isAlive()) continue;
-            
-            // Lấy tên Class của thực thể (Ví dụ: "Rabbit", "Grass", "Wolf")
             String species = e.getClass().getSimpleName();
-            
-            // Tăng biến đếm của loài đó lên 1
             population.put(species, population.getOrDefault(species, 0) + 1);
         }
 
@@ -75,22 +73,18 @@ public void update() {
         // 2. BÙ ĐẮP NHỮNG LOÀI BỊ THIẾU (DƯỚI MỨC MIN)
         // ==========================================
         double plantMultiplier = env.getWeather().getPlantGrowthMultiplier();
-
-        // 2.1. DUY TRÌ NHÓM THỰC VẬT (Có nhân hệ số thời tiết)
         String[] corePlants = {"Grass", "Berry", "Algae", "Mushroom", "VinePlant"}; 
         for (String plant : corePlants) {
             int currentCount = population.getOrDefault(plant, 0);
-            
-            // Nhân hệ số thời tiết vào số lượng tối thiểu cần có
             int minRequired = (int) (SimulationConstant.getMinPopulation(plant) * plantMultiplier);
             
             if (currentCount < minRequired) {
                 spawnEntities(plant, minRequired - currentCount);
-                population.put(plant, minRequired); // Cập nhật để tránh spawn lặp
+                population.put(plant, minRequired); 
             }
         }
+
         double seasonMultiplier = env.getWeather().getCurrentSeason().getMultiReproduction();
-        // 2.2. DUY TRÌ NHÓM ĐỘNG VẬT (Chỉ dựa vào hằng số cấu hình)
         String[] coreAnimals = {"Rabbit", "Wolf", "Deer"}; 
         for (String animal : coreAnimals) {
             int currentCount = population.getOrDefault(animal, 0);
@@ -103,35 +97,53 @@ public void update() {
         }
 
         // ==========================================
-        // 3. CHO PHÉP TẤT CẢ CÁC LOÀI SINH SẢN (NẾU CHƯA MAX)
+        // 3. LOGIC SINH SẢN GHÉP ĐÔI (Kết hợp kiểm tra Max Pop)
         // ==========================================
         if (reproductionTimer >= SimulationConstant.REPRODUCTION_INTERVAL) {
             reproductionTimer = 0;
             int birthsThisCycle = 0;
+            List<Entity> entities = env.getEntities();
+            boolean brokeOut = false; 
 
-            for (Entity e : env.getEntities()) {
-                // Nếu thực thể này có khả năng sinh sản (Implement Reproducible)
-                if (e instanceof Reproducible reproducible && reproducible.canReproduce()) {
-                    
-                    String species = e.getClass().getSimpleName();
-                    int currentPop = population.getOrDefault(species, 0);
-                    int maxPop = (int) (SimulationConstant.getMaxPopulation(species) * seasonMultiplier);
+            for (Entity e1 : entities) {
+                if (brokeOut) break;
+                if (!(e1 instanceof Animal a1) || !a1.isAlive()) continue;
 
-                    // Chỉ cho đẻ nếu số lượng hiện tại vẫn nhỏ hơn mức tối đa
-                    if (currentPop < maxPop) {
-                        Entity baby = reproducible.reproduce();
-                        
+                String species = a1.getClass().getSimpleName();
+                int currentPop = population.getOrDefault(species, 0);
+                int maxPop = (int) (SimulationConstant.getMaxPopulation(species) * seasonMultiplier);
+
+                // Dừng xét con vật này nếu loài của nó đã đạt giới hạn dân số
+                if (currentPop >= maxPop) continue; 
+
+                for (Entity e2 : entities) {
+                    if (!(e2 instanceof Animal a2) || a1 == e2 || !a2.isAlive()) continue;
+
+                    // Kiểm tra điều kiện ghép đôi
+                    if (a1.getClass() != a2.getClass()) continue;
+                    if (a1.isFemale() == a2.isFemale()) continue;
+                    if (!a1.canMate() || !a2.canMate()) continue;
+
+                    // Kiểm tra khoảng cách hình học gần nhau
+                    double distance = a1.getPosition().distanceTo(a2.getPosition());
+                    if (distance > 400) continue;
+
+                    Animal female = a1.isFemale() ? a1 : a2;
+                    Animal male = a1.isMale() ? a1 : a2;
+
+                    if (female instanceof Reproducible reproducible) {
+                        Entity baby = reproducible.reproduce(male); 
                         if (baby != null) {
                             env.queueEntity(baby);
                             
-                            // Cập nhật số liệu tức thời
-                            population.put(species, currentPop + 1); 
+                            // Cập nhật dân số ngay lập tức để tránh đẻ lố
+                            population.put(species, currentPop + 1);
                             birthsThisCycle++;
-                            
                             EventManager.animalBorn(species);
-
-                            // Giới hạn đẻ tối đa 1 con các loại mỗi frame lặp để tránh giật lag
-                            if (birthsThisCycle >= 1) {
+                            
+                            // Giới hạn số lượng sinh sản tối đa mỗi chu kỳ (tránh lag)
+                            if (birthsThisCycle >= 10) {
+                                brokeOut = true;
                                 break;
                             }
                         }
@@ -140,7 +152,7 @@ public void update() {
             }
         }
     }
-
+    
     public void spawnEntities(String entityType, int amount) {
         for (int i = 0; i < amount; i++) {
             Vector2D pos = null;

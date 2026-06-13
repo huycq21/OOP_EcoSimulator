@@ -3,6 +3,7 @@ package model.environment.map;
 import model.environment.Environment;
 import model.environment.TmxCollisionLoader;
 import model.environment.TmxPlantLoader;
+import model.environment.obstacle.Bush;
 
 public class Jungle extends Environment {
 

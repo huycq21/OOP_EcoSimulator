@@ -11,7 +11,10 @@ import java.util.List;
 import controller.SimulationConstant;
 
 public class FlockingStrategy implements SurvivalStrategy {
-    private SurvivalStrategy nextLogic; 
+    private final SurvivalStrategy nextLogic; 
+
+    // Các hằng số khoảng cách kế thừa từ bản cũ để căn chỉnh bầy đàn mượt mà
+    private static final double SEPARATION_DISTANCE = 35.0;
 
     public FlockingStrategy() {
         this.nextLogic = new PassiveStrategy();

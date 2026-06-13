@@ -1,42 +1,54 @@
 package model.carnivore;
 
+import model.Animal;
+import model.Entity;
 import model.Vector2D;
+import model.Reproducible;
 import model.strategy.*;
-import model.herbivore.Deer;
-import model.herbivore.Boar;
-import model.herbivore.Rabbit;
+import model.herbivore.*;
+import model.domestic.*;
 
 public class Wolf extends Carnivore {
 
     public Wolf(Vector2D position) {
-        // Stats: Kích thước 5.0, HP 100, Năng lượng 200, Tốc độ 5.5, Tầm nhìn 50.0
-        // Khí chất đe dọa 80.0, Sát thương 60.0, Cooldown 60 tick (~1 giây)
+        // --- THÔNG SỐ CƠ BẢN (Ưu tiên chỉ số tối ưu từ bản cũ) ---
+        // Kích thước: 5.0 | Máu (Max HP): 100.0 | Năng lượng (Max Energy): 200.0
+        // Tốc độ di chuyển: 7.5 (Đảm bảo tốc độ săn đuổi theo đàn)
+        // Tầm nhìn cốt lõi (Vision Radius): 150.0 (Để quét đồng đội và con mồi diện rộng)
+        // Khí chất đe dọa gốc (Strength Weight): 80.0
+        // Sát thương (Attack Damage): 60.0
+        // Hồi chiêu tấn công (Attack Cooldown): 60 tick (~2 giây ở 30 FPS)
         super(position, 5.0, 100.0, 200.0, 7.5, 150.0, 80.0, 60.0, 60);
 
-        // --- 1. THỰC ĐƠN CỦA SÓI ---
-        this.addPreyType(model.herbivore.Rabbit.class);
-        this.addPreyType(model.herbivore.Deer.class);
-        this.addPreyType(model.herbivore.Boar.class);        // Chơi hội đồng Lợn rừng
-        this.addPreyType(model.herbivore.Goat.class);
-        this.addPreyType(model.herbivore.Horse.class);       // Ngựa cũng không tha
-        this.addPreyType(model.domestic.Cow.class);          // Bò
-        this.addPreyType(model.domestic.Pig.class);
+        // Đặt bán kính săn mồi và vồ mồi bổ trợ từ Carnivore
+        this.setPreyDetectionRadius(150.0);
+        this.setStrikeRadius(75.0); 
 
-        // --- 2. LẮP RÁP BỘ NÃO (5 TẦNG) ---
-        // Đói thì chuyển sang chế độ đi săn
+        // --- 1. THỰC ĐƠN SĂN MỒI CỦA SÓI ---
+        this.addPreyType(Rabbit.class);       // Thỏ
+        this.addPreyType(Deer.class);         // Hươu
+        this.addPreyType(Boar.class);         // Lợn rừng (Chơi hội đồng)
+        this.addPreyType(Goat.class);         // Dê hoang
+        this.addPreyType(Horse.class);        // Ngựa
+        this.addPreyType(Cow.class);          // Bò nhà
+        this.addPreyType(Pig.class);          // Lợn nhà
+
+        // --- 2. LẮP RÁP BỘ NÃO AI ĐA TẦNG (Decorator Pattern) ---
+        // Cấu hình tập tính bầy đàn: Mỗi đồng bọn trong tầm nhìn buff 30% (0.3) sức mạnh, tối đa 2 con đồng hành (x1.9)
+        SurvivalStrategy passiveState      = new PassiveStrategy();
+        SurvivalStrategy packFlockState    = new PackFlockingStrategy(passiveState, 0.30, 2); 
+        SurvivalStrategy hunterState       = new HunterStrategy(packFlockState);
+        SurvivalStrategy scaredState       = new ScaredStrategy(hunterState);
+        SurvivalStrategy scavengerState    = new ScavengerStrategy(scaredState); 
         
-        // TẬP TÍNH BẦY ĐÀN (Bọc ngoài Đi săn)
-        // Tìm đồng loại hú hét đi chung. Mỗi đồng bọn buff 30% sức mạnh (0.3), Tối đa x1.9 sức mạnh.
-        // Sói đi 3 con: 80.0 * 1.6 = 128.0 (Đủ sức dọa lợn rừng và linh cẩu)
-        // rảnh thì đi cùng nhau
-        SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
-        SurvivalStrategy flocking = new FlockingStrategy(passive);
-        SurvivalStrategy hunter = new HunterStrategy(flocking); 
-        // Rảnh thì đi cùng nhau
-        SurvivalStrategy scared = new ScaredStrategy(hunter);
-        // NHẶT XÁC ĐẶT RA NGOÀI CÙNG!
-        SurvivalStrategy scavenger = new ScavengerStrategy(scared);
-        SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
-        this.setBrain(packflock);
+        // Nạp bộ não 5 tầng hoàn chỉnh vào thực thể Sói
+        this.setBrain(scavengerState);
+    }
+
+    // --- CƠ CHẾ SINH TRƯỞNG & SINH SẢN CHUẨN (Từ Bản Mới) ---
+
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Wolf(position); 
     }
 }

@@ -79,4 +79,8 @@ public class Bear extends ApexEntity {
             this.currentCooldownTimer = this.attackCooldown; // Vả AOE xong cũng phải nghỉ tay một chút mới cắn thường được!
         }
     }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Bear(position); 
+    }
 }

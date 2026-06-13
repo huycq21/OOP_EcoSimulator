@@ -6,6 +6,10 @@ import model.strategy.PassiveStrategy;
 import model.strategy.ScaredStrategy;
 import model.strategy.SurvivalStrategy;
 import model.strategy.ForagingStrategy;
+import model.strategy.PassiveStrategy;
+import model.strategy.ScaredStrategy;
+import model.strategy.SurvivalStrategy;
+import model.Entity;
 
 public class Horse extends Herbivore {
 
@@ -19,5 +23,9 @@ public class Horse extends Herbivore {
         SurvivalStrategy foraging = new ForagingStrategy(flocking);
         SurvivalStrategy scared = new ScaredStrategy(foraging); 
         this.setBrain(scared);
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Horse(position); 
     }
 }

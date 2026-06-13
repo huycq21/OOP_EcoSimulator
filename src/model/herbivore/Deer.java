@@ -1,7 +1,10 @@
 package model.herbivore;
 
+import model.Animal;
+import model.Reproducible;
 import model.Vector2D;
 import model.strategy.*;
+import model.Entity;
 
 public class Deer extends Herbivore {
 
@@ -19,5 +22,9 @@ public class Deer extends Herbivore {
         SurvivalStrategy scared = new ScaredStrategy(foraging); 
         
         this.setBrain(scared);
+    }
+    @Override
+    protected Entity createBaby(Vector2D position) {
+        return new Deer(position); 
     }
 }

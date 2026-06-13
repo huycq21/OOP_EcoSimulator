@@ -5,6 +5,7 @@ import model.AnimalState;
 import model.Vector2D;
 import model.environment.Environment;
 import java.util.Random;
+import controller.SimulationConstant;
 
 public class PassiveStrategy implements SurvivalStrategy {
     private final Random random;
@@ -22,6 +23,7 @@ public class PassiveStrategy implements SurvivalStrategy {
 
     @Override
     public void execute(Animal animal) {
+        // Đặt trạng thái hiển thị của thực thể thành ĐANG ĐI DẠO
         animal.setCurrentState(AnimalState.WANDERING);
 
         // 1. Nếu đang trong thời gian nghỉ ngơi -> Đứng im
@@ -66,25 +68,31 @@ public class PassiveStrategy implements SurvivalStrategy {
         }
     }
 
+    /**
+     * Ngăn chặn động vật đi lọt ra ngoài rìa bản đồ mô phỏng
+     */
     private void steerAwayFromMapEdges(Animal animal) {
         Environment env = Environment.getInstance();
         if (env == null) return;
 
-        double margin = 80;
+        // Kế thừa hằng số biên an toàn tập trung từ hệ thống của bản cũ
+        double margin = SimulationConstant.EDGE_MARGIN; 
         double x = animal.getPosition().getX();
         double y = animal.getPosition().getY();
         Vector2D velocity = animal.getVelocity();
 
+        // Kiểm tra và đảo hướng vận tốc X nếu chạm biên trái / phải
         if (x < margin) {
-            velocity.setX(Math.abs(velocity.getX()));
+            velocity.setX(Math.abs(velocity.getX())); // Chắc chắn hướng sang phải
         } else if (x > env.getWidth() - margin) {
-            velocity.setX(-Math.abs(velocity.getX()));
+            velocity.setX(-Math.abs(velocity.getX())); // Chắc chắn hướng sang trái
         }
 
+        // Kiểm tra và đảo hướng vận tốc Y nếu chạm biên trên / dưới
         if (y < margin) {
-            velocity.setY(Math.abs(velocity.getY()));
+            velocity.setY(Math.abs(velocity.getY())); // Chắc chắn hướng xuống dưới
         } else if (y > env.getHeight() - margin) {
-            velocity.setY(-Math.abs(velocity.getY()));
+            velocity.setY(-Math.abs(velocity.getY())); // Chắc chắn hướng lên trên
         }
     }
 }

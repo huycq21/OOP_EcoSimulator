@@ -1,9 +1,11 @@
 package model.herbivore;
 
 import model.Animal;
+import model.Entity;
+import model.Reproducible;
 import model.Vector2D;
 
-public abstract class Herbivore extends Animal {
+public abstract class Herbivore extends Animal implements Reproducible {
 
     // Constructor gọi thẳng lên lớp cha (Animal)
     public Herbivore(Vector2D position, double size, double maxHp, double maxEnergy, double speed, double visionRadius) {
@@ -16,5 +18,19 @@ public abstract class Herbivore extends Animal {
 
     public void setVisionRadius(double Radius) {
         this.visionRadius = Radius;
+    }
+
+    @Override
+    public Entity reproduce(Animal partner) {
+
+        setEnergy(getEnergy() * 0.5);
+        partner.setEnergy(partner.getEnergy() * 0.5);
+
+        return new Boar(
+            new Vector2D(
+                getPosition().getX() + 15,
+                getPosition().getY() + 15
+            )
+        );
     }
 }

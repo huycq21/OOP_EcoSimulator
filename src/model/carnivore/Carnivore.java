@@ -1,22 +1,26 @@
 package model.carnivore;
 
-import java.util.List;
-import model.*;
-import model.environment.Environment;
-import model.environment.Rectangle;
-import model.herbivore.Herbivore;
 import java.util.ArrayList;
+import java.util.List;
+import model.Animal;
+import model.Entity;
+import model.Reproducible;
+import model.Vector2D;
+import model.herbivore.Boar;
+import util.SoundManager;
 
-public abstract class Carnivore extends Animal {
-    protected double strengthWeight;    // Mức độ đe dọa
-    protected double attackDamage;      // Lực sát thương mỗi lần cắn
+public abstract class Carnivore extends Animal implements Reproducible{
+    protected double strengthWeight;       // Mức độ đe dọa / Khí chất gốc của loài
+    protected double attackDamage;         // Lực sát thương gây ra mỗi lần tấn công
 
-    protected int attackCooldown;       // Thời gian chờ giữa các lần tấn công (số tick)
-    protected int currentCooldownTimer; // Bộ đếm thời gian chờ
-    protected double preyDetectionRadius;
-    protected List<Class<? extends Animal>> preyTypes;
-    protected double strikeRadius;      // khoảng cách bắt đầu bộc phát tốc độ sau khi rón rén tiếp cận con mồi
-    protected double packMultiplier = 1.0; // Số lượng trong đàn, mặc định là một( khi đi cùng đàn thì mới cộng dồn)
+    protected int attackCooldown;          // Thời gian chờ hồi chiêu giữa các lần cắn (số tick)
+    protected int currentCooldownTimer;    // Bộ đếm ngược thời gian hồi chiêu
+    protected double preyDetectionRadius;  // Bán kính phát hiện con mồi xung quanh
+    protected double strikeRadius;         // Khoảng cách bộc phát tốc độ sau khi rón rén tiếp cận mồi
+    protected double packMultiplier = 1.0; // Hệ số cộng dồn sức mạnh khi đi theo bầy đàn
+
+    // Danh sách các loài có thể ăn (Để kiểu Animal giúp thú ăn thịt lớn ăn được thú ăn thịt nhỏ)
+    protected List<Class<? extends Animal>> preyTypes; 
 
     public Carnivore(Vector2D position, double size, double maxHp, double maxEnergy, 
                      double speed, double visionRadius, double strengthWeight, 
@@ -24,10 +28,9 @@ public abstract class Carnivore extends Animal {
                     
         super(position, size, maxHp, maxEnergy, speed, visionRadius);
         this.strengthWeight = strengthWeight;
-        
         this.attackDamage = attackDamage;
         this.attackCooldown = attackCooldown;
-        this.currentCooldownTimer = 0; // Sẵn sàng cắn ngay lần đầu chạm mặt
+        this.currentCooldownTimer = 0; // Sẵn sàng tấn công ngay khi vừa vào map
         this.preyDetectionRadius = visionRadius;
         this.strikeRadius = this.preyDetectionRadius * 0.5;
         this.preyTypes = new ArrayList<>();
@@ -39,34 +42,53 @@ public abstract class Carnivore extends Animal {
     
     @Override
     public void update() {
-        super.update(); // Gọi Animal update để di chuyển và giảm thể lực
+        super.update(); // Gọi logic của lớp cha Animal để cập nhật di chuyển và tiêu hao năng lượng
         
         if (!isAlive) return;
 
-        // Giảm thời gian chờ tấn công theo mỗi khung hình
+        // Giảm thời gian chờ hồi chiêu theo từng khung hình (tick) của Game Loop
         if (currentCooldownTimer > 0) {
             currentCooldownTimer--;
         }
+        
+    }
+    
+    @Override
+    public Entity reproduce(Animal partner) {
+        setEnergy(getEnergy() * 0.5);
+        partner.setEnergy(partner.getEnergy() * 0.5);
+
+        return new Boar(
+            new Vector2D(
+                getPosition().getX() + 15,
+                getPosition().getY() + 15
+            )
+        );
     }
 
-    // Hàm thực hiện việc cắn con mồi
+    // Hàm thực hiện hành vi tấn công/cắn con mồi
     public void attack(Animal prey) {
-        if (currentCooldownTimer == 0) {
-            this.startAttackState();
+        if (currentCooldownTimer == 0 && prey != null && prey.isAlive()) {
+            this.startAttackState(); // Kích hoạt trạng thái hoạt ảnh tấn công công khai
 
-            // Trừ máu con mồi
+            // Gây sát thương trực tiếp lên thanh máu của con mồi
             prey.receiveDamage(this.attackDamage);
             
-            // Reset lại thời gian chờ (Ví dụ: 30 tick = nửa giây)
+            // Phát âm thanh cào xé / cắn từ bản mới
+            SoundManager.playSound("attack_swipe.wav");
+            
+            // Đặt lại bộ đếm thời gian hồi chiêu
             this.currentCooldownTimer = this.attackCooldown;
             
-            // Có thể in ra Console để debug xem chúng nó cắn nhau thế nào
-            // System.out.println(this.getClass().getSimpleName() + " cắn " + prey.getClass().getSimpleName() + " gây " + this.attackDamage + " sát thương!");
+            // Console Debug (Có thể mở ra khi cần thiết)
+            // System.out.println(this.getClass().getSimpleName() + " tấn công " + prey.getClass().getSimpleName() + " gây " + this.attackDamage + " dame!");
         }
     }
 
+    // Kiểm tra xem đối tượng đích có nằm trong thực đơn (danh sách món ăn) của loài này không
     public boolean canAttack(Animal prey) {
-        if (preyTypes.isEmpty()) return true;
+        if (prey == null || !prey.isAlive()) return false;
+        if (preyTypes.isEmpty()) return true; // Nếu danh sách rỗng, mặc định ăn tạp mọi thứ
 
         for (Class<? extends Animal> preyType : preyTypes) {
             if (preyType.isInstance(prey)) {
@@ -76,6 +98,7 @@ public abstract class Carnivore extends Animal {
         return false;
     }
 
+    // Đăng ký thêm con mồi vào thực đơn khi khởi tạo các class con cụ thể (Fox, Wolf, Lion,...)
     protected void addPreyType(Class<? extends Animal> preyType) {
         preyTypes.add(preyType);
     }
@@ -88,16 +111,16 @@ public abstract class Carnivore extends Animal {
         this.attackDamage = attackDamage;
     }
 
+    public double getAttackDamage() { 
+        return attackDamage; 
+    }
+
     public double getPreyDetectionRadius() {
         return preyDetectionRadius;
     }
 
     public void setPreyDetectionRadius(double preyDetectionRadius) {
         this.preyDetectionRadius = preyDetectionRadius;
-    }
-
-    public double getAttackDamage() { 
-        return attackDamage; 
     }
 
     public void setPackMultiplier(double multiplier) {
