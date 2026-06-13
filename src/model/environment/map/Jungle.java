@@ -110,7 +110,7 @@ public class Jungle extends Environment {
     }
 
     private void spawnPlantsAndCover() {
-        for (int i = 0; i < 90; i++) {
+        for (int i = 0; i < 64; i++) {
             addEntity(new Grass(randomPosition()));
         }
 

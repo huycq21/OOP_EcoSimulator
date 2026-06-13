@@ -468,19 +468,25 @@ public class SimulationPanel extends JPanel {
     }
 
     private void loadBuildSprites() {
-        BufferedImage objects = loadImage("assets/Environment/Forest/Objects.png");
-        if (objects != null) {
-            // Tree: cây thông nhỏ góc trái (64x96)
-            treeSprite = safeSubimage(objects, 0,   0,   64, 96);
-            // Bush: bush góc trái (48x48) tại row 96
-            bushSprite = safeSubimage(objects, 0,   96,  48, 48);
-            // Rock lớn (80x80) tại (224, 144)
-            rockSprite = safeSubimage(objects, 224, 144, 80, 80);
+        BufferedImage plants =
+            loadImage("assets/Environment/Forest/Plants.png");
+        BufferedImage objects =
+            loadImage("assets/Environment/Forest/Objects.png");
+
+        if (plants != null && objects != null) {
+            grassSprite =
+                safeSubimage(objects, 16, 464, 48, 48);
+
+            bushSprite =
+                safeSubimage(objects, 448, 80, 48, 48);
+
+            treeSprite =
+                safeSubimage(objects, 0, 0, 80, 80);
         }
-        // Grass từ tileset cỏ riêng nếu có, hoặc bỏ qua
-        BufferedImage plants = loadImage("assets/Environment/Forest/Plants.png");
-        if (plants != null) {
-            grassSprite = safeSubimage(plants, 0, 64, 16, 16);
+
+        if (objects != null) {
+            rockSprite =
+                safeSubimage(objects, 400, 176, 48, 48);
         }
     }
 
