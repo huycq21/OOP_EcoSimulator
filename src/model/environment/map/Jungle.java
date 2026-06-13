@@ -35,43 +35,9 @@ public class Jungle extends Environment {
         TmxCollisionLoader.loadInto(this, "assets/Environment/Forest/Forest.tmx");
         TmxPlantLoader.loadInto(this, "assets/Environment/Forest/Forest.tmx");
 
-        spawnHerbivores();
-        spawnCarnivores();
         spawnFish();
         spawnDomesticAnimals();
         spawnPlantsAndCover();
-    }
-
-    private void spawnHerbivores() {
-        for (int i = 0; i < 18; i++) {
-            addEntity(new Rabbit(randomPosition()));
-        }
-
-        for (int i = 0; i < 14; i++) {
-            addEntity(new BlackGrouse(randomPosition()));
-        }
-
-        for (int i = 0; i < 12; i++) {
-            addEntity(new Deer(randomPosition()));
-        }
-
-        for (int i = 0; i < 10; i++) {
-            addEntity(new Boar(randomPosition()));
-        }
-
-        for (int i = 0; i < 2; i++) {
-            addEntity(new Elephant(randomPosition()));
-        }
-    }
-
-    private void spawnCarnivores() {
-        for (int i = 0; i < 5; i++) {
-            addEntity(new Wolf(randomPosition()));
-        }
-
-        for (int i = 0; i < 6; i++) {
-            addEntity(new Fox(randomPosition()));
-        }
     }
 
     private void spawnFish() {

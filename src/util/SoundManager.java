@@ -13,7 +13,22 @@ public class SoundManager {
     private static final int MAX_OVERLAP = 3; // Số lượng âm thanh đè lên nhau tối đa
     private static final ConcurrentHashMap<String, AtomicInteger> soundCounts = new ConcurrentHashMap<>();
 
+    private static final ConcurrentHashMap<String, Long> soundCooldowns = new ConcurrentHashMap<>();
+
+    private static final long DEFAULT_COOLDOWN_MS = 1000;
+
     public static void playSound(String fileName) {
+        long now = System.currentTimeMillis();
+
+        Long lastPlayed = soundCooldowns.get(fileName);
+
+        if (lastPlayed != null &&
+            now - lastPlayed < DEFAULT_COOLDOWN_MS) {
+            return;
+        }
+
+    soundCooldowns.put(fileName, now);
+        
         // 1. Lấy bộ đếm của file âm thanh này. Nếu chưa có thì tạo mới bộ đếm bắt đầu từ 0.
         soundCounts.putIfAbsent(fileName, new AtomicInteger(0));
         AtomicInteger currentCount = soundCounts.get(fileName);
