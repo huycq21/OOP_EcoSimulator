@@ -11,6 +11,8 @@ import model.environment.Environment;
 import model.environment.Rectangle;
 import java.util.List;
 
+import controller.SimulationConstant;
+
 public class HunterStrategy implements SurvivalStrategy {
     private SurvivalStrategy nextLogic;
 
@@ -156,7 +158,7 @@ public class HunterStrategy implements SurvivalStrategy {
         Herbivore prey = (Herbivore) entity; 
         
         // Nếu con mồi đang trốn và kẻ đi săn quá to -> Bỏ qua
-        if (prey.getCurrentState() == AnimalState.HIDING && !(hunter.getSize() < 5)) return false;
+        if (prey.getCurrentState() == AnimalState.HIDING && !(hunter.getSize() < SimulationConstant.CATCH_SIZE)) return false;
 
         // Kiểm tra xem thú săn mồi có "tư cách" cắn con này không (Ví dụ Sói không cắn được Voi)
         if (hunter instanceof Carnivore) {
