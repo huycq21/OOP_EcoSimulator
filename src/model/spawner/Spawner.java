@@ -28,33 +28,33 @@ public class Spawner {
         
         // spawn ăn thịt
         spawnEntities("wolf", 10);  
-        // spawnEntities("fox", 10);
+        spawnEntities("fox", 10);
         // spawnEntities("hyena",1);
         // spawnEntities("cheetah",1);
         // spawn ăn cỏ
         spawnEntities("rabbit", 5); 
-        // spawnEntities("deer", 2); 
-        // spawnEntities("goat", 5);
-        // spawnEntities("horse", 10);
+        spawnEntities("deer", 2); 
+        spawnEntities("goat", 5);
+        spawnEntities("horse", 10);
         // // spawnEntities("elephant", 1);
-        // // spawnEntities("boar", 2);
+        // spawnEntities("boar", 2);
         // // spawn apex
-        // spawnEntities("lion", 2);
-        // // spawnEntities("bear", 1);
-        // spawnEntities("human", 2);
+        spawnEntities("lion", 2);
+        // spawnEntities("bear", 1);
+        spawnEntities("human", 2);
         // // spawnEntities("eagle", 1);
         // // spawnEntities("tiger", 1);
         // // spawn thực vật
-        // spawnEntities("grass", 1);
-        // // spawnEntities("vinetree", 30);
+        spawnEntities("grass", 1);
+        spawnEntities("vinetree", 1);
         // // spawnEntities("berry",1);
         // spawnEntities("treeplant", 1);
         // spawnEntities("mushroom", 1);
 
-        // spawnEntities("fishone", 5);
-        // spawnEntities("FishTwo", 5);
-        // spawnEntities("fishthree", 5);
-        // spawnEntities("fishfour", 5);
+        spawnEntities("fishone", 5);
+        spawnEntities("FishTwo", 5);
+        spawnEntities("fishthree", 5);
+        spawnEntities("fishfour", 5);
         
     }
 
