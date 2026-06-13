@@ -9,7 +9,7 @@ import model.Vector2D;
 import model.herbivore.Boar;
 import util.SoundManager;
 
-public abstract class Carnivore extends Animal implements Reproducible{
+public abstract class Carnivore extends Animal {
     protected double strengthWeight;       // Mức độ đe dọa / Khí chất gốc của loài
     protected double attackDamage;         // Lực sát thương gây ra mỗi lần tấn công
 
@@ -53,18 +53,6 @@ public abstract class Carnivore extends Animal implements Reproducible{
         
     }
     
-    @Override
-    public Entity reproduce(Animal partner) {
-        setEnergy(getEnergy() * 0.5);
-        partner.setEnergy(partner.getEnergy() * 0.5);
-
-        return new Boar(
-            new Vector2D(
-                getPosition().getX() + 15,
-                getPosition().getY() + 15
-            )
-        );
-    }
 
     // Hàm thực hiện hành vi tấn công/cắn con mồi
     public void attack(Animal prey) {
