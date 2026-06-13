@@ -11,6 +11,7 @@ import model.herbivore.*;
 import model.plant.*;
 import java.util.List;
 import java.util.ArrayList;
+import controller.SimulationConstant;
 import util.SoundManager;
 
 public class CollisionHandler {
@@ -24,12 +25,12 @@ public class CollisionHandler {
         QuadTree qTree = env.getQuadTree();
 
         // Fix Bán kính tìm kiếm: Phải đủ rộng để bắt được con to nhất game (Ví dụ Voi size 15)
-        double maxEntitySize = 15.0; 
+        double maxEntityRadius = 9.0; 
 
         for (Entity e1 : entities) {
             if (!e1.isAlive()) continue;
 
-            double searchRadius = e1.getSize() / 2.0 + maxEntitySize; 
+            double searchRadius = CollisionProfile.bodyRadius(e1) + maxEntityRadius;
             
             Rectangle searchRange = new Rectangle(
                     e1.getPosition().getX(), 
@@ -44,7 +45,7 @@ public class CollisionHandler {
                 if (e1 != e2 && e2.isAlive() && e1.getId() < e2.getId()) {
                     
                     double distance = e1.getPosition().distanceTo(e2.getPosition());
-                    double collisionRadius = (e1.getSize() + e2.getSize()) / 2.0;
+                    double collisionRadius = CollisionProfile.bodyRadius(e1) + CollisionProfile.bodyRadius(e2);
 
                     if (distance < collisionRadius) {
                         resolveCollision(e1, e2, newEntities, env);
@@ -84,10 +85,10 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         }
         
         // 2. Động vật ăn cỏ đụng Eatable
-        else if (e1 instanceof Herbivore && e2 instanceof Eatable && !(e2 instanceof Carcass)) {
-            handleEating((Herbivore) e1, (Eatable) e2);
-        } else if (e2 instanceof Herbivore && e1 instanceof Eatable && !(e1 instanceof Carcass)) {
-            handleEating((Herbivore) e2, (Eatable) e1);
+        else if (e1 instanceof Herbivore && e2 instanceof Plant) {
+            handleEating((Herbivore) e1, (Plant) e2);
+        } else if (e2 instanceof Herbivore && e1 instanceof Plant) {
+            handleEating((Herbivore) e2, (Plant) e1);
         }
 
         // 3. Hai thú ăn thịt đụng nhau (Turf War)
@@ -142,29 +143,14 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
     }
 
     // Xử lý ăn cỏ / nấm độc
-    private static void handleEating(Herbivore herbivore, Eatable food) {
-
-        if (food instanceof OldTree) {
-            // Giả sử các loài có size >= 5.0 (như Voi, Hươu cao cổ) mới với tới lá cây
-            if (herbivore.getSize() < 5.0) {
-                return; 
-                // Lùn quá với không tới, từ chối cho ăn, ép con vật đi tìm cỏ!
-            }
-            //Voi có thể ăn được lá cây lớn
-            double leafGot = food.getEnergyValue();
-            herbivore.setHp(herbivore.getHp() + leafGot * 0.5);
-            herbivore.setEnergy(herbivore.getEnergy() + leafGot);
-            food.getEaten();
+    private static void handleEating(Herbivore herbivore, Plant food) {
+        if(food.getSize() > SimulationConstant.CATCH_SIZE && herbivore.getSize() < SimulationConstant.CATCH_SIZE) {
             return;
-
-        } else if (food instanceof SmallTree) { //Nếu là cây non thì ăn luôn
-            if (herbivore instanceof Elephant) {
-                // Voi có thể ăn được cây nhỏ
+        } else if(food.getSize() > SimulationConstant.CATCH_SIZE && herbivore.getSize() > SimulationConstant.CATCH_SIZE) { //Nếu là cây non thì ăn luôn
                 double energyGot = food.getEnergyValue();
                 herbivore.setHp(herbivore.getHp() + energyGot * 0.5); // Cỏ có thể hồi máu, nấm độc thì trừ máu (x0.5 để cân bằng)
                 herbivore.setEnergy(herbivore.getEnergy() + energyGot);
                 food.getEaten();
-            }
             return;
         }
 
@@ -253,7 +239,7 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         // NẾU KHÔNG THỂ CHUI VÀO (Do quá to, bụi đầy, hoặc CHỈ ĐANG ĐI DẠO NGANG QUA)
         // -> Chuyển sang logic đẩy dạt ra ngoài (trượt quanh mép cây)
         double dist = animal.getPosition().distanceTo(obstacle.getPosition());
-        double minCollisionDist = (animal.getSize() + obstacle.getSize()) / 2.0;
+        double minCollisionDist = CollisionProfile.bodyRadius(animal) + CollisionProfile.bodyRadius(obstacle);
 
         if (dist < minCollisionDist && dist > 0) {
             double overlap = minCollisionDist - dist;
@@ -284,8 +270,6 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
         // 1. NẾU CẢ 2 KHÔNG AI CÓ Ý ĐỊNH ĐÁNH NHAU
         // (Ví dụ: Cả 2 cùng đang đi dạo ngang qua, hoặc cùng đang chạy trốn kẻ khác)
         if (!c1Attacking && !c2Attacking) {
-            // Không gây sát thương, chỉ đẩy nhau ra vật lý để khỏi xuyên thấu
-            resolveOverlap(c1, c2);
             return;
         }
 
@@ -345,37 +329,42 @@ private static void resolveCollision(Entity e1, Entity e2, List<Entity> newEntit
     // Chống đè lên nhau
     private static void resolveOverlap(Entity e1, Entity e2) {
         double dist = e1.getPosition().distanceTo(e2.getPosition());
-        double minCollisionDist = (e1.getSize() + e2.getSize()) / 2.0;
+        
+        boolean isSameSpecies = (e1.getClass() == e2.getClass());
+        
+        // BÍ QUYẾT ĐỂ CHÈN LÊN NHAU: Thu nhỏ vòng va chạm của bọn cùng loài!
+        // Nếu khác loài -> Giữ nguyên 100% bán kính (1.0).
+        // Nếu cùng loài -> Chỉ lấy 15% bán kính (0.15), cho phép hình ảnh đè lên nhau 85%.
+        double scaleFactor = isSameSpecies ? 0.15 : 1.0;
+        
+        double minCollisionDist = (CollisionProfile.bodyRadius(e1) + CollisionProfile.bodyRadius(e2)) * scaleFactor;
 
-        // XỬ LÝ LỖI TRÙNG KHÍT (Khoảng cách = 0)
+        // XỬ LÝ LỖI TRÙNG KHÍT TÂM
         if (dist == 0) {
-            // Đẩy nhẹ e1 một khoảng siêu nhỏ (vd: 0.3) sang phải hoặc ngẫu nhiên
-            // Mục đích chỉ là để tạo ra dist > 0, sau đó vòng lặp vật lý sẽ tự lo phần còn lại
             e1.getPosition().setX(e1.getPosition().getX() + 0.1);
             e1.getPosition().setY(e1.getPosition().getY() + 0.1);
-            
-            // Cập nhật lại khoảng cách sau khi đã "lệch" ra
             dist = e1.getPosition().distanceTo(e2.getPosition()); 
         }
 
-        // Xử lý đẩy lùi (Lúc này dist chắc chắn > 0)
+        // Bắt đầu đẩy lùi NẾU chúng lún sâu hơn cái lõi vật lý vừa tính toán
         if (dist < minCollisionDist) {
-            double overlap = minCollisionDist - dist; // Độ lún (pixel)
+            double overlap = minCollisionDist - dist; // Độ lún thực tế (đã thu nhỏ)
 
-            // Vector hướng từ e2 sang e1
             double dx = e1.getPosition().getX() - e2.getPosition().getX();
             double dy = e1.getPosition().getY() - e2.getPosition().getY();
             
-            // Chuẩn hóa vector
             dx /= dist;
             dy /= dist;
 
-            // Đẩy mỗi con lùi lại một nửa độ lún (để chúng vừa khít chạm nhau)
-            e1.getPosition().setX(e1.getPosition().getX() + dx * (overlap / 2.0));
-            e1.getPosition().setY(e1.getPosition().getY() + dy * (overlap / 2.0));
+            // Vẫn giữ một lực đẩy nhẹ (ví dụ 10%) để chúng trượt ra mượt mà chứ không nảy giật cục
+            double pushFactor = isSameSpecies ? 0.1 : 1.0; 
+            double pushAmount = (overlap / 2.0) * pushFactor;
 
-            e2.getPosition().setX(e2.getPosition().getX() - dx * (overlap / 2.0));
-            e2.getPosition().setY(e2.getPosition().getY() - dy * (overlap / 2.0));
+            e1.getPosition().setX(e1.getPosition().getX() + dx * pushAmount);
+            e1.getPosition().setY(e1.getPosition().getY() + dy * pushAmount);
+
+            e2.getPosition().setX(e2.getPosition().getX() - dx * pushAmount);
+            e2.getPosition().setY(e2.getPosition().getY() - dy * pushAmount);
         }
     }
 }

@@ -18,7 +18,6 @@ public class Goat extends Herbivore {
         SurvivalStrategy flocking = new FlockingStrategy(passive);
         SurvivalStrategy foraging = new ForagingStrategy(flocking);
         SurvivalStrategy scared = new ScaredStrategy(foraging); 
-
         this.setBrain(scared);
     }
 }

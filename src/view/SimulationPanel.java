@@ -4,9 +4,11 @@ import controller.SimulationTime;
 import model.Animal;
 import model.AnimalState;
 import model.Entity;
+import model.apex.Bear;
 import model.apex.Human;
 import model.apex.Lion;
 import model.apex.Tiger;
+import model.carnivore.Cheetah;
 import model.aquatic.FishFour;
 import model.aquatic.FishOne;
 import model.aquatic.FishThree;
@@ -20,9 +22,10 @@ import model.herbivore.BlackGrouse;
 import model.herbivore.Boar;
 import model.herbivore.Deer;
 import model.herbivore.Elephant;
+import model.herbivore.Goat;
+import model.herbivore.Horse;
 import model.herbivore.Rabbit;
 import model.environment.Environment;
-import model.plant.Algae;
 import model.plant.Berry;
 import model.plant.Grass;
 import model.plant.GrowthStage;
@@ -41,6 +44,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -175,6 +180,12 @@ public class SimulationPanel extends JPanel {
         int boar = 0;
         int fox = 0;
         int wolf = 0;
+        int goat = 0;
+        int horse = 0;
+        int cheetah = 0;
+        int lion = 0;
+        int bear = 0;
+        int human = 0;
         int grass = 0;
 
         String weather = "UNKNOWN";
@@ -195,11 +206,17 @@ public class SimulationPanel extends JPanel {
             else if(e instanceof Boar) boar++;
             else if(e instanceof Fox) fox++;
             else if(e instanceof Wolf) wolf++;
+            else if(e instanceof Goat) goat++;
+            else if(e instanceof Horse) horse++;
+            else if(e instanceof Cheetah) cheetah++;
+            else if(e instanceof Lion) lion++;
+            else if(e instanceof Bear) bear++;
+            else if(e instanceof Human) human++;
             else if(e instanceof Grass) grass++;
         }
 
         g.setColor(new Color(0,0,0,180));
-        g.fillRoundRect(10,10,180,190,10,10);
+        g.fillRoundRect(10,10,190,310,10,10);
 
         g.setColor(Color.WHITE);
 
@@ -208,8 +225,14 @@ public class SimulationPanel extends JPanel {
         g.drawString("Boar : " + boar,20,75);
         g.drawString("Fox : " + fox,20,95);
         g.drawString("Wolf : " + wolf,20,115);
-        g.drawString("Grass : " + grass,20,135);
-        g.drawString("Weather : " + weather,20,165);
+        g.drawString("Goat : " + goat,20,135);
+        g.drawString("Horse : " + horse,20,155);
+        g.drawString("Cheetah : " + cheetah,20,175);
+        g.drawString("Lion : " + lion,20,195);
+        g.drawString("Bear : " + bear,20,215);
+        g.drawString("Human : " + human,20,235);
+        g.drawString("Grass : " + grass,20,255);
+        g.drawString("Weather : " + weather,20,285);
     }
 
     private void drawBuildUI(Graphics2D g) {
@@ -327,6 +350,30 @@ public class SimulationPanel extends JPanel {
         } else if (e instanceof Deer) {
             drawn = drawEntitySprite(g, "deer", e, cx, cy, size * 2, size * 2);
             if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Goat) {
+            int spriteSize = spritePixels(size, 1.75);
+            drawn = drawEntitySprite(g, "goat", e, cx, cy, spriteSize, spriteSize);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Horse) {
+            int spriteSize = spritePixels(size, 2.3);
+            drawn = drawEntitySprite(g, "horse", e, cx, cy, spriteSize, spriteSize);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Cheetah) {
+            int spriteSize = spritePixels(size, 2.15);
+            drawn = drawEntitySprite(g, "cheetah", e, cx, cy, spriteSize, spriteSize);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Bear) {
+            int spriteSize = spritePixels(size, 1.5);
+            drawn = drawEntitySprite(g, "bear", e, cx, cy, spriteSize, spriteSize);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Lion) {
+            int spriteSize = spritePixels(size, 1.45);
+            drawn = drawEntitySprite(g, "lion", e, cx, cy, spriteSize, spriteSize);
+            if (!drawn) drawDefault(g, cx, cy, size);
+        } else if (e instanceof Human) {
+            int spriteSize = spritePixels(size, 1.6);
+            drawn = drawEntitySprite(g, "human", e, cx, cy, spriteSize, spriteSize);
+            if (!drawn) drawDefault(g, cx, cy, size);
         } else {
             drawDefault(g, cx, cy, size);
         }
@@ -334,6 +381,10 @@ public class SimulationPanel extends JPanel {
         if (e instanceof Animal) {
             drawHealthBar(g, (Animal) e, cx, cy, size);
         }
+    }
+
+    private int spritePixels(int size, double multiplier) {
+        return Math.max(12, (int) Math.round(size * multiplier));
     }
 
     private void drawBasicEntity(
@@ -408,6 +459,18 @@ public class SimulationPanel extends JPanel {
             return;
         }
 
+        if (e instanceof Goat) {
+            g.setColor(new Color(232, 232, 220));
+            g.fillOval(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
+        if (e instanceof Horse) {
+            g.setColor(new Color(112, 70, 38));
+            g.fillOval(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
         // ========= CARNIVORES =========
 
         if (e instanceof Fox) {
@@ -422,8 +485,24 @@ public class SimulationPanel extends JPanel {
             return;
         }
 
+        if (e instanceof Cheetah) {
+            g.setColor(new Color(218, 172, 73));
+            g.fillRect(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
         // tiger
-        // lion
+        if (e instanceof Lion) {
+            g.setColor(new Color(201, 139, 49));
+            g.fillRect(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
+
+        if (e instanceof Bear) {
+            g.setColor(new Color(92, 58, 36));
+            g.fillRect(cx - size, cy - size, size * 2, size * 2);
+            return;
+        }
 
         // ========= AQUATIC =========
 
@@ -442,6 +521,12 @@ public class SimulationPanel extends JPanel {
         }
 
         // ========= HUMAN =========
+
+        if (e instanceof Human) {
+            g.setColor(new Color(60, 120, 210));
+            g.fillRoundRect(cx - size, cy - size, size * 2, size * 2, 8, 8);
+            return;
+        }
 
         // ========= BUSH =========
 
@@ -487,6 +572,12 @@ public class SimulationPanel extends JPanel {
         loadEntitySpriteSet("boar", "Boar");
         loadEntitySpriteSet("deer", "Deer");
         loadEntitySpriteSet("black_grouse", "BlackGrouse");
+        loadDirectionalSpriteSet("bear", "Bear");
+        loadDirectionalSpriteSet("cheetah", "Cheetah");
+        loadDirectionalSpriteSet("goat", "Goat");
+        loadDirectionalSpriteSet("horse", "Horse");
+        loadDirectionalSpriteSet("lion", "Lion");
+        loadDirectionalSpriteSet("human", "Farmer");
         loadColumnAnimationSpriteSet("chicken", "assets/Entities/Chicken/Chicken_animation.png", 8);
         loadColumnAnimationSpriteSet("cow", "assets/Entities/Cow/Cow_animation.png", 8);
         loadColumnAnimationSpriteSet("pig", "assets/Entities/Pig/Pig_animation.png", 8);
@@ -568,6 +659,80 @@ public class SimulationPanel extends JPanel {
         if (set.hasAnyAnimation()) {
             entitySprites.put(key, set);
         }
+    }
+
+    private void loadDirectionalSpriteSet(String key, String assetName) {
+        String folderPath = "assets/Entities/" + assetName + "/" + assetName;
+
+        EntitySpriteSet set = new EntitySpriteSet();
+        set.idle = buildDirectionalSpriteSheet(folderPath + "/rotations", null);
+        set.walk = buildDirectionalSpriteSheet(folderPath + "/animations/Walk", "frame_");
+
+        if (set.walk == null) {
+            set.walk = set.idle;
+        }
+
+        if (set.hasAnyAnimation()) {
+            entitySprites.put(key, set);
+        }
+    }
+
+    private SpriteSheet buildDirectionalSpriteSheet(String basePath, String framePrefix) {
+        String[] directions = {"south", "north", "west", "east"};
+        BufferedImage[][] frames = new BufferedImage[directions.length][];
+        int maxColumns = 0;
+        int frameWidth = 0;
+        int frameHeight = 0;
+
+        for (int row = 0; row < directions.length; row++) {
+            BufferedImage[] directionFrames = framePrefix == null
+                    ? loadRotationFrame(basePath, directions[row])
+                    : loadAnimationFrames(basePath, directions[row], framePrefix);
+
+            if (directionFrames.length == 0) return null;
+
+            frames[row] = directionFrames;
+            maxColumns = Math.max(maxColumns, directionFrames.length);
+            if (frameWidth == 0 && frameHeight == 0) {
+                frameWidth = directionFrames[0].getWidth();
+                frameHeight = directionFrames[0].getHeight();
+            }
+        }
+
+        BufferedImage sheet = new BufferedImage(
+                frameWidth * maxColumns,
+                frameHeight * directions.length,
+                BufferedImage.TYPE_INT_ARGB
+        );
+        Graphics2D g = sheet.createGraphics();
+        for (int row = 0; row < frames.length; row++) {
+            for (int column = 0; column < maxColumns; column++) {
+                BufferedImage frame = frames[row][Math.min(column, frames[row].length - 1)];
+                g.drawImage(frame, column * frameWidth, row * frameHeight, frameWidth, frameHeight, null);
+            }
+        }
+        g.dispose();
+
+        return new SpriteSheet(sheet, directions.length, maxColumns);
+    }
+
+    private BufferedImage[] loadRotationFrame(String basePath, String direction) {
+        BufferedImage image = loadImage(basePath + "/" + direction + ".png");
+        return image == null ? new BufferedImage[0] : new BufferedImage[]{image};
+    }
+
+    private BufferedImage[] loadAnimationFrames(String basePath, String direction, String framePrefix) {
+        File directory = new File(basePath + "/" + direction);
+        File[] files = directory.listFiles((dir, name) -> name.startsWith(framePrefix) && name.endsWith(".png"));
+        if (files == null || files.length == 0) return new BufferedImage[0];
+
+        Arrays.sort(files, Comparator.comparing(File::getName));
+        BufferedImage[] frames = new BufferedImage[files.length];
+        for (int i = 0; i < files.length; i++) {
+            frames[i] = loadImage(files[i].getPath());
+            if (frames[i] == null) return new BufferedImage[0];
+        }
+        return frames;
     }
 
     private void loadFishSpriteSet(String key, String fileName) {
@@ -806,8 +971,6 @@ public class SimulationPanel extends JPanel {
             if (!drawPlantSprite(g, "small_tree", plant, cx, cy, size)) {
                 drawSmallTree(g, cx, cy, size, plant.getGrowthStage());
             }
-        } else if (plant instanceof Grass || plant instanceof Algae) {
-            drawGrass(g, cx, cy, size);
         } else if (plant instanceof Berry) {
             drawBerry(g, cx, cy, size, ((Berry) plant).hasFruits());
         } else if (plant instanceof Mushroom) {

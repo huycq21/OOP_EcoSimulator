@@ -1,6 +1,7 @@
 package model.environment;
 
 import model.Animal;
+import model.CollisionProfile;
 import model.Entity;
 import model.Vector2D;
 import model.domestic.DomesticAnimal;
@@ -269,7 +270,7 @@ public abstract class Environment {
     }
 
     private double getCollisionRadius(Entity entity) {
-        return Math.max(4.0, entity.getSize());
+        return CollisionProfile.mapRadius(entity);
     }
 
     public void addMapCollider(MapCollider collider) {
@@ -321,4 +322,6 @@ public abstract class Environment {
     public synchronized void queueEntity(Entity entity) {
         pendingEntities.add(entity);
     }
+
 }
+

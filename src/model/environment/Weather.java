@@ -108,7 +108,7 @@ public class Weather {
         }
     }
 
-    public double getGrassGrowthMultiplier() {
+    public double getPlantGrowthMultiplier() {
 
         switch (currentSeason) {
 

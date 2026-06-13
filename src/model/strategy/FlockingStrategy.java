@@ -100,8 +100,8 @@ public class FlockingStrategy implements SurvivalStrategy {
             // TRỘN 3 LỰC LẠI VỚI NHAU (Bạn có thể tinh chỉnh các hệ số này)
             // Ví dụ: Ưu tiên giãn cách (1.5) > Đồng hướng (1.0) = Tụ tập (1.0)
             Vector2D finalVector = new Vector2D(
-                (steerToCenter.getX() * 1.0) + (alignment.getX() * 1.0) + (separation.getX() * 1.5),
-                (steerToCenter.getY() * 1.0) + (alignment.getY() * 1.0) + (separation.getY() * 1.5)
+                (steerToCenter.getX() * 1.0) + (alignment.getX() * 3.0) + (separation.getX() * 1.5),
+                (steerToCenter.getY() * 1.0) + (alignment.getY() * 3.0) + (separation.getY() * 1.5)
             );
             finalVector.normalize();
 

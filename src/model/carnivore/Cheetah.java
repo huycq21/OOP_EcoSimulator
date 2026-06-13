@@ -21,12 +21,10 @@ public class Cheetah extends Carnivore {
 
         // --- LẮP NÃO CHUẨN SINH THÁI ---
         SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
-        SurvivalStrategy flocking = new FlockingStrategy(passive);
-        SurvivalStrategy hunter = new HunterStrategy(flocking); 
+        SurvivalStrategy hunter = new HunterStrategy(passive); 
         SurvivalStrategy scared = new ScaredStrategy(hunter);
         SurvivalStrategy scavenger = new ScavengerStrategy(scared);
-        SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
-        this.setBrain(packflock);
+        this.setBrain(scavenger);
     }
 
     @Override

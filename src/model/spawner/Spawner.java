@@ -24,83 +24,116 @@ public class Spawner {
         this.env = env;
         this.random = new Random();
         
-        // spawnEntities("human",5);
-        // spawnEntities("eagle",5);
-        // spawnEntities("Lion", 5);
-        // spawnEntities("bear", 5);
-        // spawnEntities("tiger",5);
-        // spawnEntities("rabbit", 20);
-        // spawnEntities("deer", 10);
-        // spawnEntities("grass", 10);
-        // spawnEntities("wolf", 10);
-        spawnEntities("fishone", 30);
-        spawnEntities("fishtwo", 10);
-        spawnEntities("fishthree", 10);
-
-        // spawnEntities("fox", 10);
-
+        // spawn ăn thịt
+        spawnEntities("wolf", 1);  
+        spawnEntities("fox", 1);
+        spawnEntities("hyena",1);
+        spawnEntities("cheetah",1);
+        // spawn ăn cỏ
+        spawnEntities("rabbit", 1); 
+        spawnEntities("deer", 1); 
+        spawnEntities("goat", 1);
+        spawnEntities("horse", 1);
+        spawnEntities("elephant", 1);
+        spawnEntities("horse",1);
+        spawnEntities("boar", 1);
+        // spawn apex
+        spawnEntities("lion", 1);
+        spawnEntities("bear", 1);
+        spawnEntities("human", 1);
+        spawnEntities("eagle", 1);
+        spawnEntities("tiger", 1);
+        // spawn thực vật
+        spawnEntities("grass", 1);
+        spawnEntities("vinetree", 30);
+        spawnEntities("Algae", 30);
+        spawnEntities("berry",1);
+        spawnEntities("treeplant", 1);
+        spawnEntities("mushroom", 1);
+        
     }
 
-    public void update() {
+public void update() {
         reproductionTimer++;
-        int grassCount = 0;
-        int rabbitCount = 0;
 
+        // ==========================================
+        // 1. TỰ ĐỘNG ĐẾM SỐ LƯỢNG MỌI LOÀI ĐANG CÓ
+        // ==========================================
+        java.util.Map<String, Integer> population = new java.util.HashMap<>();
+        
         for (Entity e : env.getEntities()) {
+            if (!e.isAlive()) continue;
+            
+            // Lấy tên Class của thực thể (Ví dụ: "Rabbit", "Grass", "Wolf")
+            String species = e.getClass().getSimpleName();
+            
+            // Tăng biến đếm của loài đó lên 1
+            population.put(species, population.getOrDefault(species, 0) + 1);
+        }
 
-            if (e instanceof Grass) {
-                grassCount++;
+        // ==========================================
+        // 2. BÙ ĐẮP NHỮNG LOÀI BỊ THIẾU (DƯỚI MỨC MIN)
+        // ==========================================
+        double plantMultiplier = env.getWeather().getPlantGrowthMultiplier();
+
+        // 2.1. DUY TRÌ NHÓM THỰC VẬT (Có nhân hệ số thời tiết)
+        String[] corePlants = {"Grass", "Berry", "Algae", "Mushroom", "VinePlant"}; 
+        for (String plant : corePlants) {
+            int currentCount = population.getOrDefault(plant, 0);
+            
+            // Nhân hệ số thời tiết vào số lượng tối thiểu cần có
+            int minRequired = (int) (SimulationConstant.getMinPopulation(plant) * plantMultiplier);
+            
+            if (currentCount < minRequired) {
+                spawnEntities(plant, minRequired - currentCount);
+                population.put(plant, minRequired); // Cập nhật để tránh spawn lặp
             }
-
-            if (e instanceof Rabbit) {
-                rabbitCount++;
+        }
+        double seasonMultiplier = env.getWeather().getCurrentSeason().getMultiReproduction();
+        // 2.2. DUY TRÌ NHÓM ĐỘNG VẬT (Chỉ dựa vào hằng số cấu hình)
+        String[] coreAnimals = {"Rabbit", "Wolf", "Deer"}; 
+        for (String animal : coreAnimals) {
+            int currentCount = population.getOrDefault(animal, 0);
+            int minRequired = (int)(SimulationConstant.getMinPopulation(animal) * seasonMultiplier);
+            
+            if (currentCount < minRequired) {
+                spawnEntities(animal, minRequired - currentCount);
+                population.put(animal, minRequired); 
             }
         }
 
-        double multiplier =
-        env.getWeather().getGrassGrowthMultiplier();
-
-        int targetGrass =
-                (int)(SimulationConstant.MIN_GRASS * multiplier);
-
-        if (grassCount < targetGrass) {
-            spawnEntities("grass",targetGrass - grassCount);
-        }
-
-        if (rabbitCount < SimulationConstant.MIN_RABBIT) {
-            spawnEntities("rabbit",SimulationConstant.MIN_RABBIT - rabbitCount);
-        }
-
+        // ==========================================
+        // 3. CHO PHÉP TẤT CẢ CÁC LOÀI SINH SẢN (NẾU CHƯA MAX)
+        // ==========================================
         if (reproductionTimer >= SimulationConstant.REPRODUCTION_INTERVAL) {
-
             reproductionTimer = 0;
-
             int birthsThisCycle = 0;
 
-            if (rabbitCount < SimulationConstant.MAX_RABBIT) {
+            for (Entity e : env.getEntities()) {
+                // Nếu thực thể này có khả năng sinh sản (Implement Reproducible)
+                if (e instanceof Reproducible reproducible && reproducible.canReproduce()) {
+                    
+                    String species = e.getClass().getSimpleName();
+                    int currentPop = population.getOrDefault(species, 0);
+                    int maxPop = (int) (SimulationConstant.getMaxPopulation(species) * seasonMultiplier);
 
-                for (Entity e : env.getEntities()) {
-
-                    if (e instanceof Reproducible reproducible
-                            && reproducible.canReproduce()) {
-
+                    // Chỉ cho đẻ nếu số lượng hiện tại vẫn nhỏ hơn mức tối đa
+                    if (currentPop < maxPop) {
                         Entity baby = reproducible.reproduce();
+                        
+                        if (baby != null) {
+                            env.queueEntity(baby);
+                            
+                            // Cập nhật số liệu tức thời
+                            population.put(species, currentPop + 1); 
+                            birthsThisCycle++;
+                            
+                            EventManager.animalBorn(species);
 
-                        env.queueEntity(baby);
-
-                        birthsThisCycle++;
-                        rabbitCount++;
-
-                        EventManager.animalBorn(
-                                baby.getClass().getSimpleName()
-                        );
-
-                        if (birthsThisCycle >= 2) {
-                            break;
-                        }
-
-                        if (rabbitCount >= SimulationConstant.MAX_RABBIT) {
-                            break;
+                            // Giới hạn đẻ tối đa 1 con các loại mỗi frame lặp để tránh giật lag
+                            if (birthsThisCycle >= 1) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -163,6 +196,7 @@ public class Spawner {
                     env.queueEntity(new model.apex.Eagle(pos));
                     EventManager.animalBorn("Eagle");
                     break;
+                case "famer":
                 case "human":
                     env.queueEntity(new model.apex.Human(pos));
                     EventManager.animalBorn("Human");
@@ -201,10 +235,6 @@ public class Spawner {
                     env.queueEntity(new Grass(pos));
                     EventManager.plantSpawned("Grass");
                     break;
-                case "algae":
-                    env.queueEntity(new model.plant.Algae(pos));
-                    EventManager.plantSpawned("Algae");
-                    break;
                 case "berry":
                     env.queueEntity(new model.plant.Berry(pos));
                     EventManager.plantSpawned("Berry");
@@ -213,10 +243,10 @@ public class Spawner {
                     env.queueEntity(new model.plant.SmallTree(pos));
                     EventManager.plantSpawned("SmallTree");
                     break;
-                // case "treeplant":
-                //     env.queueEntity(new model.plant.TreePlant(pos));
-                //     EventManager.plantSpawned("TreePlant");
-                //     break;
+                case "treeplant":
+                    env.queueEntity(new model.plant.TreePlant(pos));
+                    EventManager.plantSpawned("TreePlant");
+                    break;
                 case "vineplant":
                     env.queueEntity(new model.plant.VinePlant(pos));
                     EventManager.plantSpawned("VinePlant");
@@ -249,4 +279,24 @@ public class Spawner {
         }
         System.out.println("DEVn: Đã spawn " + amount + " " + entityType);
     } 
+
+    // private double spawnRadiusFor(String entityType) {
+    //     switch (entityType.toLowerCase()) {
+    //         case "goat":
+    //             return 4.5;
+    //         case "horse":
+    //             return 5.8;
+    //         case "cheetah":
+    //             return 5.2;
+    //         case "lion":
+    //             return 8.0;
+    //         case "bear":
+    //             return 9.0;
+    //         case "human":
+    //         case "farmer":
+    //             return 3.8;
+    //         default:
+    //             return 8.0;
+    //     }
+    // }
 }

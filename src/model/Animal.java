@@ -77,13 +77,20 @@ public abstract class Animal extends Entity implements Ageable {
             if (stateLockTicks > 0) {
                 stateLockTicks--;
             } else {
-                destroy(); // Hoặc hàm dọn dẹp xác của bạn
+                // Rớt xác ra trước khi bốc hơi!
+                if (shouldSpawnCarcass()) {
+                    Carcass meat = new Carcass(this.position, this.size, this.maxEnergy, this.getClass());
+                    Environment.getInstance().queueEntity(meat);
+                }
+                
+                destroy(); // Gọi hàm này để isAlive = false -> Xe rác sẽ tới dọn
             }
             return;
         }
 
         // 1. Giảm thể lực theo thời gian và tăng tuổi
         decreaseEnergy();
+        healHP();
         growOlder();
 
         // 2. Kiểm tra sinh tử
@@ -121,6 +128,13 @@ public abstract class Animal extends Entity implements Ageable {
     // Hàm giảm năng lượng cơ bản
     private void decreaseEnergy() {
         this.energy -= SimulationConstant.ENERGY_DECAY_PER_TICK;
+    }
+    // Hàm hồi máu cơ bản
+    private void healHP() {
+        this.hp += SimulationConstant.HP_REGEN_PER_TICK;
+        if (this.hp > this.maxHp) {
+            this.hp = this.maxHp;
+        }
     }
 
     // --- CÁC HÀM GETTER / SETTER QUAN TRỌNG ---

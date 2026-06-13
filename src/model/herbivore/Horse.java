@@ -12,7 +12,7 @@ public class Horse extends Herbivore {
     public Horse(Vector2D position) {
         // Kích thước: 5.0, Máu: 80, Năng lượng: 150
         // Tốc độ: 5.5, Tầm nhìn: 60.0
-        super(position, 5.0, 80, 150, 5.5, 120.0);
+        super(position, 4.5, 80, 150, 5.5, 120.0);
         // Trong constructor của Horse:
         SurvivalStrategy passive = new PassiveStrategy();
         SurvivalStrategy flocking = new FlockingStrategy(passive);

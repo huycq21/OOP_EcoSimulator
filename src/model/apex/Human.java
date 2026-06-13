@@ -30,17 +30,19 @@ public class Human extends ApexEntity {
             2000.0,      // strengthWeight: SIÊU ĐE DỌA. Mọi con vật gặp người đều bỏ chạy!
             30.0,        // attackDamage: Đánh tay bo/dao găm cùi bắp
             60,          // attackCooldown: Hồi đánh tay
-            1800          // spAttackCooldown: Hồi đạn lâu cho cân bằng (30s)
+            18000          // spAttackCooldown: Hồi đạn lâu cho cân bằng (300s)
         );
+        this.addPreyType(model.domestic.Cow.class);          // Bò
+        this.addPreyType(model.domestic.Pig.class);          // Heo
+        this.addPreyType(model.domestic.Chicken.class);      // Gà
+        this.addPreyType(model.herbivore.Rabbit.class);           // Nai
         // Tầm bắn của súng
         this.gunRange = 50.0;
         SurvivalStrategy passive = new PassiveStrategy(); // Rảnh rỗi đi dạo
-        SurvivalStrategy flocking = new FlockingStrategy(passive);
-        SurvivalStrategy hunter = new HunterStrategy(flocking); 
+        SurvivalStrategy hunter = new HunterStrategy(passive); 
         SurvivalStrategy scared = new ScaredStrategy(hunter);
         SurvivalStrategy scavenger = new ScavengerStrategy(scared);
-        SurvivalStrategy packflock = new PackFlockingStrategy(scavenger, 0.3, 2);
-        this.setBrain(packflock);
+        this.setBrain(scavenger);
     }
 
     @Override

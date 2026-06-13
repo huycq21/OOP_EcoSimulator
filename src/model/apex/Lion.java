@@ -19,13 +19,13 @@ public class Lion extends ApexEntity {
 
     public Lion(Vector2D position) {
         // Stats: Máu trâu (350), Thể lực dồi dào (450), Đe dọa cơ bản (130)
-        super(position, 11.0, 350.0, 450.0, 5.8, 200.0, 130.0, 90.0, 75, 350);
+        super(position, 11.0, 350.0, 450.0, 5.8, 200.0, 130.0, 90.0, 75, 3500);
         
         // Tiếng gầm vang xa gấp 2.5 lần tầm nhìn (AOE cực rộng)
         this.roarRadius = this.getVisionRadius() * 2.5; 
         
         // Lượng máu mất đi khi nghe tiếng gầm. Dễ dàng tinh chỉnh ở đây!
-        this.roarDamage = 45.0; 
+        this.roarDamage = 15.0; 
 
         // --- 1. THỰC ĐƠN CỦA CHÚA SƠN LÂM ---
         this.addPreyType(Deer.class);

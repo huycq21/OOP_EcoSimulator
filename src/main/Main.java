@@ -1,25 +1,14 @@
 package main;
 
-import view.ForestTileMap;
 import view.SimulationPanel;
 import controller.SimulationEngine;
 import model.environment.Environment;
-import model.environment.map.EmptyMap;
-import model.environment.map.Jungle;
-import model.carnivore.*;
-import model.herbivore.*;
-import model.plant.*;
-import model.Vector2D;
-
-// Thư viện âm thanh từ nhánh của đồng nghiệp
-import util.SoundManager; 
-import javax.sound.sampled.Clip; 
+import model.environment.map.*;
 
 import javax.swing.JFrame;
-import java.awt.Dimension;
 
 public class Main {
-    //  public static void main(String[] args) {
+    //       public static void main(String[] args) {
     //      // 1. Khởi tạo kích thước map để dễ tái sử dụng
     //      double mapWidth = 800.0;
     //      double mapHeight = 600.0;

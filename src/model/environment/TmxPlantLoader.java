@@ -143,7 +143,7 @@ public class TmxPlantLoader {
         if (VINE_LAYER.equals(speciesKey) || "nho".equals(speciesKey)) {
             return new VinePlant(position);
         }
-        return new TreePlant(position, speciesKey);
+        return new TreePlant(position);
     }
 
     private static void addNeighbor(int x, int y, Set<TileCell> remaining, ArrayDeque<TileCell> queue) {
